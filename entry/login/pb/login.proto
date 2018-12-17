@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package fs.entry.login;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Login {
+
+    //使用密码账号登录(手机，邮箱，企业号)
+    rpc EntryByAP (EntryByAPRequest) returns (fs.base.Response);
+
+    //使用第三方登录
+    rpc EntryByOAuth (EntryByOAuthRequest) returns (fs.base.Response);
+
+    //使用验证码登录(手机，邮箱)
+    rpc EntryByValidateCode (EntryByValidateCodeRequest) returns (fs.base.Response);
+
+    //使用二维码登录(有平台限制)
+    rpc EntryByQRCode (EntryByQRCodeRequest) returns (fs.base.Response);
+}
+
+message EntryByQRCodeRequest {
+    fs.base.Meta meta = 1;
+}
+
+message EntryByValidateCodeRequest {
+    fs.base.Meta meta = 1;
+    string phone = 2;
+}
+
+message EntryByOAuthRequest {
+    fs.base.Meta meta = 1;
+    string type = 2;
+    string openId = 3;
+    string token = 4;
+}
+
+message EntryByAPRequest {
+    fs.base.Meta meta = 1;
+    string account = 2;
+    string password = 3;
+}

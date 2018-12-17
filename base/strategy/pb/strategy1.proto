@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+package fs.base.strategy;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Strategy {
+    //查找
+    rpc Get (GetRequest) returns (GetResponse);
+
+    //新建/更新
+    rpc Upsert (UpsertRequest) returns (fs.base.Response);
+}
+
+message GetRequest {
+    string projectId = 1;
+}
+
+message GetResponse {
+    fs.base.State state = 1;
+    ProjectStrategy strategy = 2;
+}
+
+message UpsertRequest {
+    fs.base.Meta meta = 1;
+    ProjectStrategy strategy = 2;
+}
+
+message ProjectStrategy {
+    OnSecondaryValidate onSecondaryValidate = 1;
+    OnStatistics onStatistics = 2;
+    OnRequestFrozen onRequestFrozen = 3;
+    OnRelieveFrozen onRelieveFrozen = 4;
+    OnLogin onLogin = 5;
+    OnRegister onRegister = 6;
+    OnResetPassword onResetPassword = 7;
+    OnSetOAuth onSetOAuth = 8;
+    OnCancelOAuth onCancelOAuth = 9;
+    OnValidate onValidate = 10;
+    OnUserEnterPasswordError onUserEnterPasswordError = 11;
+    OnUserValidateError onUserValidateError = 12;
+    OnForgetPassword onForgetPassword = 13;
+    OnReview onReview = 14;
+    OnInvite onInvite = 15;
+    OnIsolationVisit onIsolationVisit = 16;
+
+    //以下不用提交
+    string projectId = 17;
+    string creator = 18;
+    int64 createAt = 19;
+    int64 modifyAt = 20;
+    int64 version = 21; //版本
+}
+
+//邀请用户时
+message OnInvite {
+    //验证过期时间
+    int64 expireTime = 2;
+}
+
+//审核时
+message OnReview {
+    string reportUserId = 1;
+    repeated fs.base.KeyValue kvs = 2; //key:字段名  value:描述
+}
+
+message OnSecondaryValidate {
+    int64 verification = 1;
+    int64 lockTime = 2;
+}
+
+//统计时
+message OnStatistics {
+    int64 raftTime = 1;
+}
+
+//请求冻结时
+message OnRequestFrozen {
+    int64 verification = 1;
+    int64 time = 2; //-1: 永久（需要管理员解除） >0：冻结时间（单位.分钟）
+}
+
+//解除冻结时
+message OnRelieveFrozen {
+    int64 verification = 1;
+    int64 raftTime = 2; //操作间隔时间
+}
+
+//登录时
+message OnLogin {
+    int64 maxOnlineOnAndroid = 1; //android平台最大在线数量 -1为不限制
+    int64 maxOnlineOnIOS = 2; //ios平台最大在线数量 -1为不限制
+    int64 maxOnlineOnMacOS = 3; //MacOS平台最大在线数量 -1为不限制
+    int64 maxOnlineOnApplet = 4; //web平台(单个浏览器)最大在线数量 -1为不限制
+    int64 maxOnlineOnWindows = 5; //windows平台最大在线数量 -1为不限制
+    int64 verification = 6; //每次登录是否需要验证
+    int64 onCommonEquipmentChanges = 7; //常用设备改变时的操作（验证） 需要验证 | 记录并发送信息至绑定的手机/邮箱
+    int64 loginMode = 8;//登录模式- 1：手机  2：邮箱  3：企业号  4：手机验证码  5：邮箱验证码  6：第三方登录
+}
+
+//当有发现在其他地方注册的用户访问当前应用时的操作
+message OnIsolationVisit {
+    //1:其他项目用户不允许访问(用户需要再进行注册才可访问)
+    //2:其他项目用户需要通过审核才可以访问
+    int64 checkReview = 1; //如果被隔离的用户没有当前平台审核，那么需要审核才可以进入
+}
+
+//注册时
+message OnRegister {
+    int64 minPasswordLength = 1; //最少密码长度
+    int64 bindEmailOrPhone = 2;
+    int64 review = 3; //是否开启审核, 开启后没有经过审核的账号立即下线并在下次登录时提示需要提交审核材料
+    int64 isolation = 4; //用户隔离（针对应用不需要和其他应用对接的情况）
+}
+
+//当用户点击重置密码时
+message OnResetPassword {
+    int64 verification = 1;
+}
+
+//当用户点击忘记密码时
+message OnForgetPassword {
+    int64 verification = 1;
+}
+
+//设置第三方授权时
+message OnSetOAuth {
+    int64 verification = 1;
+}
+
+//取消第三方授权时
+message OnCancelOAuth {
+    int64 verification = 1;
+}
+
+//验证时
+message OnValidate {
+    repeated int64 priority = 1; //验证的优先级
+    int64 expireTime = 2; //过期时间
+}
+
+//当密码输入错误时
+message OnUserEnterPasswordError {
+    int64 maxCountCondition = 1; //最大错误数量
+    int64 frozenTime = 2; //冻结时间
+}
+
+//当验证信息输入错误时
+message OnUserValidateError {
+    int64 maxCountCondition = 1; //最大错误量
+    int64 frozenTime = 2; //冻结时间
+}

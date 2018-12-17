@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package fs.base;
+
+message Meta {
+    string face = 1;
+    string device = 2;
+}
+
+message State {
+    int64 code = 1;
+    bool ok = 2;
+    string message = 3;
+}
+
+message Response {
+    State state = 1;
+}
+
+message Metadata {
+    string clientId = 1;
+    string appId = 2;
+    string userId = 3;
+    string ip = 4;
+    string face = 5;
+    string token = 6;
+    string device = 7;
+    string userAgent = 8;
+    int64 platform = 9;
+}
+
+message KeyValue {
+    string key = 1;
+    string value = 2;
+    int64 type = 3;
+}

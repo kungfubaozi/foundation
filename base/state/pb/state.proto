@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package fs.base.state;
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service State {
+
+    //插入（如果没有则新建，有则覆盖）
+    rpc Upsert (UpsertRequest) returns (fs.base.Response);
+
+    //获取
+    rpc Get (GetRequest) returns (GetResponse);
+
+}
+
+message UpsertRequest {
+    string key = 1;
+    int64 status = 2;
+}
+
+message GetRequest {
+    string key = 1;
+}
+
+message GetResponse {
+    fs.base.State state = 1;
+    int64 status = 2;
+}
