@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -37,6 +38,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MQTTClient interface {
+	SendMessage(ctx context.Context, in *pb.TsMessage, opts ...grpc.CallOption) (*pb.Response, error)
 }
 
 type mQTTClient struct {
@@ -47,29 +49,66 @@ func NewMQTTClient(cc *grpc.ClientConn) MQTTClient {
 	return &mQTTClient{cc}
 }
 
+func (c *mQTTClient) SendMessage(ctx context.Context, in *pb.TsMessage, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.base.mqtt.MQTT/SendMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MQTTServer is the server API for MQTT service.
 type MQTTServer interface {
+	SendMessage(context.Context, *pb.TsMessage) (*pb.Response, error)
 }
 
 func RegisterMQTTServer(s *grpc.Server, srv MQTTServer) {
 	s.RegisterService(&_MQTT_serviceDesc, srv)
 }
 
+func _MQTT_SendMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(pb.TsMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MQTTServer).SendMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.mqtt.MQTT/SendMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MQTTServer).SendMessage(ctx, req.(*pb.TsMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _MQTT_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.base.mqtt.MQTT",
 	HandlerType: (*MQTTServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "base/mqtt/pb/mqtt.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "SendMessage",
+			Handler:    _MQTT_SendMessage_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "base/mqtt/pb/mqtt.proto",
 }
 
 func init() { proto.RegisterFile("base/mqtt/pb/mqtt.proto", fileDescriptor_ffd62c4d8b8166db) }
 
 var fileDescriptor_ffd62c4d8b8166db = []byte{
-	// 68 bytes of a gzipped FileDescriptorProto
+	// 139 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4f, 0x4a, 0x2c, 0x4e,
 	0xd5, 0xcf, 0x2d, 0x2c, 0x29, 0xd1, 0x2f, 0x48, 0x02, 0xd3, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9,
-	0x42, 0x3c, 0x69, 0xc5, 0x7a, 0x20, 0x39, 0x3d, 0x90, 0x98, 0x11, 0x1b, 0x17, 0x8b, 0x6f, 0x60,
-	0x48, 0x48, 0x12, 0x1b, 0x58, 0xd2, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xa8, 0x8b, 0x2e, 0xf4,
-	0x37, 0x00, 0x00, 0x00,
+	0x42, 0x3c, 0x69, 0xc5, 0x7a, 0x20, 0x39, 0x3d, 0x90, 0x98, 0x94, 0x76, 0x55, 0x71, 0x76, 0x41,
+	0x62, 0x51, 0x76, 0x6a, 0x91, 0x5e, 0x72, 0x7e, 0xae, 0x7e, 0x5a, 0x7e, 0x69, 0x5e, 0x4a, 0x62,
+	0x49, 0x66, 0x7e, 0x9e, 0x3e, 0x58, 0x7f, 0x41, 0x12, 0x98, 0x86, 0x68, 0x35, 0xb2, 0xe1, 0x62,
+	0xf1, 0x0d, 0x0c, 0x09, 0x11, 0x32, 0xe1, 0xe2, 0x0e, 0x4e, 0xcd, 0x4b, 0xf1, 0x4d, 0x2d, 0x2e,
+	0x4e, 0x4c, 0x4f, 0x15, 0x12, 0xd2, 0x83, 0x19, 0x19, 0x52, 0x0c, 0x15, 0x93, 0x12, 0x84, 0x8b,
+	0x05, 0xa5, 0x16, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x26, 0xb1, 0x81, 0x0d, 0x31, 0x06, 0x04, 0x00,
+	0x00, 0xff, 0xff, 0xa9, 0x2c, 0x81, 0x9b, 0x9a, 0x00, 0x00, 0x00,
 }

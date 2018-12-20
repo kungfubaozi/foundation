@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"zskparker.com/foundation/analysis/streaming"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/entry/login/pb"
 )
@@ -17,4 +18,30 @@ type Service interface {
 }
 
 type loginService struct {
+	streaming streaming.Streaming
+}
+
+func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_base.Response, error) {
+	panic("implement me")
+
+}
+
+func (svc *loginService) EntryByOAuth(ctx context.Context, in *fs_entry_login.EntryByOAuthRequest) (*fs_base.Response, error) {
+	panic("implement me")
+}
+
+func (svc *loginService) EntryByValidateCode(ctx context.Context, in *fs_entry_login.EntryByValidateCodeRequest) (*fs_base.Response, error) {
+	panic("implement me")
+}
+
+func (svc *loginService) EntryByQRCode(ctx context.Context, in *fs_entry_login.EntryByQRCodeRequest) (*fs_base.Response, error) {
+	panic("implement me")
+}
+
+func NewService(streaming streaming.Streaming) Service {
+	var service Service
+	{
+		service = &loginService{streaming: streaming}
+	}
+	return service
 }

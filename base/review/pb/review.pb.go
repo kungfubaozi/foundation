@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -25,6 +26,249 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type AddConditionRequest struct {
+	ProjectId            string         `protobuf:"bytes,1,opt,name=projectId,proto3" json:"projectId,omitempty"`
+	Kvs                  []*pb.KeyValue `protobuf:"bytes,2,rep,name=kvs,proto3" json:"kvs,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *AddConditionRequest) Reset()         { *m = AddConditionRequest{} }
+func (m *AddConditionRequest) String() string { return proto.CompactTextString(m) }
+func (*AddConditionRequest) ProtoMessage()    {}
+func (*AddConditionRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_795e14ae1ee434bc, []int{0}
+}
+
+func (m *AddConditionRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AddConditionRequest.Unmarshal(m, b)
+}
+func (m *AddConditionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AddConditionRequest.Marshal(b, m, deterministic)
+}
+func (m *AddConditionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddConditionRequest.Merge(m, src)
+}
+func (m *AddConditionRequest) XXX_Size() int {
+	return xxx_messageInfo_AddConditionRequest.Size(m)
+}
+func (m *AddConditionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddConditionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddConditionRequest proto.InternalMessageInfo
+
+func (m *AddConditionRequest) GetProjectId() string {
+	if m != nil {
+		return m.ProjectId
+	}
+	return ""
+}
+
+func (m *AddConditionRequest) GetKvs() []*pb.KeyValue {
+	if m != nil {
+		return m.Kvs
+	}
+	return nil
+}
+
+type GetConditionRequest struct {
+	ProjectId            string   `protobuf:"bytes,1,opt,name=projectId,proto3" json:"projectId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetConditionRequest) Reset()         { *m = GetConditionRequest{} }
+func (m *GetConditionRequest) String() string { return proto.CompactTextString(m) }
+func (*GetConditionRequest) ProtoMessage()    {}
+func (*GetConditionRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_795e14ae1ee434bc, []int{1}
+}
+
+func (m *GetConditionRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetConditionRequest.Unmarshal(m, b)
+}
+func (m *GetConditionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetConditionRequest.Marshal(b, m, deterministic)
+}
+func (m *GetConditionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetConditionRequest.Merge(m, src)
+}
+func (m *GetConditionRequest) XXX_Size() int {
+	return xxx_messageInfo_GetConditionRequest.Size(m)
+}
+func (m *GetConditionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetConditionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetConditionRequest proto.InternalMessageInfo
+
+func (m *GetConditionRequest) GetProjectId() string {
+	if m != nil {
+		return m.ProjectId
+	}
+	return ""
+}
+
+type GetConditionResponse struct {
+	State                *pb.State      `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	Kvs                  []*pb.KeyValue `protobuf:"bytes,2,rep,name=kvs,proto3" json:"kvs,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *GetConditionResponse) Reset()         { *m = GetConditionResponse{} }
+func (m *GetConditionResponse) String() string { return proto.CompactTextString(m) }
+func (*GetConditionResponse) ProtoMessage()    {}
+func (*GetConditionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_795e14ae1ee434bc, []int{2}
+}
+
+func (m *GetConditionResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetConditionResponse.Unmarshal(m, b)
+}
+func (m *GetConditionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetConditionResponse.Marshal(b, m, deterministic)
+}
+func (m *GetConditionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetConditionResponse.Merge(m, src)
+}
+func (m *GetConditionResponse) XXX_Size() int {
+	return xxx_messageInfo_GetConditionResponse.Size(m)
+}
+func (m *GetConditionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetConditionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetConditionResponse proto.InternalMessageInfo
+
+func (m *GetConditionResponse) GetState() *pb.State {
+	if m != nil {
+		return m.State
+	}
+	return nil
+}
+
+func (m *GetConditionResponse) GetKvs() []*pb.KeyValue {
+	if m != nil {
+		return m.Kvs
+	}
+	return nil
+}
+
+type ReviewConfig struct {
+	Title                string        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Version              string        `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	Items                []*ReviewItem `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *ReviewConfig) Reset()         { *m = ReviewConfig{} }
+func (m *ReviewConfig) String() string { return proto.CompactTextString(m) }
+func (*ReviewConfig) ProtoMessage()    {}
+func (*ReviewConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_795e14ae1ee434bc, []int{3}
+}
+
+func (m *ReviewConfig) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ReviewConfig.Unmarshal(m, b)
+}
+func (m *ReviewConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ReviewConfig.Marshal(b, m, deterministic)
+}
+func (m *ReviewConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReviewConfig.Merge(m, src)
+}
+func (m *ReviewConfig) XXX_Size() int {
+	return xxx_messageInfo_ReviewConfig.Size(m)
+}
+func (m *ReviewConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_ReviewConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ReviewConfig proto.InternalMessageInfo
+
+func (m *ReviewConfig) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *ReviewConfig) GetVersion() string {
+	if m != nil {
+		return m.Version
+	}
+	return ""
+}
+
+func (m *ReviewConfig) GetItems() []*ReviewItem {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type ReviewItem struct {
+	Key                  string   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	ValueType            string   `protobuf:"bytes,2,opt,name=valueType,proto3" json:"valueType,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ReviewItem) Reset()         { *m = ReviewItem{} }
+func (m *ReviewItem) String() string { return proto.CompactTextString(m) }
+func (*ReviewItem) ProtoMessage()    {}
+func (*ReviewItem) Descriptor() ([]byte, []int) {
+	return fileDescriptor_795e14ae1ee434bc, []int{4}
+}
+
+func (m *ReviewItem) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ReviewItem.Unmarshal(m, b)
+}
+func (m *ReviewItem) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ReviewItem.Marshal(b, m, deterministic)
+}
+func (m *ReviewItem) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReviewItem.Merge(m, src)
+}
+func (m *ReviewItem) XXX_Size() int {
+	return xxx_messageInfo_ReviewItem.Size(m)
+}
+func (m *ReviewItem) XXX_DiscardUnknown() {
+	xxx_messageInfo_ReviewItem.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ReviewItem proto.InternalMessageInfo
+
+func (m *ReviewItem) GetKey() string {
+	if m != nil {
+		return m.Key
+	}
+	return ""
+}
+
+func (m *ReviewItem) GetValueType() string {
+	if m != nil {
+		return m.ValueType
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*AddConditionRequest)(nil), "fs.base.review.AddConditionRequest")
+	proto.RegisterType((*GetConditionRequest)(nil), "fs.base.review.GetConditionRequest")
+	proto.RegisterType((*GetConditionResponse)(nil), "fs.base.review.GetConditionResponse")
+	proto.RegisterType((*ReviewConfig)(nil), "fs.base.review.ReviewConfig")
+	proto.RegisterType((*ReviewItem)(nil), "fs.base.review.ReviewItem")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -37,6 +281,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ReviewClient interface {
+	// 添加审核条件
+	AddCondition(ctx context.Context, in *AddConditionRequest, opts ...grpc.CallOption) (*pb.Response, error)
+	// 获取
+	GetCondition(ctx context.Context, in *GetConditionRequest, opts ...grpc.CallOption) (*GetConditionResponse, error)
 }
 
 type reviewClient struct {
@@ -47,29 +295,113 @@ func NewReviewClient(cc *grpc.ClientConn) ReviewClient {
 	return &reviewClient{cc}
 }
 
+func (c *reviewClient) AddCondition(ctx context.Context, in *AddConditionRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.base.review.Review/AddCondition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reviewClient) GetCondition(ctx context.Context, in *GetConditionRequest, opts ...grpc.CallOption) (*GetConditionResponse, error) {
+	out := new(GetConditionResponse)
+	err := c.cc.Invoke(ctx, "/fs.base.review.Review/GetCondition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ReviewServer is the server API for Review service.
 type ReviewServer interface {
+	// 添加审核条件
+	AddCondition(context.Context, *AddConditionRequest) (*pb.Response, error)
+	// 获取
+	GetCondition(context.Context, *GetConditionRequest) (*GetConditionResponse, error)
 }
 
 func RegisterReviewServer(s *grpc.Server, srv ReviewServer) {
 	s.RegisterService(&_Review_serviceDesc, srv)
 }
 
+func _Review_AddCondition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddConditionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReviewServer).AddCondition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.review.Review/AddCondition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReviewServer).AddCondition(ctx, req.(*AddConditionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Review_GetCondition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConditionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReviewServer).GetCondition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.review.Review/GetCondition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReviewServer).GetCondition(ctx, req.(*GetConditionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Review_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.base.review.Review",
 	HandlerType: (*ReviewServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "base/review/pb/review.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AddCondition",
+			Handler:    _Review_AddCondition_Handler,
+		},
+		{
+			MethodName: "GetCondition",
+			Handler:    _Review_GetCondition_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "base/review/pb/review.proto",
 }
 
 func init() { proto.RegisterFile("base/review/pb/review.proto", fileDescriptor_795e14ae1ee434bc) }
 
 var fileDescriptor_795e14ae1ee434bc = []byte{
-	// 69 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4e, 0x4a, 0x2c, 0x4e,
-	0xd5, 0x2f, 0x4a, 0x2d, 0xcb, 0x4c, 0x2d, 0xd7, 0x2f, 0x48, 0x82, 0xb2, 0xf4, 0x0a, 0x8a, 0xf2,
-	0x4b, 0xf2, 0x85, 0xf8, 0xd2, 0x8a, 0xf5, 0x40, 0xf2, 0x7a, 0x10, 0x51, 0x23, 0x0e, 0x2e, 0xb6,
-	0x20, 0x30, 0x2b, 0x89, 0x0d, 0xac, 0xc0, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xe2, 0x02, 0x62,
-	0x7e, 0x3f, 0x00, 0x00, 0x00,
+	// 344 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0x41, 0x6b, 0xea, 0x40,
+	0x10, 0x46, 0x83, 0x3e, 0x1c, 0x45, 0xde, 0x5b, 0x3d, 0x84, 0xbc, 0x77, 0x90, 0xe8, 0x41, 0x78,
+	0xb0, 0x29, 0x7a, 0xed, 0xa5, 0x08, 0x2d, 0xd2, 0x5b, 0x5a, 0x4a, 0x7b, 0x4c, 0xcc, 0x58, 0xb6,
+	0xd1, 0xec, 0x36, 0xbb, 0xa6, 0xd8, 0xbf, 0xd4, 0x3f, 0x59, 0x76, 0x37, 0x1a, 0x6d, 0xa5, 0xb4,
+	0xa7, 0xec, 0x7c, 0x33, 0xdf, 0xf7, 0x0d, 0xdf, 0x04, 0xfe, 0xc6, 0x91, 0xc4, 0x20, 0xc7, 0x82,
+	0xe1, 0x4b, 0x20, 0xe2, 0xf2, 0x45, 0x45, 0xce, 0x15, 0x27, 0xdd, 0xa5, 0xa4, 0xba, 0x4f, 0x2d,
+	0xea, 0xfd, 0x7f, 0x95, 0xa9, 0x88, 0xf2, 0x14, 0x73, 0xba, 0xe0, 0xeb, 0x60, 0xc9, 0x37, 0x59,
+	0x12, 0x29, 0xc6, 0xb3, 0xc0, 0xa8, 0x88, 0xd8, 0x7c, 0x2d, 0xd9, 0xbf, 0x87, 0xde, 0x45, 0x92,
+	0xcc, 0x78, 0x96, 0x30, 0x3d, 0x12, 0xe2, 0xf3, 0x06, 0xa5, 0x22, 0xff, 0xa0, 0x25, 0x72, 0xfe,
+	0x84, 0x0b, 0x35, 0x4f, 0xdc, 0xda, 0xa0, 0x36, 0x6e, 0x85, 0x15, 0x40, 0x86, 0xe0, 0xa4, 0x85,
+	0x74, 0xeb, 0x03, 0x67, 0xdc, 0x9e, 0xfc, 0xa1, 0x3b, 0xff, 0x6b, 0xdc, 0xde, 0x45, 0xab, 0x0d,
+	0x86, 0xba, 0xeb, 0x4f, 0xa1, 0x77, 0x85, 0xea, 0x67, 0xca, 0x7e, 0x04, 0xfd, 0x63, 0x92, 0x14,
+	0x3c, 0x93, 0x48, 0x46, 0xd0, 0x90, 0x2a, 0x52, 0x68, 0x18, 0xed, 0x49, 0x77, 0xef, 0x79, 0xa3,
+	0xd1, 0xd0, 0x36, 0xbf, 0xb7, 0x97, 0x80, 0x4e, 0x68, 0x82, 0x9a, 0xf1, 0x6c, 0xc9, 0x1e, 0x49,
+	0x1f, 0x1a, 0x8a, 0xa9, 0x15, 0x96, 0xcb, 0xd8, 0x82, 0xb8, 0xf0, 0xab, 0xc0, 0x5c, 0x32, 0x9e,
+	0xb9, 0x75, 0x83, 0xef, 0x4a, 0x72, 0x06, 0x0d, 0xa6, 0x70, 0x2d, 0x5d, 0xc7, 0xd8, 0x78, 0xf4,
+	0x38, 0x7e, 0x6a, 0xc5, 0xe7, 0x0a, 0xd7, 0xa1, 0x1d, 0xf4, 0xcf, 0x01, 0x2a, 0x90, 0xfc, 0x06,
+	0x27, 0xc5, 0x6d, 0xe9, 0xa6, 0x9f, 0x3a, 0x92, 0x42, 0xef, 0x77, 0xbb, 0x15, 0x58, 0xba, 0x55,
+	0xc0, 0xe4, 0xad, 0x06, 0x4d, 0x4b, 0x27, 0x97, 0xd0, 0x39, 0x3c, 0x16, 0x19, 0x7e, 0xf4, 0x3e,
+	0x71, 0x4a, 0xaf, 0xca, 0x61, 0x9f, 0xe6, 0x03, 0x74, 0x0e, 0x53, 0xfe, 0xac, 0x73, 0xe2, 0x70,
+	0xde, 0xe8, 0xeb, 0x21, 0x2b, 0x1d, 0x37, 0xcd, 0x6f, 0x35, 0x7d, 0x0f, 0x00, 0x00, 0xff, 0xff,
+	0x3b, 0x0b, 0x81, 0xbe, 0xb2, 0x02, 0x00, 0x00,
 }

@@ -2,6 +2,33 @@ syntax = "proto3";
 
 package fs.base.user;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service User {
 
+    rpc Add (AddRequest) returns (fs.base.Response);
+
+    rpc Get (GetRequest) returns (GetResponse);
+
+}
+
+message GetRequest {
+    string userId = 1;
+}
+
+message GetResponse {
+    fs.base.State state = 1;
+    string userId = 2;
+    int64 level = 3;
+    string phone = 4;
+    string enterprise = 5;
+}
+
+message AddRequest {
+    string password = 1;
+    string enterprise = 2;
+    int64 level = 3;
+    string phone = 4;
+    string fromProjectId = 5;
+    string fromAppId = 6;
 }

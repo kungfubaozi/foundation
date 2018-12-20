@@ -5,6 +5,8 @@ package fs.base;
 message Meta {
     string face = 1;
     string device = 2;
+    string longitude = 4;
+    string latitude = 5;
 }
 
 message State {
@@ -33,4 +35,12 @@ message KeyValue {
     string key = 1;
     string value = 2;
     int64 type = 3;
+    bool must = 4; //必须填写
+}
+
+message TsMessage {
+    string from = 1;
+    string to = 2;
+    string content = 3;
+    string timestamp = 4;
 }

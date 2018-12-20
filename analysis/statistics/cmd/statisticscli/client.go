@@ -1,0 +1,5 @@
+package statisticscli
+
+func StartClient() {
+
+}

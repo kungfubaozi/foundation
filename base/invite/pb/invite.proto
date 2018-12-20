@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package fs.base.invite;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Invite {
+
+    //添加
+    rpc Add (AddRequest) returns (fs.base.Response);
+
+}
+
+message AddRequest {
+    string phone = 1;
+    string enterprise = 2;
+}

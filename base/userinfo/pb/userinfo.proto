@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package fs.base.userinfo;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service UserInfo {
+
+    rpc Upsert (UserBaseInfo) returns (fs.base.Response);
+
+    rpc Get(GetRequest) returns (GetResponse);
+
+}
+
+message GetRequest {
+    string userId = 1;
+}
+
+message GetResponse {
+    fs.base.State state = 1;
+    string userId = 2;
+    string nickName = 3;
+    string realName = 4;
+    int64 age = 5;
+    string icon = 6;
+}
+
+message UserBaseInfo {
+    string userId = 1;
+    string nickName = 2;
+    string realName = 3;
+    int64 age = 4;
+    string icon = 5;
+    int64 sex = 6;
+}

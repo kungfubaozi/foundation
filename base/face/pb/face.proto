@@ -2,6 +2,52 @@ syntax = "proto3";
 
 package fs.base.face;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service Face {
 
+    //更新人脸
+    rpc Update (UpdateRequest) returns (fs.base.Response);
+
+    //人脸对比
+    rpc Compare (CompareRequest) returns (fs.base.Response);
+
+    //在人脸库里搜索
+    rpc Search (SearchRequest) returns (SearchResponse);
+
+    //添加人脸
+    rpc AddFace (AddFaceRequest) returns (fs.base.Response);
+
+    //移除人脸
+    rpc RemoveFace (RemoveFaceRequest) returns (fs.base.Response);
+}
+
+message UpdateRequest {
+    string userId = 1;
+    string faceToken = 2;
+}
+
+message SearchRequest {
+    string base64Face = 1;
+}
+
+message SearchResponse {
+    fs.base.State state = 1;
+    string userId = 2;
+    string faceToken = 3;
+    int64 level = 4;
+}
+
+message RemoveFaceRequest {
+    string userId = 1;
+}
+
+message AddFaceRequest {
+    string userId = 1;
+    string base64Face = 2;
+}
+
+message CompareRequest {
+    string userId = 1;
+    string base64Face = 2;
 }

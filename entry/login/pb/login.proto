@@ -17,6 +17,13 @@ service Login {
 
     //使用二维码登录(有平台限制)
     rpc EntryByQRCode (EntryByQRCodeRequest) returns (fs.base.Response);
+
+    //游客登录
+    rpc EntryByTourist(EntryByTouristRequest) returns (fs.base.Response);
+}
+
+message EntryByTouristRequest {
+    fs.base.Meta meta = 1;
 }
 
 message EntryByQRCodeRequest {

@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -25,6 +26,164 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type CreateResponse struct {
+	State                *pb.State `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	VerId                string    `protobuf:"bytes,2,opt,name=verId,proto3" json:"verId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *CreateResponse) Reset()         { *m = CreateResponse{} }
+func (m *CreateResponse) String() string { return proto.CompactTextString(m) }
+func (*CreateResponse) ProtoMessage()    {}
+func (*CreateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6d5fd6021931f40c, []int{0}
+}
+
+func (m *CreateResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateResponse.Unmarshal(m, b)
+}
+func (m *CreateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateResponse.Marshal(b, m, deterministic)
+}
+func (m *CreateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateResponse.Merge(m, src)
+}
+func (m *CreateResponse) XXX_Size() int {
+	return xxx_messageInfo_CreateResponse.Size(m)
+}
+func (m *CreateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateResponse proto.InternalMessageInfo
+
+func (m *CreateResponse) GetState() *pb.State {
+	if m != nil {
+		return m.State
+	}
+	return nil
+}
+
+func (m *CreateResponse) GetVerId() string {
+	if m != nil {
+		return m.VerId
+	}
+	return ""
+}
+
+type CreateRequest struct {
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	Do                   int64    `protobuf:"varint,2,opt,name=do,proto3" json:"do,omitempty"`
+	Mode                 string   `protobuf:"bytes,3,opt,name=mode,proto3" json:"mode,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CreateRequest) Reset()         { *m = CreateRequest{} }
+func (m *CreateRequest) String() string { return proto.CompactTextString(m) }
+func (*CreateRequest) ProtoMessage()    {}
+func (*CreateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6d5fd6021931f40c, []int{1}
+}
+
+func (m *CreateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateRequest.Unmarshal(m, b)
+}
+func (m *CreateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateRequest.Marshal(b, m, deterministic)
+}
+func (m *CreateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateRequest.Merge(m, src)
+}
+func (m *CreateRequest) XXX_Size() int {
+	return xxx_messageInfo_CreateRequest.Size(m)
+}
+func (m *CreateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateRequest proto.InternalMessageInfo
+
+func (m *CreateRequest) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+func (m *CreateRequest) GetDo() int64 {
+	if m != nil {
+		return m.Do
+	}
+	return 0
+}
+
+func (m *CreateRequest) GetMode() string {
+	if m != nil {
+		return m.Mode
+	}
+	return ""
+}
+
+type VerificationRequest struct {
+	// 开头为p是phone
+	// ...e为email
+	// ...f为face
+	VerId                string   `protobuf:"bytes,1,opt,name=verId,proto3" json:"verId,omitempty"`
+	Content              string   `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *VerificationRequest) Reset()         { *m = VerificationRequest{} }
+func (m *VerificationRequest) String() string { return proto.CompactTextString(m) }
+func (*VerificationRequest) ProtoMessage()    {}
+func (*VerificationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6d5fd6021931f40c, []int{2}
+}
+
+func (m *VerificationRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_VerificationRequest.Unmarshal(m, b)
+}
+func (m *VerificationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_VerificationRequest.Marshal(b, m, deterministic)
+}
+func (m *VerificationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VerificationRequest.Merge(m, src)
+}
+func (m *VerificationRequest) XXX_Size() int {
+	return xxx_messageInfo_VerificationRequest.Size(m)
+}
+func (m *VerificationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_VerificationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VerificationRequest proto.InternalMessageInfo
+
+func (m *VerificationRequest) GetVerId() string {
+	if m != nil {
+		return m.VerId
+	}
+	return ""
+}
+
+func (m *VerificationRequest) GetContent() string {
+	if m != nil {
+		return m.Content
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*CreateResponse)(nil), "fs.base.validate.CreateResponse")
+	proto.RegisterType((*CreateRequest)(nil), "fs.base.validate.CreateRequest")
+	proto.RegisterType((*VerificationRequest)(nil), "fs.base.validate.VerificationRequest")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -37,6 +196,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ValidateClient interface {
+	// 验证
+	Verification(ctx context.Context, in *VerificationRequest, opts ...grpc.CallOption) (*pb.Response, error)
+	// 创建验证码(自动发送验证码)
+	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 }
 
 type validateClient struct {
@@ -47,29 +210,109 @@ func NewValidateClient(cc *grpc.ClientConn) ValidateClient {
 	return &validateClient{cc}
 }
 
+func (c *validateClient) Verification(ctx context.Context, in *VerificationRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.base.validate.Validate/Verification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *validateClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+	out := new(CreateResponse)
+	err := c.cc.Invoke(ctx, "/fs.base.validate.Validate/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ValidateServer is the server API for Validate service.
 type ValidateServer interface {
+	// 验证
+	Verification(context.Context, *VerificationRequest) (*pb.Response, error)
+	// 创建验证码(自动发送验证码)
+	Create(context.Context, *CreateRequest) (*CreateResponse, error)
 }
 
 func RegisterValidateServer(s *grpc.Server, srv ValidateServer) {
 	s.RegisterService(&_Validate_serviceDesc, srv)
 }
 
+func _Validate_Verification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValidateServer).Verification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.validate.Validate/Verification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValidateServer).Verification(ctx, req.(*VerificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Validate_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ValidateServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.validate.Validate/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ValidateServer).Create(ctx, req.(*CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Validate_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.base.validate.Validate",
 	HandlerType: (*ValidateServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "base/validate/pb/validate.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Verification",
+			Handler:    _Validate_Verification_Handler,
+		},
+		{
+			MethodName: "Create",
+			Handler:    _Validate_Create_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "base/validate/pb/validate.proto",
 }
 
 func init() { proto.RegisterFile("base/validate/pb/validate.proto", fileDescriptor_6d5fd6021931f40c) }
 
 var fileDescriptor_6d5fd6021931f40c = []byte{
-	// 71 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4f, 0x4a, 0x2c, 0x4e,
-	0xd5, 0x2f, 0x4b, 0xcc, 0xc9, 0x4c, 0x49, 0x2c, 0x49, 0xd5, 0x2f, 0x48, 0x82, 0xb3, 0xf5, 0x0a,
-	0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x04, 0xd2, 0x8a, 0xf5, 0x40, 0x6a, 0xf4, 0x60, 0xe2, 0x46, 0x5c,
-	0x5c, 0x1c, 0x61, 0x50, 0x76, 0x12, 0x1b, 0x58, 0x91, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xe4,
-	0x24, 0xf0, 0x23, 0x47, 0x00, 0x00, 0x00,
+	// 284 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x51, 0x5d, 0x4b, 0xc3, 0x30,
+	0x14, 0x25, 0x9d, 0xab, 0x7a, 0xd5, 0xa2, 0x57, 0x91, 0xd2, 0x97, 0x95, 0xa2, 0x30, 0x10, 0x52,
+	0x98, 0x3f, 0x41, 0x04, 0x65, 0x3e, 0x55, 0xd8, 0x7b, 0xda, 0xdc, 0x42, 0x99, 0x6b, 0x6a, 0x92,
+	0xee, 0xc1, 0x7f, 0xe3, 0x3f, 0x95, 0xa5, 0x1f, 0xcc, 0xaf, 0xa7, 0xdc, 0x73, 0x73, 0xee, 0x39,
+	0x37, 0x27, 0x30, 0xcb, 0x85, 0xa1, 0x74, 0x2b, 0xde, 0x2a, 0x29, 0x2c, 0xa5, 0x4d, 0x3e, 0xd6,
+	0xbc, 0xd1, 0xca, 0x2a, 0x3c, 0x2f, 0x0d, 0xdf, 0x71, 0xf8, 0xd0, 0x8f, 0xee, 0x3e, 0xcc, 0xba,
+	0x11, 0x7a, 0x4d, 0x9a, 0x17, 0x6a, 0x93, 0x96, 0xaa, 0xad, 0xa5, 0xb0, 0x95, 0xaa, 0x53, 0xa7,
+	0xd5, 0xe4, 0xee, 0xec, 0xc6, 0x93, 0x17, 0x08, 0x1e, 0x34, 0x09, 0x4b, 0x19, 0x99, 0x46, 0xd5,
+	0x86, 0xf0, 0x06, 0xa6, 0xc6, 0x0a, 0x4b, 0x21, 0x8b, 0xd9, 0xfc, 0x64, 0x11, 0xf0, 0xc1, 0xe0,
+	0x75, 0xd7, 0xcd, 0xba, 0x4b, 0xbc, 0x82, 0xe9, 0x96, 0xf4, 0xb3, 0x0c, 0xbd, 0x98, 0xcd, 0x8f,
+	0xb3, 0x0e, 0x24, 0x4b, 0x38, 0x1b, 0xd4, 0xde, 0x5b, 0x32, 0x16, 0xaf, 0xc1, 0x6f, 0x8d, 0xe3,
+	0x31, 0xc7, 0xeb, 0x11, 0x06, 0xe0, 0x49, 0xe5, 0x66, 0x27, 0x99, 0x27, 0x15, 0x22, 0x1c, 0x6c,
+	0x94, 0xa4, 0x70, 0xe2, 0x58, 0xae, 0x4e, 0x1e, 0xe1, 0x72, 0x45, 0xba, 0x2a, 0xab, 0xc2, 0x6d,
+	0x3f, 0x48, 0x8e, 0xce, 0x6c, 0xcf, 0x19, 0x43, 0x38, 0x2c, 0x54, 0x6d, 0xa9, 0xb6, 0xfd, 0x46,
+	0x03, 0x5c, 0x7c, 0x32, 0x38, 0x5a, 0xf5, 0xd9, 0xe0, 0x13, 0x9c, 0xee, 0x6b, 0xe2, 0x2d, 0xff,
+	0x19, 0x1f, 0xff, 0xc3, 0x33, 0xba, 0x18, 0x69, 0x63, 0x4c, 0x4b, 0xf0, 0xbb, 0xa7, 0xe2, 0xec,
+	0xb7, 0xc6, 0xb7, 0x10, 0xa2, 0xf8, 0x7f, 0x42, 0x27, 0x96, 0xfb, 0xee, 0x33, 0xee, 0xbf, 0x02,
+	0x00, 0x00, 0xff, 0xff, 0xc3, 0x8b, 0xdd, 0x2e, 0xee, 0x01, 0x00, 0x00,
 }

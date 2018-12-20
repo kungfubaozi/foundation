@@ -1,7 +1,35 @@
 syntax = "proto3";
 
 package fs.base.validate;
+import "zskparker.com/foundation/base/pb/base.proto";
 
 service Validate {
+
+    //验证
+    rpc Verification (VerificationRequest) returns (fs.base.Response);
+
+    //创建验证码(自动发送验证码)
+    rpc Create (CreateRequest) returns (CreateResponse);
+
+}
+
+message CreateResponse {
+    fs.base.State state = 1;
+    string verId = 2;
+}
+
+message CreateRequest {
+    string userId = 1;
+    int64 do = 2;
+    string mode = 3; //验证模式(p,e,f)
+}
+
+message VerificationRequest {
+
+    //开头为p是phone
+    //...e为email
+    //...f为face
+    string verId = 1;
+    string content = 2;
 
 }

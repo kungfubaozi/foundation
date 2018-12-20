@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. analysis/statistics/pb/statistics.proto
+
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/pb/base.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/authenticate/pb/authenticate.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/email/pb/email.proto
@@ -17,6 +19,9 @@ protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/interceptor/pb/interceptor.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/review/pb/review.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/state/pb/state.proto
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/userinfo/pb/userinfo.proto
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/usersync/pb/usersync.proto
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/invite/pb/invite.proto
 
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. entry/login/pb/login.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. entry/register/pb/register.proto

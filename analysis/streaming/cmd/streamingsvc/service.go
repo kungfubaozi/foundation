@@ -1,0 +1,5 @@
+package streamingsvc
+
+func StartService() {
+
+}

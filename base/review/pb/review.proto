@@ -2,6 +2,38 @@ syntax = "proto3";
 
 package fs.base.review;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service Review {
 
+    //添加审核条件
+    rpc AddCondition (AddConditionRequest) returns (fs.base.Response);
+
+    //获取
+    rpc GetCondition (GetConditionRequest) returns (GetConditionResponse);
+}
+
+message AddConditionRequest {
+    string projectId = 1;
+    repeated fs.base.KeyValue kvs = 2;
+}
+
+message GetConditionRequest {
+    string projectId = 1;
+}
+
+message GetConditionResponse {
+    fs.base.State state = 1;
+    repeated fs.base.KeyValue kvs = 2;
+}
+
+message ReviewConfig {
+    string title = 1;
+    string version = 2;
+    repeated ReviewItem items = 3;
+}
+
+message ReviewItem {
+    string key = 1;
+    string valueType = 2;
 }

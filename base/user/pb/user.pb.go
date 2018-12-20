@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -25,6 +26,201 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type GetRequest struct {
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetRequest) Reset()         { *m = GetRequest{} }
+func (m *GetRequest) String() string { return proto.CompactTextString(m) }
+func (*GetRequest) ProtoMessage()    {}
+func (*GetRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c941ea4089a6591e, []int{0}
+}
+
+func (m *GetRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetRequest.Unmarshal(m, b)
+}
+func (m *GetRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetRequest.Marshal(b, m, deterministic)
+}
+func (m *GetRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetRequest.Merge(m, src)
+}
+func (m *GetRequest) XXX_Size() int {
+	return xxx_messageInfo_GetRequest.Size(m)
+}
+func (m *GetRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetRequest proto.InternalMessageInfo
+
+func (m *GetRequest) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+type GetResponse struct {
+	State                *pb.State `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	UserId               string    `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId,omitempty"`
+	Level                int64     `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Phone                string    `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
+	Enterprise           string    `protobuf:"bytes,5,opt,name=enterprise,proto3" json:"enterprise,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *GetResponse) Reset()         { *m = GetResponse{} }
+func (m *GetResponse) String() string { return proto.CompactTextString(m) }
+func (*GetResponse) ProtoMessage()    {}
+func (*GetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c941ea4089a6591e, []int{1}
+}
+
+func (m *GetResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetResponse.Unmarshal(m, b)
+}
+func (m *GetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetResponse.Marshal(b, m, deterministic)
+}
+func (m *GetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetResponse.Merge(m, src)
+}
+func (m *GetResponse) XXX_Size() int {
+	return xxx_messageInfo_GetResponse.Size(m)
+}
+func (m *GetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetResponse proto.InternalMessageInfo
+
+func (m *GetResponse) GetState() *pb.State {
+	if m != nil {
+		return m.State
+	}
+	return nil
+}
+
+func (m *GetResponse) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+func (m *GetResponse) GetLevel() int64 {
+	if m != nil {
+		return m.Level
+	}
+	return 0
+}
+
+func (m *GetResponse) GetPhone() string {
+	if m != nil {
+		return m.Phone
+	}
+	return ""
+}
+
+func (m *GetResponse) GetEnterprise() string {
+	if m != nil {
+		return m.Enterprise
+	}
+	return ""
+}
+
+type AddRequest struct {
+	Password             string   `protobuf:"bytes,1,opt,name=password,proto3" json:"password,omitempty"`
+	Enterprise           string   `protobuf:"bytes,2,opt,name=enterprise,proto3" json:"enterprise,omitempty"`
+	Level                int64    `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Phone                string   `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
+	FromProjectId        string   `protobuf:"bytes,5,opt,name=fromProjectId,proto3" json:"fromProjectId,omitempty"`
+	FromAppId            string   `protobuf:"bytes,6,opt,name=fromAppId,proto3" json:"fromAppId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AddRequest) Reset()         { *m = AddRequest{} }
+func (m *AddRequest) String() string { return proto.CompactTextString(m) }
+func (*AddRequest) ProtoMessage()    {}
+func (*AddRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c941ea4089a6591e, []int{2}
+}
+
+func (m *AddRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AddRequest.Unmarshal(m, b)
+}
+func (m *AddRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AddRequest.Marshal(b, m, deterministic)
+}
+func (m *AddRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddRequest.Merge(m, src)
+}
+func (m *AddRequest) XXX_Size() int {
+	return xxx_messageInfo_AddRequest.Size(m)
+}
+func (m *AddRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddRequest proto.InternalMessageInfo
+
+func (m *AddRequest) GetPassword() string {
+	if m != nil {
+		return m.Password
+	}
+	return ""
+}
+
+func (m *AddRequest) GetEnterprise() string {
+	if m != nil {
+		return m.Enterprise
+	}
+	return ""
+}
+
+func (m *AddRequest) GetLevel() int64 {
+	if m != nil {
+		return m.Level
+	}
+	return 0
+}
+
+func (m *AddRequest) GetPhone() string {
+	if m != nil {
+		return m.Phone
+	}
+	return ""
+}
+
+func (m *AddRequest) GetFromProjectId() string {
+	if m != nil {
+		return m.FromProjectId
+	}
+	return ""
+}
+
+func (m *AddRequest) GetFromAppId() string {
+	if m != nil {
+		return m.FromAppId
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*GetRequest)(nil), "fs.base.user.GetRequest")
+	proto.RegisterType((*GetResponse)(nil), "fs.base.user.GetResponse")
+	proto.RegisterType((*AddRequest)(nil), "fs.base.user.AddRequest")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -37,6 +233,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type UserClient interface {
+	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*pb.Response, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 }
 
 type userClient struct {
@@ -47,29 +245,109 @@ func NewUserClient(cc *grpc.ClientConn) UserClient {
 	return &userClient{cc}
 }
 
+func (c *userClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.base.user.User/Add", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+	out := new(GetResponse)
+	err := c.cc.Invoke(ctx, "/fs.base.user.User/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 type UserServer interface {
+	Add(context.Context, *AddRequest) (*pb.Response, error)
+	Get(context.Context, *GetRequest) (*GetResponse, error)
 }
 
 func RegisterUserServer(s *grpc.Server, srv UserServer) {
 	s.RegisterService(&_User_serviceDesc, srv)
 }
 
+func _User_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).Add(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.user.User/Add",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).Add(ctx, req.(*AddRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _User_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.user.User/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _User_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.base.user.User",
 	HandlerType: (*UserServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "base/user/pb/user.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Add",
+			Handler:    _User_Add_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _User_Get_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "base/user/pb/user.proto",
 }
 
 func init() { proto.RegisterFile("base/user/pb/user.proto", fileDescriptor_c941ea4089a6591e) }
 
 var fileDescriptor_c941ea4089a6591e = []byte{
-	// 68 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4f, 0x4a, 0x2c, 0x4e,
-	0xd5, 0x2f, 0x2d, 0x4e, 0x2d, 0xd2, 0x2f, 0x48, 0x02, 0xd3, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9,
-	0x42, 0x3c, 0x69, 0xc5, 0x7a, 0x20, 0x39, 0x3d, 0x90, 0x98, 0x11, 0x1b, 0x17, 0x4b, 0x68, 0x71,
-	0x6a, 0x51, 0x12, 0x1b, 0x58, 0xd2, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xbc, 0x86, 0xf0, 0xbe,
-	0x37, 0x00, 0x00, 0x00,
+	// 314 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x51, 0xcd, 0x4a, 0xc3, 0x40,
+	0x10, 0x26, 0x4d, 0x5b, 0xec, 0x54, 0x05, 0x17, 0xd1, 0x35, 0x88, 0x94, 0xd2, 0x43, 0x41, 0xd8,
+	0x40, 0xbd, 0x79, 0xeb, 0xa9, 0xf4, 0x26, 0x11, 0x1f, 0x20, 0xe9, 0x4e, 0xb1, 0xb6, 0xcd, 0xae,
+	0x3b, 0xdb, 0x0a, 0xbe, 0x88, 0xaf, 0xe2, 0xe3, 0xc9, 0x6e, 0xda, 0x24, 0x06, 0x2f, 0x9e, 0x86,
+	0xf9, 0xfe, 0x98, 0xe1, 0x83, 0xeb, 0x2c, 0x25, 0x8c, 0x77, 0x84, 0x26, 0xd6, 0x99, 0x9f, 0x42,
+	0x1b, 0x65, 0x15, 0x3b, 0x5d, 0x92, 0x70, 0x9c, 0x70, 0x58, 0x74, 0xff, 0x49, 0x6b, 0x9d, 0x9a,
+	0x35, 0x1a, 0xb1, 0x50, 0xdb, 0x78, 0xa9, 0x76, 0xb9, 0x4c, 0xed, 0x4a, 0xe5, 0xb1, 0xf7, 0xeb,
+	0xcc, 0xcf, 0xc2, 0x3a, 0x1c, 0x01, 0xcc, 0xd0, 0x26, 0xf8, 0xbe, 0x43, 0xb2, 0xec, 0x0a, 0xba,
+	0x2e, 0x62, 0x2e, 0x79, 0x30, 0x08, 0xc6, 0xbd, 0xe4, 0xb0, 0x0d, 0xbf, 0x02, 0xe8, 0x7b, 0x19,
+	0x69, 0x95, 0x13, 0xb2, 0x11, 0x74, 0xc8, 0xa6, 0x16, 0xbd, 0xac, 0x3f, 0x39, 0x17, 0xc7, 0x03,
+	0x9e, 0x1d, 0x9a, 0x14, 0x64, 0x2d, 0xad, 0x55, 0x4f, 0x63, 0x97, 0xd0, 0xd9, 0xe0, 0x1e, 0x37,
+	0x3c, 0x1c, 0x04, 0xe3, 0x30, 0x29, 0x16, 0x87, 0xea, 0x57, 0x95, 0x23, 0x6f, 0x7b, 0x71, 0xb1,
+	0xb0, 0x3b, 0x00, 0xcc, 0x2d, 0x1a, 0x6d, 0x56, 0x84, 0xbc, 0xe3, 0xa9, 0x1a, 0x32, 0xfc, 0x0e,
+	0x00, 0xa6, 0x52, 0x1e, 0x1f, 0x88, 0xe0, 0x44, 0xa7, 0x44, 0x1f, 0xca, 0x1c, 0x5f, 0x28, 0xf7,
+	0x46, 0x54, 0xab, 0x19, 0xf5, 0xaf, 0xb3, 0x46, 0x70, 0xb6, 0x34, 0x6a, 0xfb, 0x64, 0xd4, 0x1b,
+	0x2e, 0xec, 0x5c, 0x1e, 0x2e, 0xfb, 0x0d, 0xb2, 0x5b, 0xe8, 0x39, 0x60, 0xaa, 0xf5, 0x5c, 0xf2,
+	0xae, 0x57, 0x54, 0xc0, 0x64, 0x0f, 0xed, 0x17, 0x42, 0xc3, 0x26, 0x10, 0x4e, 0xa5, 0x64, 0x5c,
+	0xd4, 0x5b, 0x14, 0xd5, 0x53, 0xd1, 0x45, 0xc9, 0x94, 0x05, 0x3c, 0x42, 0x38, 0x43, 0xdb, 0xf4,
+	0x54, 0x4d, 0x46, 0x37, 0x7f, 0x30, 0x85, 0x37, 0xeb, 0xfa, 0xe6, 0x1f, 0x7e, 0x02, 0x00, 0x00,
+	0xff, 0xff, 0x6f, 0xb6, 0x1b, 0xa4, 0x4f, 0x02, 0x00, 0x00,
 }
