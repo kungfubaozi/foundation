@@ -2,8 +2,8 @@ package login
 
 import (
 	"context"
-	"zskparker.com/foundation/analysis/streaming"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/base/reporter"
 	"zskparker.com/foundation/entry/login/pb"
 )
 
@@ -18,12 +18,11 @@ type Service interface {
 }
 
 type loginService struct {
-	streaming streaming.Streaming
+	reportercli reporter.Service
 }
 
 func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_base.Response, error) {
 	panic("implement me")
-
 }
 
 func (svc *loginService) EntryByOAuth(ctx context.Context, in *fs_entry_login.EntryByOAuthRequest) (*fs_base.Response, error) {
@@ -38,10 +37,10 @@ func (svc *loginService) EntryByQRCode(ctx context.Context, in *fs_entry_login.E
 	panic("implement me")
 }
 
-func NewService(streaming streaming.Streaming) Service {
+func NewService(reportercli reporter.Service) Service {
 	var service Service
 	{
-		service = &loginService{streaming: streaming}
+		service = &loginService{reportercli: reportercli}
 	}
 	return service
 }

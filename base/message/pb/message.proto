@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package fs.base.message;
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Message {
+
+    rpc SendMessage (fs.base.DirectMessage) returns (fs.base.Response);
+
+    rpc SendBroadcast (fs.base.DirectMessage) returns (fs.base.Response);
+
+    rpc SendOffline (fs.base.DirectMessage) returns (fs.base.Response);
+
+    rpc SendSMS (fs.base.DirectMessage) returns (fs.base.Response);
+
+    rpc SendEmail (fs.base.DirectMessage) returns (fs.base.Response);
+
+}
+

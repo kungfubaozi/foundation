@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"os"
-	"time"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
@@ -48,7 +47,7 @@ func NewRegistrar(gs *grpc.Server, name, consulAddr string) error {
 	agent := consulClient.Agent()
 
 	ip := osenv.GetHostIp()
-	id := fmt.Sprintf("%v-%v-%v-%v", name, ip, checkPort, time.Now().UnixNano())
+	id := fmt.Sprintf("%v-%v", name, os.Getenv("NODE_NAME"))
 
 	//HTTP:                           fmt.Sprintf("http://%s:%s%s", ip, checkPort, "/check"),
 
@@ -64,7 +63,7 @@ func NewRegistrar(gs *grpc.Server, name, consulAddr string) error {
 		Name:    name,
 		Address: ip,
 		ID:      id,
-		Tags:    []string{"Zodiac Server"},
+		Tags:    []string{"Foundation gRPC Server"},
 		Port:    int(checkPort),
 		Check:   &check,
 	}

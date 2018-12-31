@@ -1,0 +1,5 @@
+package verificationsvc
+
+func StartService() {
+
+}

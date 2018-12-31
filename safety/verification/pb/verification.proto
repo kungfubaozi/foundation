@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package fs.safety.verification;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Verification {
+
+    //新建验证
+    rpc New (NewRequest) returns (NewResponse);
+
+    //获取功能模块的验证模式
+    rpc GetFuncVerMode (GetFuncVerModeRequest) returns (GetFuncVerModeResponse);
+
+}
+
+message GetFuncVerModeRequest {
+    string func = 1;
+}
+
+message GetFuncVerModeResponse {
+    fs.base.State state = 1;
+    int64 mode = 2;
+}
+
+message NewRequest {
+    string do = 1;
+    string funcId = 2;
+}
+
+message NewResponse {
+    fs.base.State state = 1;
+    string verId = 2;
+    string mode = 3; //验证模式
+}

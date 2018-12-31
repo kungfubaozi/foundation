@@ -2,6 +2,26 @@ syntax = "proto3";
 
 package fs.safety.froze;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service Froze {
 
+    rpc Check (CheckRequest) returns (fs.base.Response);
+
+    rpc Add (AddRequest) returns (fs.base.Response);
+
+    rpc Remove (RemoveRequest) returns (fs.base.Response);
+}
+
+message AddRequest {
+    string userId = 1;
+    string duration = 2; //冻结时长
+}
+
+message RemoveRequest {
+    string userId = 1;
+}
+
+message CheckRequest {
+    string userId = 1;
 }

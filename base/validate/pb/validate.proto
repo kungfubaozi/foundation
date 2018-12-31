@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package fs.base.validate;
 import "zskparker.com/foundation/base/pb/base.proto";
+import "zskparker.com/foundation/base/pb/strategy1.proto";
 
 service Validate {
 
@@ -20,16 +21,20 @@ message CreateResponse {
 
 message CreateRequest {
     string userId = 1;
-    int64 do = 2;
-    string mode = 3; //验证模式(p,e,f)
+    int64 do = 2; //做什么
+    int64 mode = 3; //验证模式(1:phone,2:email,3:face)
+    string to = 4;
+
+    fs.base.OnVerification onVerification = 5; //项目配置
+    fs.base.Metadata metadata = 6;
 }
 
 message VerificationRequest {
 
-    //开头为p是phone
-    //...e为email
-    //...f为face
     string verId = 1;
-    string content = 2;
+    string code = 2;
+    int64 do = 3;
 
+    fs.base.OnVerification onVerification = 4; //项目配置
+    fs.base.Metadata metadata = 5;
 }

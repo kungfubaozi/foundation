@@ -2,6 +2,55 @@ syntax = "proto3";
 
 package fs.base.function;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service Function {
 
+    //添加功能(用作身份验证/统计运维等)
+    rpc Add (AddRequest) returns (AddResponse);
+
+    //移除功能
+    rpc Remove (RemoveRequest) returns (fs.base.Response);
+
+    //更新
+    rpc Update (UpdateRequest) returns (fs.base.Response);
+
+    //admin or gRPC
+    rpc Get (GetRequest) returns (GetResponse);
+
+}
+
+message GetRequest {
+    string func = 1;
+}
+
+message GetResponse {
+    fs.base.State state = 1;
+    string func = 2;
+    string verification = 3;
+    string zh = 4;
+    string en = 5;
+    string api = 6;
+}
+
+message AddRequest {
+    string api = 1;
+    string zh = 2;
+    string en = 3;
+    string verification = 4; //1:phone 2:face 3:email
+}
+
+message AddResponse {
+    fs.base.State state = 1;
+    string func = 2;
+}
+
+message RemoveRequest {
+    string func = 1;
+}
+
+message UpdateRequest {
+    string api = 1;
+    string zh = 2;
+    string en = 3;
 }

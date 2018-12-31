@@ -4,20 +4,17 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"gopkg.in/mgo.v2"
-	"os"
 )
 
 //token过期时间
 var TOKEN_EX_TIME string
 
-func CreatePool() *redis.Pool {
-
-	host := os.Getenv("REDIS_HOST")
+func CreatePool(addr string) *redis.Pool {
 
 	pool := &redis.Pool{
 		MaxIdle: 20,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", host)
+			c, err := redis.Dial("tcp", addr)
 
 			if err != nil {
 				return nil, err

@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -25,6 +26,145 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type FromAPRequest struct {
+	Password             string   `protobuf:"bytes,1,opt,name=password,proto3" json:"password,omitempty"`
+	Enterprise           string   `protobuf:"bytes,2,opt,name=enterprise,proto3" json:"enterprise,omitempty"`
+	Level                int64    `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Phone                string   `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
+	Email                string   `protobuf:"bytes,5,opt,name=email,proto3" json:"email,omitempty"`
+	Meta                 *pb.Meta `protobuf:"bytes,6,opt,name=meta,proto3" json:"meta,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FromAPRequest) Reset()         { *m = FromAPRequest{} }
+func (m *FromAPRequest) String() string { return proto.CompactTextString(m) }
+func (*FromAPRequest) ProtoMessage()    {}
+func (*FromAPRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_738b49ddadfffd25, []int{0}
+}
+
+func (m *FromAPRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FromAPRequest.Unmarshal(m, b)
+}
+func (m *FromAPRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FromAPRequest.Marshal(b, m, deterministic)
+}
+func (m *FromAPRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FromAPRequest.Merge(m, src)
+}
+func (m *FromAPRequest) XXX_Size() int {
+	return xxx_messageInfo_FromAPRequest.Size(m)
+}
+func (m *FromAPRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_FromAPRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FromAPRequest proto.InternalMessageInfo
+
+func (m *FromAPRequest) GetPassword() string {
+	if m != nil {
+		return m.Password
+	}
+	return ""
+}
+
+func (m *FromAPRequest) GetEnterprise() string {
+	if m != nil {
+		return m.Enterprise
+	}
+	return ""
+}
+
+func (m *FromAPRequest) GetLevel() int64 {
+	if m != nil {
+		return m.Level
+	}
+	return 0
+}
+
+func (m *FromAPRequest) GetPhone() string {
+	if m != nil {
+		return m.Phone
+	}
+	return ""
+}
+
+func (m *FromAPRequest) GetEmail() string {
+	if m != nil {
+		return m.Email
+	}
+	return ""
+}
+
+func (m *FromAPRequest) GetMeta() *pb.Meta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+type FromOAuthRequest struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Token                string   `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	Meta                 *pb.Meta `protobuf:"bytes,3,opt,name=meta,proto3" json:"meta,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FromOAuthRequest) Reset()         { *m = FromOAuthRequest{} }
+func (m *FromOAuthRequest) String() string { return proto.CompactTextString(m) }
+func (*FromOAuthRequest) ProtoMessage()    {}
+func (*FromOAuthRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_738b49ddadfffd25, []int{1}
+}
+
+func (m *FromOAuthRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FromOAuthRequest.Unmarshal(m, b)
+}
+func (m *FromOAuthRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FromOAuthRequest.Marshal(b, m, deterministic)
+}
+func (m *FromOAuthRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FromOAuthRequest.Merge(m, src)
+}
+func (m *FromOAuthRequest) XXX_Size() int {
+	return xxx_messageInfo_FromOAuthRequest.Size(m)
+}
+func (m *FromOAuthRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_FromOAuthRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FromOAuthRequest proto.InternalMessageInfo
+
+func (m *FromOAuthRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *FromOAuthRequest) GetToken() string {
+	if m != nil {
+		return m.Token
+	}
+	return ""
+}
+
+func (m *FromOAuthRequest) GetMeta() *pb.Meta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func init() {
+	proto.RegisterType((*FromAPRequest)(nil), "fs.entry.register.FromAPRequest")
+	proto.RegisterType((*FromOAuthRequest)(nil), "fs.entry.register.FromOAuthRequest")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -37,6 +177,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type RegisterClient interface {
+	FromAP(ctx context.Context, in *FromAPRequest, opts ...grpc.CallOption) (*pb.Response, error)
+	FromOAuth(ctx context.Context, in *FromOAuthRequest, opts ...grpc.CallOption) (*pb.Response, error)
 }
 
 type registerClient struct {
@@ -47,29 +189,109 @@ func NewRegisterClient(cc *grpc.ClientConn) RegisterClient {
 	return &registerClient{cc}
 }
 
+func (c *registerClient) FromAP(ctx context.Context, in *FromAPRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.entry.register.Register/FromAP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *registerClient) FromOAuth(ctx context.Context, in *FromOAuthRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.entry.register.Register/FromOAuth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RegisterServer is the server API for Register service.
 type RegisterServer interface {
+	FromAP(context.Context, *FromAPRequest) (*pb.Response, error)
+	FromOAuth(context.Context, *FromOAuthRequest) (*pb.Response, error)
 }
 
 func RegisterRegisterServer(s *grpc.Server, srv RegisterServer) {
 	s.RegisterService(&_Register_serviceDesc, srv)
 }
 
+func _Register_FromAP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FromAPRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegisterServer).FromAP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.entry.register.Register/FromAP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegisterServer).FromAP(ctx, req.(*FromAPRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Register_FromOAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FromOAuthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegisterServer).FromOAuth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.entry.register.Register/FromOAuth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegisterServer).FromOAuth(ctx, req.(*FromOAuthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Register_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.entry.register.Register",
 	HandlerType: (*RegisterServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "entry/register/pb/register.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "FromAP",
+			Handler:    _Register_FromAP_Handler,
+		},
+		{
+			MethodName: "FromOAuth",
+			Handler:    _Register_FromOAuth_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "entry/register/pb/register.proto",
 }
 
 func init() { proto.RegisterFile("entry/register/pb/register.proto", fileDescriptor_738b49ddadfffd25) }
 
 var fileDescriptor_738b49ddadfffd25 = []byte{
-	// 72 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xcd, 0x2b, 0x29,
-	0xaa, 0xd4, 0x2f, 0x4a, 0x4d, 0xcf, 0x2c, 0x2e, 0x49, 0x2d, 0xd2, 0x2f, 0x48, 0x82, 0xb3, 0xf5,
-	0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x04, 0xd3, 0x8a, 0xf5, 0xc0, 0x8a, 0xf4, 0x60, 0x12, 0x46,
-	0x5c, 0x5c, 0x1c, 0x41, 0x50, 0x76, 0x12, 0x1b, 0x58, 0x95, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff,
-	0xa3, 0x10, 0x9b, 0xa2, 0x49, 0x00, 0x00, 0x00,
+	// 307 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0xcf, 0x4a, 0x33, 0x31,
+	0x14, 0xc5, 0x49, 0xff, 0xd1, 0xde, 0x8f, 0x7e, 0xd8, 0xe0, 0x22, 0x74, 0x21, 0x63, 0xdd, 0x14,
+	0x84, 0x0c, 0xd4, 0xb5, 0x8b, 0x22, 0xb8, 0x13, 0x25, 0x5b, 0x57, 0xa9, 0xbd, 0xb5, 0xa1, 0x9d,
+	0x24, 0x26, 0xa9, 0xa2, 0x0f, 0xe1, 0xb3, 0xf8, 0x88, 0x92, 0xa4, 0x33, 0x54, 0xb4, 0xab, 0x99,
+	0x73, 0x6e, 0xee, 0x8f, 0x93, 0x13, 0x28, 0x50, 0x07, 0xf7, 0x5e, 0x3a, 0x7c, 0x56, 0x3e, 0xa0,
+	0x2b, 0xed, 0xa2, 0xf9, 0xe7, 0xd6, 0x99, 0x60, 0xe8, 0x68, 0xe5, 0x79, 0x3a, 0xc4, 0xeb, 0xc1,
+	0xf8, 0xf2, 0xc3, 0x6f, 0xac, 0x74, 0x1b, 0x74, 0xfc, 0xc9, 0x54, 0xe5, 0xca, 0xec, 0xf4, 0x52,
+	0x06, 0x65, 0x74, 0xb9, 0x90, 0x1e, 0x23, 0x23, 0x7e, 0xf3, 0xfe, 0xe4, 0x8b, 0xc0, 0xf0, 0xd6,
+	0x99, 0x6a, 0xfe, 0x20, 0xf0, 0x65, 0x87, 0x3e, 0xd0, 0x31, 0xf4, 0xad, 0xf4, 0xfe, 0xcd, 0xb8,
+	0x25, 0x23, 0x05, 0x99, 0x0e, 0x44, 0xa3, 0xe9, 0x19, 0x00, 0xea, 0x80, 0xce, 0x3a, 0xe5, 0x91,
+	0xb5, 0xd2, 0xf4, 0xc0, 0xa1, 0xa7, 0xd0, 0xdd, 0xe2, 0x2b, 0x6e, 0x59, 0xbb, 0x20, 0xd3, 0xb6,
+	0xc8, 0x22, 0xba, 0x76, 0x6d, 0x34, 0xb2, 0x4e, 0x5a, 0xc8, 0x22, 0xba, 0x58, 0x49, 0xb5, 0x65,
+	0xdd, 0xec, 0x26, 0x41, 0xcf, 0xa1, 0x53, 0x61, 0x90, 0xac, 0x57, 0x90, 0xe9, 0xbf, 0xd9, 0x90,
+	0xaf, 0x3c, 0x4f, 0x69, 0xef, 0x30, 0x48, 0x91, 0x46, 0x93, 0x47, 0x38, 0x89, 0x89, 0xef, 0xe7,
+	0xbb, 0xb0, 0xae, 0x43, 0xff, 0x87, 0x96, 0xaa, 0xe3, 0xb6, 0xd4, 0x32, 0xc2, 0x83, 0xd9, 0xa0,
+	0xde, 0x67, 0xcc, 0xa2, 0x81, 0xb7, 0x8f, 0xc2, 0x67, 0x9f, 0x04, 0xfa, 0x62, 0xdf, 0x24, 0xbd,
+	0x86, 0x5e, 0xee, 0x86, 0x16, 0xfc, 0x57, 0xcf, 0xfc, 0x47, 0x6d, 0xe3, 0x51, 0x43, 0x13, 0xe8,
+	0xad, 0xd1, 0x1e, 0xe9, 0x0d, 0x0c, 0x9a, 0xa0, 0xf4, 0xe2, 0x08, 0xe1, 0xf0, 0x1a, 0x7f, 0x40,
+	0x16, 0xbd, 0xf4, 0x4e, 0x57, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x1e, 0xee, 0x97, 0x95, 0x0b,
+	0x02, 0x00, 0x00,
 }

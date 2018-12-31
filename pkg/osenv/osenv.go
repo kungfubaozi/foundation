@@ -5,6 +5,10 @@ import (
 	"strconv"
 )
 
+func GetValidateTemplate() string {
+	return os.Getenv("VALIDATE_TEMPLATE")
+}
+
 func GetConsulAddr() string {
 	s := os.Getenv("CONSUL_ADDR")
 	if len(s) == 0 {
@@ -17,11 +21,23 @@ func GetAMQPAddr() string {
 	return os.Getenv("AMQP_ADDR")
 }
 
+func GetMessageAMQPAddr() string {
+	return os.Getenv("MESSAGE_AMQP_ADDR")
+}
+
+func GetRedisAddr() string {
+	return os.Getenv("REDIS_ADDR")
+}
+
 func GetReporterAMQPAddr() string {
 	return os.Getenv("REPORTER_AMQP_ADDR")
 }
 
 func GetReporterKafkaAddr() string {
+	return os.Getenv("REPORTER_KAFKA_ADDR")
+}
+
+func GetStatisticsKafkaAddr() string {
 	return os.Getenv("STATISTICS_KAFKA_ADDR")
 }
 
@@ -51,4 +67,8 @@ func GetMicroPort() int64 {
 		return 0
 	}
 	return i
+}
+
+func GetZipkinAddr() string {
+	return os.Getenv("ZIPKIN_ADDR")
 }

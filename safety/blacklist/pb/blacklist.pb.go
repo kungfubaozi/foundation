@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -25,6 +26,121 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type CheckRequest struct {
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	Ip                   string   `protobuf:"bytes,2,opt,name=ip,proto3" json:"ip,omitempty"`
+	Device               string   `protobuf:"bytes,3,opt,name=device,proto3" json:"device,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CheckRequest) Reset()         { *m = CheckRequest{} }
+func (m *CheckRequest) String() string { return proto.CompactTextString(m) }
+func (*CheckRequest) ProtoMessage()    {}
+func (*CheckRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bc33b09e0453396d, []int{0}
+}
+
+func (m *CheckRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CheckRequest.Unmarshal(m, b)
+}
+func (m *CheckRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CheckRequest.Marshal(b, m, deterministic)
+}
+func (m *CheckRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CheckRequest.Merge(m, src)
+}
+func (m *CheckRequest) XXX_Size() int {
+	return xxx_messageInfo_CheckRequest.Size(m)
+}
+func (m *CheckRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CheckRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CheckRequest proto.InternalMessageInfo
+
+func (m *CheckRequest) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+func (m *CheckRequest) GetIp() string {
+	if m != nil {
+		return m.Ip
+	}
+	return ""
+}
+
+func (m *CheckRequest) GetDevice() string {
+	if m != nil {
+		return m.Device
+	}
+	return ""
+}
+
+type AddRequest struct {
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	Ip                   string   `protobuf:"bytes,2,opt,name=ip,proto3" json:"ip,omitempty"`
+	Device               string   `protobuf:"bytes,3,opt,name=device,proto3" json:"device,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AddRequest) Reset()         { *m = AddRequest{} }
+func (m *AddRequest) String() string { return proto.CompactTextString(m) }
+func (*AddRequest) ProtoMessage()    {}
+func (*AddRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bc33b09e0453396d, []int{1}
+}
+
+func (m *AddRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AddRequest.Unmarshal(m, b)
+}
+func (m *AddRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AddRequest.Marshal(b, m, deterministic)
+}
+func (m *AddRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddRequest.Merge(m, src)
+}
+func (m *AddRequest) XXX_Size() int {
+	return xxx_messageInfo_AddRequest.Size(m)
+}
+func (m *AddRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddRequest proto.InternalMessageInfo
+
+func (m *AddRequest) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+func (m *AddRequest) GetIp() string {
+	if m != nil {
+		return m.Ip
+	}
+	return ""
+}
+
+func (m *AddRequest) GetDevice() string {
+	if m != nil {
+		return m.Device
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*CheckRequest)(nil), "fs.safety.blacklist.CheckRequest")
+	proto.RegisterType((*AddRequest)(nil), "fs.safety.blacklist.AddRequest")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -37,6 +153,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BlacklistClient interface {
+	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*pb.Response, error)
+	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*pb.Response, error)
 }
 
 type blacklistClient struct {
@@ -47,20 +165,85 @@ func NewBlacklistClient(cc *grpc.ClientConn) BlacklistClient {
 	return &blacklistClient{cc}
 }
 
+func (c *blacklistClient) Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.safety.blacklist.Blacklist/Check", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *blacklistClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.safety.blacklist.Blacklist/Add", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BlacklistServer is the server API for Blacklist service.
 type BlacklistServer interface {
+	Check(context.Context, *CheckRequest) (*pb.Response, error)
+	Add(context.Context, *AddRequest) (*pb.Response, error)
 }
 
 func RegisterBlacklistServer(s *grpc.Server, srv BlacklistServer) {
 	s.RegisterService(&_Blacklist_serviceDesc, srv)
 }
 
+func _Blacklist_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlacklistServer).Check(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.safety.blacklist.Blacklist/Check",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlacklistServer).Check(ctx, req.(*CheckRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Blacklist_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlacklistServer).Add(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.safety.blacklist.Blacklist/Add",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlacklistServer).Add(ctx, req.(*AddRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Blacklist_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.safety.blacklist.Blacklist",
 	HandlerType: (*BlacklistServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "safety/blacklist/pb/blacklist.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Check",
+			Handler:    _Blacklist_Check_Handler,
+		},
+		{
+			MethodName: "Add",
+			Handler:    _Blacklist_Add_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "safety/blacklist/pb/blacklist.proto",
 }
 
 func init() {
@@ -68,10 +251,20 @@ func init() {
 }
 
 var fileDescriptor_bc33b09e0453396d = []byte{
-	// 74 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2e, 0x4e, 0x4c, 0x4b,
-	0x2d, 0xa9, 0xd4, 0x4f, 0xca, 0x49, 0x4c, 0xce, 0xce, 0xc9, 0x2c, 0x2e, 0xd1, 0x2f, 0x48, 0x42,
-	0x70, 0xf4, 0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x84, 0xd3, 0x8a, 0xf5, 0x20, 0xea, 0xf4, 0xe0,
-	0x52, 0x46, 0xdc, 0x5c, 0x9c, 0x4e, 0x30, 0x4e, 0x12, 0x1b, 0x58, 0xa1, 0x31, 0x20, 0x00, 0x00,
-	0xff, 0xff, 0xd9, 0x8b, 0xe3, 0xb9, 0x4f, 0x00, 0x00, 0x00,
+	// 230 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x90, 0x3d, 0x4b, 0x04, 0x31,
+	0x10, 0x86, 0xd9, 0x3d, 0x3c, 0xb8, 0x41, 0x04, 0x23, 0xc8, 0x72, 0x8d, 0x7a, 0x36, 0x82, 0x90,
+	0x80, 0x56, 0x16, 0x16, 0xa7, 0x95, 0x20, 0x16, 0xfb, 0x0f, 0xf2, 0x31, 0x8b, 0x21, 0xe7, 0x26,
+	0x66, 0xb2, 0x82, 0xf6, 0xfe, 0x6f, 0xd9, 0x44, 0x5d, 0x8b, 0x2d, 0x2d, 0xdf, 0xe4, 0x99, 0x97,
+	0x79, 0x06, 0xce, 0x49, 0x76, 0x98, 0xde, 0x85, 0xda, 0x49, 0xed, 0x76, 0x96, 0x92, 0x08, 0x6a,
+	0x0a, 0x3c, 0x44, 0x9f, 0x3c, 0x3b, 0xea, 0x88, 0x17, 0x8e, 0xff, 0x7e, 0xad, 0x2f, 0x3f, 0xc8,
+	0x05, 0x19, 0x1d, 0x46, 0xae, 0xfd, 0x8b, 0xe8, 0xfc, 0xd0, 0x1b, 0x99, 0xac, 0xef, 0x85, 0x92,
+	0x84, 0xb9, 0x46, 0x12, 0x96, 0x86, 0xcd, 0x13, 0xec, 0xdf, 0x3f, 0xa3, 0x76, 0x2d, 0xbe, 0x0e,
+	0x48, 0x89, 0x1d, 0xc3, 0x72, 0x20, 0x8c, 0x0f, 0xa6, 0xa9, 0x4e, 0xab, 0x8b, 0x55, 0xfb, 0x9d,
+	0xd8, 0x01, 0xd4, 0x36, 0x34, 0x75, 0x7e, 0xab, 0x6d, 0x18, 0x39, 0x83, 0x6f, 0x56, 0x63, 0xb3,
+	0x28, 0x5c, 0x49, 0x9b, 0x47, 0x80, 0xad, 0x31, 0xff, 0xd4, 0x76, 0xf5, 0x59, 0xc1, 0xea, 0xee,
+	0x47, 0x8c, 0xdd, 0xc2, 0x5e, 0xde, 0x95, 0x9d, 0xf1, 0x19, 0x6f, 0xfe, 0xd7, 0x63, 0x7d, 0x38,
+	0x22, 0xd9, 0xb3, 0x45, 0x0a, 0xbe, 0x27, 0x64, 0x37, 0xb0, 0xd8, 0x1a, 0xc3, 0x4e, 0x66, 0x87,
+	0xa7, 0xa5, 0x67, 0x46, 0xd5, 0x32, 0x1f, 0xeb, 0xfa, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x84, 0x65,
+	0x1b, 0x2c, 0x95, 0x01, 0x00, 0x00,
 }

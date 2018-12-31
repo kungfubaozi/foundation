@@ -2,6 +2,43 @@ syntax = "proto3";
 
 package fs.base.project;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service Project {
 
+    rpc New (NewRequest) returns (fs.base.Response);
+
+    rpc Get (GetRequest) returns (GetResponse);
+
+}
+
+message GetRequest {
+    string platformId = 1;
+}
+
+message GetResponse {
+    fs.base.State state = 1;
+    ProjectInfo info = 2;
+}
+
+message NewRequest {
+    string logo = 1;
+    string desc = 2;
+    string en = 3;
+    string zh = 4;
+    repeated string platforms = 5;
+    fs.base.Meta meta = 6;
+}
+
+message ProjectInfo {
+    string logo = 1;
+    string desc = 2;
+    string en = 3;
+    string zh = 4;
+    repeated AppPlatform platforms = 5;
+}
+
+message AppPlatform {
+    string clientId = 1;
+    bool enabled = 2;
 }

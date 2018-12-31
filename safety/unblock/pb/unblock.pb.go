@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -25,6 +26,41 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type UnlockRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *UnlockRequest) Reset()         { *m = UnlockRequest{} }
+func (m *UnlockRequest) String() string { return proto.CompactTextString(m) }
+func (*UnlockRequest) ProtoMessage()    {}
+func (*UnlockRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d169fad80b63771e, []int{0}
+}
+
+func (m *UnlockRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UnlockRequest.Unmarshal(m, b)
+}
+func (m *UnlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UnlockRequest.Marshal(b, m, deterministic)
+}
+func (m *UnlockRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UnlockRequest.Merge(m, src)
+}
+func (m *UnlockRequest) XXX_Size() int {
+	return xxx_messageInfo_UnlockRequest.Size(m)
+}
+func (m *UnlockRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UnlockRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UnlockRequest proto.InternalMessageInfo
+
+func init() {
+	proto.RegisterType((*UnlockRequest)(nil), "fs.safety.unblock.UnlockRequest")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -37,6 +73,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type UnblockClient interface {
+	// 解锁
+	Unlock(ctx context.Context, in *UnlockRequest, opts ...grpc.CallOption) (*pb.Response, error)
 }
 
 type unblockClient struct {
@@ -47,29 +85,68 @@ func NewUnblockClient(cc *grpc.ClientConn) UnblockClient {
 	return &unblockClient{cc}
 }
 
+func (c *unblockClient) Unlock(ctx context.Context, in *UnlockRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.safety.unblock.Unblock/Unlock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UnblockServer is the server API for Unblock service.
 type UnblockServer interface {
+	// 解锁
+	Unlock(context.Context, *UnlockRequest) (*pb.Response, error)
 }
 
 func RegisterUnblockServer(s *grpc.Server, srv UnblockServer) {
 	s.RegisterService(&_Unblock_serviceDesc, srv)
 }
 
+func _Unblock_Unlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnlockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UnblockServer).Unlock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.safety.unblock.Unblock/Unlock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UnblockServer).Unlock(ctx, req.(*UnlockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Unblock_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.safety.unblock.Unblock",
 	HandlerType: (*UnblockServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "safety/unblock/pb/unblock.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Unlock",
+			Handler:    _Unblock_Unlock_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "safety/unblock/pb/unblock.proto",
 }
 
 func init() { proto.RegisterFile("safety/unblock/pb/unblock.proto", fileDescriptor_d169fad80b63771e) }
 
 var fileDescriptor_d169fad80b63771e = []byte{
-	// 72 bytes of a gzipped FileDescriptorProto
+	// 153 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x2f, 0x4e, 0x4c, 0x4b,
 	0x2d, 0xa9, 0xd4, 0x2f, 0xcd, 0x4b, 0xca, 0xc9, 0x4f, 0xce, 0xd6, 0x2f, 0x48, 0x82, 0x31, 0xf5,
-	0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x04, 0xd3, 0x8a, 0xf5, 0x20, 0x6a, 0xf4, 0xa0, 0x12, 0x46,
-	0x9c, 0x5c, 0xec, 0xa1, 0x10, 0x66, 0x12, 0x1b, 0x58, 0x91, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff,
-	0xf5, 0xd8, 0xb1, 0x58, 0x47, 0x00, 0x00, 0x00,
+	0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x04, 0xd3, 0x8a, 0xf5, 0x20, 0x6a, 0xf4, 0xa0, 0x12, 0x52,
+	0xda, 0x55, 0xc5, 0xd9, 0x05, 0x89, 0x45, 0xd9, 0xa9, 0x45, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x69,
+	0xf9, 0xa5, 0x79, 0x29, 0x89, 0x25, 0x99, 0xf9, 0x79, 0xfa, 0x49, 0x89, 0xc5, 0xa9, 0x20, 0x23,
+	0x40, 0x34, 0x44, 0xbf, 0x12, 0x3f, 0x17, 0x6f, 0x68, 0x1e, 0x48, 0x5b, 0x50, 0x6a, 0x61, 0x69,
+	0x6a, 0x71, 0x89, 0x91, 0x07, 0x17, 0x7b, 0x28, 0xc4, 0x20, 0x21, 0x5b, 0x2e, 0x36, 0x88, 0x9c,
+	0x90, 0x82, 0x1e, 0x86, 0x35, 0x7a, 0x28, 0xda, 0xa4, 0x04, 0x41, 0x2a, 0xc0, 0xe6, 0x06, 0xa5,
+	0x16, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x26, 0xb1, 0x81, 0x6d, 0x30, 0x06, 0x04, 0x00, 0x00, 0xff,
+	0xff, 0x4d, 0x2b, 0xff, 0x95, 0xc4, 0x00, 0x00, 0x00,
 }

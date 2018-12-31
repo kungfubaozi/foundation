@@ -2,6 +2,28 @@ syntax = "proto3";
 
 package fs.entry.register;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
+//http
 service Register {
 
+    rpc FromAP (FromAPRequest) returns (fs.base.Response);
+
+    rpc FromOAuth (FromOAuthRequest) returns (fs.base.Response);
+
+}
+
+message FromAPRequest {
+    string password = 1;
+    string enterprise = 2;
+    int64 level = 3;
+    string phone = 4;
+    string email = 5;
+    fs.base.Meta meta = 6;
+}
+
+message FromOAuthRequest {
+    string id = 1;
+    string token = 2;
+    fs.base.Meta meta = 3;
 }

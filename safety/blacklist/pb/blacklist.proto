@@ -2,6 +2,23 @@ syntax = "proto3";
 
 package fs.safety.blacklist;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service Blacklist {
 
+    rpc Check (CheckRequest) returns (fs.base.Response);
+
+    rpc Add(AddRequest) returns (fs.base.Response);
+}
+
+message CheckRequest {
+    string userId = 1;
+    string ip = 2;
+    string device = 3;
+}
+
+message AddRequest {
+    string userId = 1;
+    string ip = 2;
+    string device = 3;
 }

@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
+	pb "zskparker.com/foundation/base/pb"
 )
 
 import (
@@ -25,6 +26,105 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type AuthRequest struct {
+	Meta                 *pb.Meta `protobuf:"bytes,1,opt,name=meta,proto3" json:"meta,omitempty"`
+	Func                 string   `protobuf:"bytes,2,opt,name=func,proto3" json:"func,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AuthRequest) Reset()         { *m = AuthRequest{} }
+func (m *AuthRequest) String() string { return proto.CompactTextString(m) }
+func (*AuthRequest) ProtoMessage()    {}
+func (*AuthRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_45cf45fb04bd98f2, []int{0}
+}
+
+func (m *AuthRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AuthRequest.Unmarshal(m, b)
+}
+func (m *AuthRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AuthRequest.Marshal(b, m, deterministic)
+}
+func (m *AuthRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthRequest.Merge(m, src)
+}
+func (m *AuthRequest) XXX_Size() int {
+	return xxx_messageInfo_AuthRequest.Size(m)
+}
+func (m *AuthRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AuthRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AuthRequest proto.InternalMessageInfo
+
+func (m *AuthRequest) GetMeta() *pb.Meta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *AuthRequest) GetFunc() string {
+	if m != nil {
+		return m.Func
+	}
+	return ""
+}
+
+type AuthResponse struct {
+	State                *pb.State `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	UserId               string    `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *AuthResponse) Reset()         { *m = AuthResponse{} }
+func (m *AuthResponse) String() string { return proto.CompactTextString(m) }
+func (*AuthResponse) ProtoMessage()    {}
+func (*AuthResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_45cf45fb04bd98f2, []int{1}
+}
+
+func (m *AuthResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AuthResponse.Unmarshal(m, b)
+}
+func (m *AuthResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AuthResponse.Marshal(b, m, deterministic)
+}
+func (m *AuthResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthResponse.Merge(m, src)
+}
+func (m *AuthResponse) XXX_Size() int {
+	return xxx_messageInfo_AuthResponse.Size(m)
+}
+func (m *AuthResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AuthResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AuthResponse proto.InternalMessageInfo
+
+func (m *AuthResponse) GetState() *pb.State {
+	if m != nil {
+		return m.State
+	}
+	return nil
+}
+
+func (m *AuthResponse) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*AuthRequest)(nil), "fs.base.interceptor.AuthRequest")
+	proto.RegisterType((*AuthResponse)(nil), "fs.base.interceptor.AuthResponse")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -37,6 +137,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type InterceptorClient interface {
+	Auth(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (*AuthResponse, error)
 }
 
 type interceptorClient struct {
@@ -47,20 +148,53 @@ func NewInterceptorClient(cc *grpc.ClientConn) InterceptorClient {
 	return &interceptorClient{cc}
 }
 
+func (c *interceptorClient) Auth(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (*AuthResponse, error) {
+	out := new(AuthResponse)
+	err := c.cc.Invoke(ctx, "/fs.base.interceptor.Interceptor/Auth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InterceptorServer is the server API for Interceptor service.
 type InterceptorServer interface {
+	Auth(context.Context, *AuthRequest) (*AuthResponse, error)
 }
 
 func RegisterInterceptorServer(s *grpc.Server, srv InterceptorServer) {
 	s.RegisterService(&_Interceptor_serviceDesc, srv)
 }
 
+func _Interceptor_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InterceptorServer).Auth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.base.interceptor.Interceptor/Auth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InterceptorServer).Auth(ctx, req.(*AuthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Interceptor_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.base.interceptor.Interceptor",
 	HandlerType: (*InterceptorServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "base/interceptor/pb/interceptor.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Auth",
+			Handler:    _Interceptor_Auth_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "base/interceptor/pb/interceptor.proto",
 }
 
 func init() {
@@ -68,10 +202,20 @@ func init() {
 }
 
 var fileDescriptor_45cf45fb04bd98f2 = []byte{
-	// 75 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4d, 0x4a, 0x2c, 0x4e,
-	0xd5, 0xcf, 0xcc, 0x2b, 0x49, 0x2d, 0x4a, 0x4e, 0x2d, 0x28, 0xc9, 0x2f, 0xd2, 0x2f, 0x48, 0x42,
-	0xe6, 0xea, 0x15, 0x14, 0xe5, 0x97, 0xe4, 0x0b, 0x09, 0xa7, 0x15, 0xeb, 0x81, 0x54, 0xea, 0x21,
-	0x49, 0x19, 0xf1, 0x72, 0x71, 0x7b, 0x22, 0xb8, 0x49, 0x6c, 0x60, 0xa5, 0xc6, 0x80, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0x1e, 0x17, 0xb8, 0x3d, 0x53, 0x00, 0x00, 0x00,
+	// 231 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x8f, 0x41, 0x4b, 0x03, 0x31,
+	0x10, 0x85, 0x59, 0x59, 0x0b, 0xce, 0xaa, 0x87, 0x11, 0xa4, 0xf4, 0xb4, 0x2d, 0x0a, 0x05, 0x21,
+	0x0b, 0xf5, 0x17, 0x08, 0x5e, 0x8a, 0x7a, 0x59, 0x6f, 0xde, 0x92, 0xed, 0x2c, 0x96, 0xd2, 0x24,
+	0x66, 0x26, 0x17, 0x7f, 0xbd, 0x6c, 0xb2, 0xea, 0x1e, 0xc4, 0x53, 0xf2, 0xe6, 0x3d, 0x3e, 0xde,
+	0x83, 0x5b, 0xa3, 0x99, 0x9a, 0xbd, 0x15, 0x0a, 0x1d, 0x79, 0x71, 0xa1, 0xf1, 0x66, 0x2a, 0x95,
+	0x0f, 0x4e, 0x1c, 0x5e, 0xf5, 0xac, 0x86, 0xa4, 0x9a, 0x58, 0x8b, 0xbb, 0x4f, 0x3e, 0x78, 0x1d,
+	0x0e, 0x14, 0x54, 0xe7, 0x8e, 0x4d, 0xef, 0xa2, 0xdd, 0x69, 0xd9, 0x3b, 0xdb, 0x24, 0xa8, 0x37,
+	0xe9, 0xcd, 0x84, 0xd5, 0x23, 0x54, 0x0f, 0x51, 0xde, 0x5b, 0xfa, 0x88, 0xc4, 0x82, 0x4b, 0x28,
+	0x8f, 0x24, 0x7a, 0x5e, 0xd4, 0xc5, 0xba, 0xda, 0x5c, 0xa8, 0x6f, 0xfe, 0x0b, 0x89, 0x6e, 0x93,
+	0x85, 0x08, 0x65, 0x1f, 0x6d, 0x37, 0x3f, 0xa9, 0x8b, 0xf5, 0x59, 0x9b, 0xfe, 0xab, 0x67, 0x38,
+	0xcf, 0x14, 0xf6, 0xce, 0x32, 0xe1, 0x0d, 0x9c, 0xb2, 0x68, 0xa1, 0x91, 0x73, 0xf9, 0xc3, 0x79,
+	0x1d, 0xae, 0x6d, 0x36, 0xf1, 0x1a, 0x66, 0x91, 0x29, 0x6c, 0x77, 0x23, 0x6b, 0x54, 0x9b, 0x37,
+	0xa8, 0xb6, 0xbf, 0x7b, 0xf0, 0x09, 0xca, 0x01, 0x8e, 0xb5, 0xfa, 0x63, 0xad, 0x9a, 0xb4, 0x5f,
+	0x2c, 0xff, 0x49, 0xe4, 0x66, 0x66, 0x96, 0x66, 0xdf, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0x08,
+	0xbf, 0xcc, 0xd1, 0x61, 0x01, 0x00, 0x00,
 }

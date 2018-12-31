@@ -2,6 +2,15 @@ syntax = "proto3";
 
 package fs.safety.unblock;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
 service Unblock {
 
+    //解锁
+    rpc Unlock (UnlockRequest) returns (fs.base.Response);
+
+}
+
+message UnlockRequest {
+     
 }

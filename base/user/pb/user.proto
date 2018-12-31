@@ -10,6 +10,20 @@ service User {
 
     rpc Get (GetRequest) returns (GetResponse);
 
+    rpc UpdatePhone (UpdateRequest) returns (fs.base.Response);
+
+    rpc UpdateEnterprise (UpdateRequest) returns (fs.base.Response);
+
+    rpc UpdatePassword (UpdateRequest) returns (fs.base.Response);
+
+    rpc UpdateEmail (UpdateRequest) returns (fs.base.Response);
+
+}
+
+//http
+message UpdateRequest {
+    string value = 1;
+    fs.base.Meta meta = 2;
 }
 
 message GetRequest {
@@ -22,6 +36,7 @@ message GetResponse {
     int64 level = 3;
     string phone = 4;
     string enterprise = 5;
+    string email = 6;
 }
 
 message AddRequest {
@@ -29,6 +44,7 @@ message AddRequest {
     string enterprise = 2;
     int64 level = 3;
     string phone = 4;
-    string fromProjectId = 5;
-    string fromAppId = 6;
+    string email = 5;
+    string fromProjectId = 6;
+    string fromAppId = 7;
 }

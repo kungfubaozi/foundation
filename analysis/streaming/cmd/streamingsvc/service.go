@@ -1,5 +1,0 @@
-package streamingsvc
-
-func StartService() {
-
-}

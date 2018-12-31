@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package fs.base.reporter;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Reporter {
+
+    //写入
+    rpc Write (WriteRequest) returns (fs.base.Response);
+
+}
+
+message WriteRequest {
+
+    string svc = 1;
+    int64 do = 2;
+    string who = 3;
+    string timestamp = 4;
+    string where = 5;
+    string date = 6;
+
+}

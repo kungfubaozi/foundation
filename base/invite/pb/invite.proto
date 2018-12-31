@@ -12,6 +12,6 @@ service Invite {
 }
 
 message AddRequest {
-    string phone = 1;
-    string enterprise = 2;
+    string id = 1; //phone or email
+    string enterprise = 2; //可以绑定的企业号
 }

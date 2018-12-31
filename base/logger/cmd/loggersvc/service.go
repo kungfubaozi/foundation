@@ -1,5 +1,0 @@
-package loggersvc
-
-func StartService() {
-
-}

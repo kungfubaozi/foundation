@@ -2,6 +2,21 @@ syntax = "proto3";
 
 package fs.base.interceptor;
 
+import "zskparker.com/foundation/base/pb/base.proto";
+
+//拦截器
 service Interceptor {
 
+    rpc Auth (AuthRequest) returns (AuthResponse);
+
+}
+
+message AuthRequest {
+    fs.base.Meta meta = 1;
+    string func = 2; //这里的func为优先调用，为空则取meta里func
+}
+
+message AuthResponse {
+    fs.base.State state = 1;
+    string userId = 2;
 }

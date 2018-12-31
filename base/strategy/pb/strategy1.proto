@@ -3,6 +3,7 @@ syntax = "proto3";
 package fs.base.strategy;
 
 import "zskparker.com/foundation/base/pb/base.proto";
+import "zskparker.com/foundation/base/pb/strategy1.proto";
 
 service Strategy {
     //查找
@@ -18,161 +19,10 @@ message GetRequest {
 
 message GetResponse {
     fs.base.State state = 1;
-    ProjectStrategy strategy = 2;
+    fs.base.ProjectStrategy strategy = 2;
 }
 
 message UpsertRequest {
     fs.base.Meta meta = 1;
-    ProjectStrategy strategy = 2;
-}
-
-message ProjectStrategy {
-    //以下不用提交
-    string projectId = 1;
-    string creator = 2;
-    int64 createAt = 3;
-    int64 modifyAt = 4;
-    int64 version = 5; //版本(策略版本)
-
-    Events events = 6;
-    Configuration configuration = 7;
-}
-
-message Configuration {
-    string registerReviewId = 1; //注册时的审核信息
-    string openTime = 2; //开放时间 格式: 小时-小时 eg:0-24
-}
-
-message Events {
-    OnRegister onRegister = 1;
-    OnLogin onLogin = 2;
-    OnVerification onVerification = 3;
-    OnQRLogin onQRLogin = 4;
-    OnFaceLogin onFaceLogin = 5;
-    OnCommonEquipmentChanges OnCommonEquipmentChanges = 6;
-    OnRequestFrozen onRequestFrozen = 7;
-    OnCancelFrozen onCancelFrozen = 8;
-    OnChangePhoneNumber onChangePhoneNumber = 9;
-    OnChangeEmail onChangeEmail = 10;
-    OnChangeOAuth onChangeOAuth = 11;
-    OnChangeFace onChangeFace = 12;
-    OnResetPassword onResetPassword = 13;
-    OnElsewhereLogin onElsewhereLogin = 14;
-    OnSubmitReview onSubmitReview = 15;
-    OnInviteUser onInviteUser = 16;
-}
-
-//邀请用户时
-message OnInviteUser {
-    int64 expireTime = 1; //过期时间,单位（秒）
-    int64 review = 2; //如果有审核，是否需要填写
-}
-
-//提交审核时
-message OnSubmitReview {
-    string reportUserId = 1; //审核人（level4-5）
-    string responseMessage = 2; //返回消息（用户提交审核后看到的消息）
-}
-
-//异地登录
-message OnElsewhereLogin {
-    int64 sendMessageToUser = 1;
-    int64 verification = 2;
-}
-
-//重置密码时
-message OnResetPassword {
-    int64 phone = 1; //手机验证找回
-    int64 email = 2; //邮箱验证找回
-}
-
-//改变手机号
-message OnChangePhoneNumber {
-    int64 verification = 1;
-}
-
-//改变邮箱
-message OnChangeEmail {
-    int64 verification = 1;
-}
-
-//改变第三方账号
-message OnChangeOAuth {
-    int64 verification = 1;
-}
-
-//改变脸部验证
-message OnChangeFace {
-    int64 verification = 1;
-}
-
-//请求冻结
-message OnRequestFrozen {
-    repeated fs.base.KeyValue kvs = 1; //需要提交的信息
-    int64 verification = 2;
-    int64 submitInfo = 3; //是否提交信息
-}
-
-//解除冻结
-message OnCancelFrozen {
-    int64 verification = 1; //验证方式 解除冻结时并不需要那么多的操作，验证身份之后就可以解除冻结了
-}
-
-message OnFaceLogin {
-    int64 degree = 1; // 相似度
-}
-
-//常用设备改变时
-message OnCommonEquipmentChanges {
-    int64 sendMessageToUser = 1; //发送消息给用户 手机优先级高，其次是邮箱
-    //    int64 addIPToBlacklist = 2; //添加到黑名单
-    //    int64 addDeviceToBlacklist = 3; //设备号添加到黑名单，不适用与applet
-}
-
-message OnQRLogin {
-    int64 refreshDuration = 1; //重新刷新时间
-}
-
-message OnRegister {
-    int64 openReview = 1; //  开启审核
-    repeated int64 mode = 2; //  支持的注册模式(1-5)
-    repeated OnRegisterOpeningTime openingTime = 3; //开放时间
-    int64 anIPRegistrationInterval = 4; //一个IP注册间隔
-    int64 anDeviceRegistrationInterval = 5; //一个设备注册间隔
-    int64 submitlal = 6; //是否提交经纬度信息
-}
-
-message OnRegisterOpeningTime {
-    int64 begin = 1;
-    int64 end = 2;
-    int64 every = 3; //每天这个时候
-}
-
-message OnLogin {
-    int64 allowOtherProjectUserToLogin = 1; //是否允许其他项目用户登录
-    //1：手机号 2：邮箱 3：手机验证码  4：邮箱验证码
-    //5：第三方账号  6：二维码  7: 游客模式
-    repeated int64 mode = 2; //支持的登录模式(1-6)
-    int64 verification = 3; //每次登录时是否需要验证身份  1:不需要 2:验证
-    repeated MaxCountOfErrorPassword maxCountOfErrorPassword = 4; //当用户输入密码达到对应次数时
-    repeated MaxCountOfInvalidAccount maxCountOfInvalidAccount = 5; //当用户输入账号达到对应次数时
-    int64 submitlal = 6; //是否提交经纬度信息
-}
-
-//既一个用户（IP/Device）在规定的时间内输入多次错误的用户账号，可以怀疑是刷数据等其他操作
-message MaxCountOfInvalidAccount {
-    int64 count = 1; //错误次数
-    int64 action = 2; //1：封禁IP 2：封禁设备 3：全都封 4：需要输入验证码
-    int64 expiredTime = 3; //过期时间
-}
-
-message MaxCountOfErrorPassword {
-    int64 count = 1; //错误次数
-    int64 action = 2;
-    int64 expiredTime = 3; //过期时间
-}
-
-message OnVerification {
-    int64 expiredTime = 1; //过期时间
-    int64 combinationMode = 2; //组合方式 1:6位数字验证码 2:8位字母数字组合验证码
+    fs.base.ProjectStrategy strategy = 2;
 }

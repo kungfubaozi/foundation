@@ -2,11 +2,14 @@ syntax = "proto3";
 
 package fs.base;
 
+//作为API请求用，放在body里
 message Meta {
     string face = 1;
-    string device = 2;
-    string longitude = 4;
-    string latitude = 5;
+    string longitude = 2;
+    string latitude = 3;
+    string validate = 4;
+    string id = 5;
+    string func = 6; //请求的功能编号
 }
 
 message State {
@@ -19,16 +22,16 @@ message Response {
     State state = 1;
 }
 
+//作为服务间传输用
 message Metadata {
     string clientId = 1;
     string appId = 2;
     string userId = 3;
     string ip = 4;
-    string face = 5;
-    string token = 6;
-    string device = 7;
-    string userAgent = 8;
-    int64 platform = 9;
+    string token = 5;
+    string device = 6;
+    string userAgent = 7;
+    int64 platform = 8;
 }
 
 message KeyValue {
@@ -38,9 +41,7 @@ message KeyValue {
     bool must = 4; //必须填写
 }
 
-message TsMessage {
-    string from = 1;
-    string to = 2;
-    string content = 3;
-    string timestamp = 4;
+message DirectMessage {
+    string to = 1;
+    string content = 2;
 }
