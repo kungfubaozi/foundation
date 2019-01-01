@@ -5,6 +5,8 @@ import (
 	"zskparker.com/foundation/base/function"
 	"zskparker.com/foundation/base/reporter"
 	"zskparker.com/foundation/base/validate"
+	"zskparker.com/foundation/base/validate/pb"
+	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/safety/verification/pb"
 )
 
@@ -20,11 +22,16 @@ type verificationService struct {
 	reportercli reporter.Service
 }
 
-func (verificationService) New(ctx context.Context, in *fs_safety_verification.NewRequest) (*fs_safety_verification.NewResponse, error) {
-	panic("implement me")
+func (svc *verificationService) New(ctx context.Context, in *fs_safety_verification.NewRequest) (*fs_safety_verification.NewResponse, error) {
+	if in.Do <= 0 && in.FuncId <= 0 {
+		return &fs_safety_verification.NewResponse{
+			State: errno.ErrRequest,
+		}, nil
+	}
+	resp, err := svc.validatecli.Create(ctx, &fs_base_validate.CreateRequest{})
 }
 
-func (verificationService) GetFuncVerMode(ctx context.Context, in *fs_safety_verification.GetFuncVerModeRequest) (*fs_safety_verification.GetFuncVerModeResponse, error) {
+func (svc *verificationService) GetFuncVerMode(ctx context.Context, in *fs_safety_verification.GetFuncVerModeRequest) (*fs_safety_verification.GetFuncVerModeResponse, error) {
 	panic("implement me")
 }
 

@@ -4,6 +4,6 @@ RUN mkdir /app
 
 WORKDIR /app
 
-ADD cmd /app/cmd
+ADD apigateaway /app/cmd
 
 CMD ["./cmd"]

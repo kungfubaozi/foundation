@@ -6,9 +6,9 @@ import (
 )
 
 type repository interface {
-	Add()
+	Add(user *user) error
 
-	Get()
+	Get(value, key string) (*user, error)
 
 	Close()
 
@@ -29,12 +29,14 @@ func (repo *userRepository) Close() {
 	repo.session.Close()
 }
 
-func (repo *userRepository) Add() {
-	panic("implement me")
+func (repo *userRepository) Add(user *user) error {
+	return repo.collection().Insert(user)
 }
 
-func (repo *userRepository) Get() {
-	panic("implement me")
+func (repo *userRepository) Get(value, key string) (*user, error) {
+	user := &user{}
+	err := repo.collection().Find(bson.M{key: value}).One(user)
+	return user, err
 }
 
 func (repo *userRepository) UpdatePassword(userId, password string) error {
@@ -59,4 +61,17 @@ func (repo *userRepository) UpdateEmail(userId, email string) error {
 
 func (repo *userRepository) collection() *mgo.Collection {
 	return repo.session.DB("foundation").C("user")
+}
+
+type user struct {
+	UserId        string `bson:"user_id"`
+	Username      string `bson:"username"`
+	Password      string `bson:"password"`
+	Enterprise    string `bson:"enterprise"`
+	CreateAt      int64  `bson:"create_at"`
+	Phone         string `bson:"phone"`
+	Email         string `bson:"email"`
+	Level         int64  `bson:"level"`
+	FromProjectId string `bson:"from_project_id"`
+	FromAppId     string `bson:"from_app_id"`
 }

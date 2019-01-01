@@ -5,6 +5,7 @@ import (
 )
 
 func main() {
-	a := "9s8df098kllfd"
-	fmt.Println(a[0:1])
+	//a := "9s8df098kllfd"
+	fmt.Println(100100 << 1)
+	fmt.Println(100100 << 2)
 }

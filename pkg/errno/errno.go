@@ -18,4 +18,6 @@ var (
 	ErrFaceProcess  = &fs_base.State{Ok: false, Message: "err face process", Code: 10008}
 	ErrMetaValidate = &fs_base.State{Ok: false, Message: "err validate meta", Code: 10009}
 	ErrFroze        = &fs_base.State{Ok: false, Message: "err user froze", Code: 10010}
+	ErrData         = &fs_base.State{Ok: false, Message: "err data", Code: 10011}
+	ErrPlatform     = &fs_base.State{Ok: false, Message: "err platform", Code: 10012}
 )

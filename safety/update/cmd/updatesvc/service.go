@@ -1,10 +1,11 @@
-package verificationsvc
+package updatesvc
 
 import (
 	"fmt"
 	"github.com/go-kit/kit/log"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
+	"net"
 	"os"
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
@@ -15,10 +16,10 @@ import (
 	"zskparker.com/foundation/pkg/serv"
 	"zskparker.com/foundation/safety/update"
 	"zskparker.com/foundation/safety/update/pb"
-	"zskparker.com/foundation/safety/verification"
 )
 
 func StartService() {
+
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -43,7 +44,7 @@ func StartService() {
 	}
 	defer session.Close()
 
-	service := verification.NewService(validatecli.NewClient(osenv.GetConsulAddr(), zipkinTracer))
+	service := update.NewService(usercli.NewClient(), validatecli.NewClient(osenv.GetConsulAddr(), zipkinTracer))
 	endpoints := update.NewEndpoints(service, zipkinTracer, logger)
 	svc := update.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

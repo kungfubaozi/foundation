@@ -10,7 +10,9 @@ import (
 type Service interface {
 	Get(ctx context.Context, in *fs_base_strategy.GetRequest) (*fs_base_strategy.GetResponse, error)
 
-	Upsert(ctx context.Context, in *fs_base_strategy.UpsertRequest) (*fs_base.Response, error)
+	New(ctx context.Context, in *fs_base.ProjectStrategy) (*fs_base.Response, error)
+
+	Update(ctx context.Context, in *fs_base_strategy.UpsertRequest) (*fs_base.Response, error)
 }
 
 type strategyService struct {

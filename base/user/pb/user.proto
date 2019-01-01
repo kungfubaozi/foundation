@@ -8,7 +8,10 @@ service User {
 
     rpc Add (AddRequest) returns (fs.base.Response);
 
-    rpc Get (GetRequest) returns (GetResponse);
+    rpc FindByUserId (FindRequest) returns (FindResponse);
+    rpc FindByEmail (FindRequest) returns (FindResponse);
+    rpc FindByPhone (FindRequest) returns (FindResponse);
+    rpc FindByEnterprise (FindRequest) returns (FindResponse);
 
     rpc UpdatePhone (UpdateRequest) returns (fs.base.Response);
 
@@ -20,23 +23,23 @@ service User {
 
 }
 
-//http
 message UpdateRequest {
     string value = 1;
-    fs.base.Meta meta = 2;
 }
 
-message GetRequest {
-    string userId = 1;
+message FindRequest {
+    string value = 1;
 }
 
-message GetResponse {
+message FindResponse {
     fs.base.State state = 1;
     string userId = 2;
     int64 level = 3;
     string phone = 4;
     string enterprise = 5;
     string email = 6;
+    string fromProjectId = 7;
+    string fromAppId = 8;
 }
 
 message AddRequest {

@@ -1,24 +1,27 @@
-package verificationsvc
+package usersvc
 
 import (
 	"fmt"
 	"github.com/go-kit/kit/log"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
+	"net"
 	"os"
-	"zskparker.com/foundation/base/user/cmd/usercli"
+	"zskparker.com/foundation/base/message/cmd/messagecli"
+	"zskparker.com/foundation/base/state/cmd/statecli"
+	"zskparker.com/foundation/base/user"
+	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
+	"zskparker.com/foundation/base/validate/pb"
 	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
-	"zskparker.com/foundation/safety/update"
-	"zskparker.com/foundation/safety/update/pb"
-	"zskparker.com/foundation/safety/verification"
 )
 
 func StartService() {
+
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -31,11 +34,8 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_SAFETY_UPDATE, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_USER, osenv.GetMicroPortString())
 	defer reporter.Close()
-
-	pool := db.CreatePool(osenv.GetRedisAddr())
-	defer pool.Close()
 
 	session, err := db.CreateSession(osenv.GetMongoDBAddr())
 	if err != nil {
@@ -43,16 +43,21 @@ func StartService() {
 	}
 	defer session.Close()
 
-	service := verification.NewService(validatecli.NewClient(osenv.GetConsulAddr(), zipkinTracer))
-	endpoints := update.NewEndpoints(service, zipkinTracer, logger)
-	svc := update.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
+	message, err := messagecli.NewMQClient(osenv.GetMessageAMQPAddr())
+	if err != nil {
+		panic(err)
+	}
+
+	service := user.NewService(session, statecli.NewClient(osenv.GetConsulAddr(), zipkinTracer), authenticatecli)
+	endpoints := validate.NewEndpoints(service, zipkinTracer, logger)
+	svc := validate.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()
-	fs_safety_update.RegisterUpdateServer(gs, svc)
+	fs_base_validate.RegisterValidateServer(gs, svc)
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_SAFETY_UPDATE, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, names.F_SVC_USER, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())
@@ -64,4 +69,5 @@ func StartService() {
 	}()
 
 	logger.Log("exit", <-errc)
+
 }

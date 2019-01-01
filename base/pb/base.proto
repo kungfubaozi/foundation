@@ -25,7 +25,7 @@ message Response {
 //作为服务间传输用
 message Metadata {
     string clientId = 1;
-    string appId = 2;
+    string projectId = 2;
     string userId = 3;
     string ip = 4;
     string token = 5;

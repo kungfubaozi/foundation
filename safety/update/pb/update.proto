@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package fs.safety.update;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Update {
+
+    rpc UpdatePhone (UpdateRequest) returns (fs.base.Response);
+
+    rpc UpdateEnterprise (UpdateRequest) returns (fs.base.Response);
+
+    rpc UpdatePassword (UpdateRequest) returns (fs.base.Response);
+
+    rpc UpdateEmail (UpdateRequest) returns (fs.base.Response);
+
+}
+
+message UpdateRequest {
+    string value = 1;
+    fs.base.Meta meta = 2;
+}

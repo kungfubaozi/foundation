@@ -106,7 +106,7 @@ message OnCommonEquipmentChanges {
 }
 
 message OnQRLogin {
-    int64 refreshDuration = 1; //重新刷新时间
+    int64 refreshDuration = 1; //重新刷新时间(s)
 }
 
 message OnRegister {
@@ -138,7 +138,7 @@ message OnLogin {
 //既一个用户（IP/Device）在规定的时间内输入多次错误的用户账号，可以怀疑是刷数据等其他操作
 message MaxCountOfInvalidAccount {
     int64 count = 1; //错误次数
-    int64 action = 2; //1：封禁IP 2：封禁设备 3：全都封 4：需要输入验证码
+    int64 action = 2; //1：封禁IP 2：封禁设备 3：全都封 4：需要输入验证码 5:输入手机/邮箱验证码（手机优先）
     int64 expiredTime = 3; //过期时间
 }
 
@@ -149,7 +149,6 @@ message MaxCountOfErrorPassword {
 }
 
 message OnVerification {
-    int64 expiredTime = 1; //过期时间
-    int64 combinationMode = 2; //组合方式 1:6位数字验证码 2:8位字母数字组合验证码
-    int64 effectiveTime = 3; //有效时间(单位分钟)
+    int64 combinationMode = 1; //组合方式 1:6位数字验证码 2:8位字母数字组合验证码
+    int64 effectiveTime = 2; //有效时间(单位分钟)
 }

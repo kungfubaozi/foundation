@@ -26,7 +26,7 @@ protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out
 
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. safety/blacklist/pb/blacklist.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. safety/froze/pb/froze.proto
-protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. safety/password/pb/password.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. safety/trustdevice/pb/trustdevice.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. safety/unblock/pb/unblock.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. safety/verification/pb/verification.proto
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. safety/update/pb/update.proto
