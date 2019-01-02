@@ -150,5 +150,5 @@ message MaxCountOfErrorPassword {
 
 message OnVerification {
     int64 combinationMode = 1; //组合方式 1:6位数字验证码 2:8位字母数字组合验证码
-    int64 effectiveTime = 2; //有效时间(单位分钟)
+    int64 effectiveTime = 2; //有效时间(单位秒)
 }

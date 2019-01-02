@@ -1,17 +1,15 @@
 package main
 
 import (
-	"context"
-	"github.com/go-kit/kit/examples/addsvc/pkg/addtransport"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
-	"github.com/hashicorp/consul/api"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"net/http"
 	"os"
 	"zskparker.com/foundation/pkg/osenv"
-	"zskparker.com/foundation/safety/update"
+	"zskparker.com/foundation/safety/verification"
+	"zskparker.com/foundation/safety/verification/cmd/verificationcli"
 )
 
 //safety apigateway
@@ -24,29 +22,23 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
-	// Service discovery domain. In this example we use Consul.
-	var client consulsd.Client
-	{
-		consulConfig := api.DefaultConfig()
-		if len(*consulAddr) > 0 {
-			consulConfig.Address = *consulAddr
-		}
-		consulClient, err := api.NewClient(consulConfig)
-		if err != nil {
-			logger.Log("err", err)
-			os.Exit(1)
-		}
-		client = consulsd.NewClient(consulClient)
-	}
-
 	// Transport domain.
 	tracer := stdopentracing.GlobalTracer() // no-op
 	zipkinTracer, _ := stdzipkin.NewTracer(nil, stdzipkin.WithNoopTracer(true))
-	ctx := context.Background()
 	r := mux.NewRouter()
 
-	//update
-	r.PathPrefix("/update").Handler(http.StripPrefix("/update", update.MakeHTTPHandler()))
+	{
+		//update
+		//svc := update.MakeGRPCClient()
+		//r.PathPrefix("/update").Handler(http.StripPrefix("/update", update.MakeHTTPHandler(svc, tracer, zipkinTracer, logger)))
+	}
+
+	{
+		//verification
+		endpoints := verificationcli.NewEndpoints(osenv.GetConsulAddr(), zipkinTracer)
+		r.PathPrefix("/api/rpfds/safety/verification").Handler(http.StripPrefix("/api/rpfds/safety/verification", verification.MakeHTPPHandler(
+			endpoints, tracer, zipkinTracer, logger)))
+	}
 
 	errc := make(chan error)
 	// HTTP transport.

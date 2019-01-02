@@ -13,7 +13,7 @@ service Interceptor {
 
 message AuthRequest {
     fs.base.Meta meta = 1;
-    string func = 2; //这里的func为优先调用，为空则取meta里func
+    string api = 2;
 }
 
 message AuthResponse {

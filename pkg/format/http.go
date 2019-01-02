@@ -13,7 +13,7 @@ func EncodeHTTPGenericResponse(ctx context.Context, w http.ResponseWriter, respo
 	if f, ok := response.(endpoint.Failer); ok && f.Failed() != nil {
 		return nil
 	}
-	w.Header().Set("Content-Type", "applicationmw/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
 }
 
@@ -24,6 +24,8 @@ func Metadata() kithttp.RequestFunc {
 		meta.ClientId = request.Header.Get("X-Client-Id")
 		meta.Ip = request.Header.Get("X-Real-IP")
 		meta.Token = request.Header.Get("Authorization")
+		meta.UserAgent = request.Header.Get("User-Agent")
+		meta.Api = request.URL.Path
 		return context.WithValue(ctx, "meta", meta)
 	}
 }

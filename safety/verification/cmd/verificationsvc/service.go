@@ -5,17 +5,17 @@ import (
 	"github.com/go-kit/kit/log"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
+	"net"
 	"os"
-	"zskparker.com/foundation/base/user/cmd/usercli"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
 	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
-	"zskparker.com/foundation/safety/update"
-	"zskparker.com/foundation/safety/update/pb"
 	"zskparker.com/foundation/safety/verification"
+	"zskparker.com/foundation/safety/verification/pb"
 )
 
 func StartService() {
@@ -31,7 +31,7 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_SAFETY_UPDATE, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_SAFETY_VERIFICATION, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	pool := db.CreatePool(osenv.GetRedisAddr())
@@ -43,16 +43,16 @@ func StartService() {
 	}
 	defer session.Close()
 
-	service := verification.NewService(validatecli.NewClient(osenv.GetConsulAddr(), zipkinTracer))
-	endpoints := update.NewEndpoints(service, zipkinTracer, logger)
-	svc := update.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
+	service := verification.NewService(validatecli.NewClient(osenv.GetConsulAddr(), zipkinTracer), reportercli.NewClient(osenv.GetConsulAddr()))
+	endpoints := verification.NewEndpoints(service, zipkinTracer, logger)
+	svc := verification.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()
-	fs_safety_update.RegisterUpdateServer(gs, svc)
+	fs_safety_verification.RegisterVerificationServer(gs, svc)
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_SAFETY_UPDATE, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, names.F_SVC_SAFETY_VERIFICATION, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())

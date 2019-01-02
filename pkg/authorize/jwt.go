@@ -4,13 +4,14 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pborman/uuid"
 	"time"
+	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/authenticate/pb"
 )
 
 var TOKEN_KEY = []byte("1DMx*o34&42j/B?+6R#M3qr40]$3W")
 
 type UserClaims struct {
-	Token *fs_base_authenticate.Authorize
+	Token *authenticate.SimpleAuthorize
 
 	jwt.StandardClaims
 }
@@ -26,10 +27,31 @@ func DecodeToken(token string) (*UserClaims, error) {
 	return nil, err
 }
 
+func EncodeAccessToken(authorize *fs_base_authenticate.Authorize) (string, error) {
+	sa := &authenticate.SimpleAuthorize{
+		UserId:    authorize.UserId,
+		ProjectId: authorize.ProjectId,
+		ClientId:  authorize.UserId,
+		TokenAb:   uuid.New(),
+		Access:    true,
+	}
+	return encodeToken(time.Minute*10, sa)
+}
+
+func EncodeRefreshToken(authorize *fs_base_authenticate.Authorize) (string, error) {
+	sa := &authenticate.SimpleAuthorize{
+		UserId:    authorize.UserId,
+		ProjectId: authorize.ProjectId,
+		ClientId:  authorize.UserId,
+		TokenAb:   uuid.New(),
+		Access:    false,
+	}
+	return encodeToken(time.Hour*24*7, sa)
+}
+
 //加密token
-func EncodeToken(authorize *fs_base_authenticate.Authorize) (string, error) {
-	//3天后过期
-	expireTime := time.Now().Add(time.Hour * 24 * 3).Unix()
+func encodeToken(et time.Duration, authorize *authenticate.SimpleAuthorize) (string, error) {
+	expireTime := time.Now().Add(et).Unix()
 
 	c := jwt.StandardClaims{
 		Issuer:    "foundation.authenticate", // 签发者

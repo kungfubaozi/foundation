@@ -26,95 +26,10 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type GetFuncVerModeRequest struct {
-	Func                 string   `protobuf:"bytes,1,opt,name=func,proto3" json:"func,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *GetFuncVerModeRequest) Reset()         { *m = GetFuncVerModeRequest{} }
-func (m *GetFuncVerModeRequest) String() string { return proto.CompactTextString(m) }
-func (*GetFuncVerModeRequest) ProtoMessage()    {}
-func (*GetFuncVerModeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c47f403cbdc6a6e0, []int{0}
-}
-
-func (m *GetFuncVerModeRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetFuncVerModeRequest.Unmarshal(m, b)
-}
-func (m *GetFuncVerModeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetFuncVerModeRequest.Marshal(b, m, deterministic)
-}
-func (m *GetFuncVerModeRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetFuncVerModeRequest.Merge(m, src)
-}
-func (m *GetFuncVerModeRequest) XXX_Size() int {
-	return xxx_messageInfo_GetFuncVerModeRequest.Size(m)
-}
-func (m *GetFuncVerModeRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetFuncVerModeRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GetFuncVerModeRequest proto.InternalMessageInfo
-
-func (m *GetFuncVerModeRequest) GetFunc() string {
-	if m != nil {
-		return m.Func
-	}
-	return ""
-}
-
-type GetFuncVerModeResponse struct {
-	State                *pb.State `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
-	Mode                 int64     `protobuf:"varint,2,opt,name=mode,proto3" json:"mode,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
-	XXX_unrecognized     []byte    `json:"-"`
-	XXX_sizecache        int32     `json:"-"`
-}
-
-func (m *GetFuncVerModeResponse) Reset()         { *m = GetFuncVerModeResponse{} }
-func (m *GetFuncVerModeResponse) String() string { return proto.CompactTextString(m) }
-func (*GetFuncVerModeResponse) ProtoMessage()    {}
-func (*GetFuncVerModeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c47f403cbdc6a6e0, []int{1}
-}
-
-func (m *GetFuncVerModeResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetFuncVerModeResponse.Unmarshal(m, b)
-}
-func (m *GetFuncVerModeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetFuncVerModeResponse.Marshal(b, m, deterministic)
-}
-func (m *GetFuncVerModeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetFuncVerModeResponse.Merge(m, src)
-}
-func (m *GetFuncVerModeResponse) XXX_Size() int {
-	return xxx_messageInfo_GetFuncVerModeResponse.Size(m)
-}
-func (m *GetFuncVerModeResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetFuncVerModeResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GetFuncVerModeResponse proto.InternalMessageInfo
-
-func (m *GetFuncVerModeResponse) GetState() *pb.State {
-	if m != nil {
-		return m.State
-	}
-	return nil
-}
-
-func (m *GetFuncVerModeResponse) GetMode() int64 {
-	if m != nil {
-		return m.Mode
-	}
-	return 0
-}
-
 type NewRequest struct {
 	Do                   int64    `protobuf:"varint,1,opt,name=do,proto3" json:"do,omitempty"`
 	FuncId               int64    `protobuf:"varint,2,opt,name=funcId,proto3" json:"funcId,omitempty"`
+	To                   string   `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -124,7 +39,7 @@ func (m *NewRequest) Reset()         { *m = NewRequest{} }
 func (m *NewRequest) String() string { return proto.CompactTextString(m) }
 func (*NewRequest) ProtoMessage()    {}
 func (*NewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c47f403cbdc6a6e0, []int{2}
+	return fileDescriptor_c47f403cbdc6a6e0, []int{0}
 }
 
 func (m *NewRequest) XXX_Unmarshal(b []byte) error {
@@ -159,6 +74,13 @@ func (m *NewRequest) GetFuncId() int64 {
 	return 0
 }
 
+func (m *NewRequest) GetTo() string {
+	if m != nil {
+		return m.To
+	}
+	return ""
+}
+
 type NewResponse struct {
 	State                *pb.State `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
 	VerId                string    `protobuf:"bytes,2,opt,name=verId,proto3" json:"verId,omitempty"`
@@ -172,7 +94,7 @@ func (m *NewResponse) Reset()         { *m = NewResponse{} }
 func (m *NewResponse) String() string { return proto.CompactTextString(m) }
 func (*NewResponse) ProtoMessage()    {}
 func (*NewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c47f403cbdc6a6e0, []int{3}
+	return fileDescriptor_c47f403cbdc6a6e0, []int{1}
 }
 
 func (m *NewResponse) XXX_Unmarshal(b []byte) error {
@@ -215,8 +137,6 @@ func (m *NewResponse) GetMode() string {
 }
 
 func init() {
-	proto.RegisterType((*GetFuncVerModeRequest)(nil), "fs.safety.verification.GetFuncVerModeRequest")
-	proto.RegisterType((*GetFuncVerModeResponse)(nil), "fs.safety.verification.GetFuncVerModeResponse")
 	proto.RegisterType((*NewRequest)(nil), "fs.safety.verification.NewRequest")
 	proto.RegisterType((*NewResponse)(nil), "fs.safety.verification.NewResponse")
 }
@@ -235,8 +155,6 @@ const _ = grpc.SupportPackageIsVersion4
 type VerificationClient interface {
 	// 新建验证
 	New(ctx context.Context, in *NewRequest, opts ...grpc.CallOption) (*NewResponse, error)
-	// 获取功能模块的验证模式
-	GetFuncVerMode(ctx context.Context, in *GetFuncVerModeRequest, opts ...grpc.CallOption) (*GetFuncVerModeResponse, error)
 }
 
 type verificationClient struct {
@@ -256,21 +174,10 @@ func (c *verificationClient) New(ctx context.Context, in *NewRequest, opts ...gr
 	return out, nil
 }
 
-func (c *verificationClient) GetFuncVerMode(ctx context.Context, in *GetFuncVerModeRequest, opts ...grpc.CallOption) (*GetFuncVerModeResponse, error) {
-	out := new(GetFuncVerModeResponse)
-	err := c.cc.Invoke(ctx, "/fs.safety.verification.Verification/GetFuncVerMode", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // VerificationServer is the server API for Verification service.
 type VerificationServer interface {
 	// 新建验证
 	New(context.Context, *NewRequest) (*NewResponse, error)
-	// 获取功能模块的验证模式
-	GetFuncVerMode(context.Context, *GetFuncVerModeRequest) (*GetFuncVerModeResponse, error)
 }
 
 func RegisterVerificationServer(s *grpc.Server, srv VerificationServer) {
@@ -295,24 +202,6 @@ func _Verification_New_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Verification_GetFuncVerMode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFuncVerModeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(VerificationServer).GetFuncVerMode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/fs.safety.verification.Verification/GetFuncVerMode",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VerificationServer).GetFuncVerMode(ctx, req.(*GetFuncVerModeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Verification_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fs.safety.verification.Verification",
 	HandlerType: (*VerificationServer)(nil),
@@ -320,10 +209,6 @@ var _Verification_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "New",
 			Handler:    _Verification_New_Handler,
-		},
-		{
-			MethodName: "GetFuncVerMode",
-			Handler:    _Verification_GetFuncVerMode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -335,24 +220,21 @@ func init() {
 }
 
 var fileDescriptor_c47f403cbdc6a6e0 = []byte{
-	// 300 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x51, 0x41, 0x4b, 0xf3, 0x40,
-	0x10, 0x25, 0xcd, 0xd7, 0x42, 0xa7, 0x1f, 0x39, 0x2c, 0x1a, 0x4a, 0x4e, 0x25, 0x7a, 0xa8, 0x14,
-	0x37, 0x50, 0xfd, 0x0d, 0x8a, 0x07, 0x73, 0x58, 0xa1, 0x37, 0x0f, 0x49, 0x76, 0x16, 0x42, 0x69,
-	0x36, 0xee, 0x6e, 0x5a, 0xf4, 0x4f, 0xfa, 0x97, 0x64, 0x77, 0xa3, 0xb6, 0x52, 0x45, 0x4f, 0x3b,
-	0xb3, 0xf3, 0xe6, 0xbd, 0x99, 0x37, 0x70, 0xa1, 0x0b, 0x81, 0xe6, 0x39, 0xdb, 0xa2, 0xaa, 0x45,
-	0x5d, 0x15, 0xa6, 0x96, 0x4d, 0xd6, 0x96, 0x07, 0x39, 0x6d, 0x95, 0x34, 0x92, 0xc4, 0x42, 0x53,
-	0x8f, 0xa6, 0xfb, 0xd5, 0x64, 0xf1, 0xa2, 0xd7, 0x6d, 0xa1, 0xd6, 0xa8, 0x68, 0x25, 0x37, 0x99,
-	0x90, 0x5d, 0xc3, 0x3d, 0x4f, 0x59, 0x68, 0xb4, 0x64, 0xf6, 0xf5, 0x24, 0xe9, 0x02, 0x4e, 0x6f,
-	0xd1, 0xdc, 0x74, 0x4d, 0xb5, 0x42, 0x75, 0x2f, 0x39, 0x32, 0x7c, 0xea, 0x50, 0x1b, 0x42, 0xe0,
-	0x9f, 0xe8, 0x9a, 0x6a, 0x1a, 0xcc, 0x82, 0xf9, 0x98, 0xb9, 0x38, 0x65, 0x10, 0x7f, 0x05, 0xeb,
-	0x56, 0x36, 0x1a, 0xc9, 0x39, 0x0c, 0xb5, 0x29, 0x0c, 0x3a, 0xf8, 0x64, 0x19, 0x51, 0xa1, 0xa9,
-	0x53, 0x79, 0xb0, 0xbf, 0xcc, 0x17, 0x2d, 0xe7, 0x46, 0x72, 0x9c, 0x0e, 0x66, 0xc1, 0x3c, 0x64,
-	0x2e, 0x4e, 0xaf, 0x01, 0x72, 0xdc, 0xbd, 0xab, 0x46, 0x30, 0xe0, 0xd2, 0x91, 0x84, 0x6c, 0xc0,
-	0x25, 0x89, 0x61, 0x64, 0x95, 0xef, 0x78, 0xdf, 0xd3, 0x67, 0xe9, 0x23, 0x4c, 0x5c, 0xd7, 0x9f,
-	0xe4, 0x4f, 0x60, 0xb8, 0x45, 0xd5, 0x73, 0x8d, 0x99, 0x4f, 0x3e, 0x86, 0x0a, 0xfd, 0xa2, 0x36,
-	0x5e, 0xbe, 0x06, 0xf0, 0x7f, 0xb5, 0xe7, 0x29, 0xc9, 0x21, 0xcc, 0x71, 0x47, 0x52, 0x7a, 0xdc,
-	0x73, 0xfa, 0xb9, 0x42, 0x72, 0xf6, 0x23, 0xa6, 0x1f, 0x58, 0x42, 0x74, 0xe8, 0x24, 0xb9, 0xfc,
-	0xae, 0xed, 0xe8, 0x79, 0x12, 0xfa, 0x5b, 0xb8, 0x17, 0x2c, 0x47, 0xee, 0xdc, 0x57, 0x6f, 0x01,
-	0x00, 0x00, 0xff, 0xff, 0x63, 0x78, 0x1a, 0x43, 0x60, 0x02, 0x00, 0x00,
+	// 248 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x90, 0xc1, 0x4b, 0xc3, 0x30,
+	0x14, 0xc6, 0x69, 0xeb, 0x06, 0x7b, 0x93, 0x1d, 0x82, 0x8c, 0xb2, 0xd3, 0xa8, 0x1e, 0x26, 0x42,
+	0x0a, 0xf3, 0x5f, 0xf0, 0xe2, 0xa5, 0x87, 0x08, 0xde, 0x14, 0xd2, 0xe6, 0x05, 0xca, 0x58, 0x5f,
+	0xcd, 0x4b, 0x37, 0xf4, 0xaf, 0x97, 0x26, 0x05, 0x27, 0x88, 0xa7, 0xe4, 0x7b, 0xef, 0xe3, 0x97,
+	0x7c, 0x1f, 0xdc, 0xb3, 0xb6, 0xe8, 0x3f, 0xcb, 0x13, 0xba, 0xd6, 0xb6, 0x8d, 0xf6, 0x2d, 0x75,
+	0x65, 0x5f, 0xff, 0xd2, 0xb2, 0x77, 0xe4, 0x49, 0xac, 0x2d, 0xcb, 0xe8, 0x96, 0x97, 0xdb, 0xcd,
+	0xc3, 0x17, 0x1f, 0x7a, 0xed, 0x0e, 0xe8, 0x64, 0x43, 0xc7, 0xd2, 0xd2, 0xd0, 0x99, 0xc8, 0xa9,
+	0x35, 0xe3, 0x08, 0x1b, 0xcf, 0x08, 0x29, 0x9e, 0x00, 0x2a, 0x3c, 0x2b, 0xfc, 0x18, 0x90, 0xbd,
+	0x58, 0x41, 0x6a, 0x28, 0x4f, 0xb6, 0xc9, 0x2e, 0x53, 0xa9, 0x21, 0xb1, 0x86, 0xb9, 0x1d, 0xba,
+	0xe6, 0xd9, 0xe4, 0x69, 0x98, 0x4d, 0x6a, 0xf4, 0x79, 0xca, 0xb3, 0x6d, 0xb2, 0x5b, 0xa8, 0xd4,
+	0x53, 0xf1, 0x06, 0xcb, 0x40, 0xe1, 0x9e, 0x3a, 0x46, 0x71, 0x07, 0x33, 0xf6, 0xda, 0x63, 0x20,
+	0x2d, 0xf7, 0x2b, 0x69, 0x59, 0x86, 0x37, 0x5f, 0xc6, 0xa9, 0x8a, 0x4b, 0x71, 0x03, 0xb3, 0x13,
+	0xba, 0x89, 0xbd, 0x50, 0x51, 0x08, 0x01, 0x57, 0x47, 0x32, 0x38, 0xc1, 0xc3, 0x7d, 0xff, 0x0e,
+	0xd7, 0xaf, 0x17, 0x09, 0x45, 0x05, 0x59, 0x85, 0x67, 0x51, 0xc8, 0xbf, 0x1b, 0x90, 0x3f, 0x89,
+	0x36, 0xb7, 0xff, 0x7a, 0xe2, 0x7f, 0xeb, 0x79, 0xe8, 0xe2, 0xf1, 0x3b, 0x00, 0x00, 0xff, 0xff,
+	0xc5, 0xc0, 0xaa, 0xd8, 0x7d, 0x01, 0x00, 0x00,
 }

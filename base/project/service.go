@@ -8,6 +8,7 @@ import (
 	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/base/reporter"
 	"zskparker.com/foundation/base/strategy"
+	"zskparker.com/foundation/base/strategy/def"
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/names"
@@ -195,10 +196,7 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 					},
 					Submitlal: 1, //不用提交经纬度
 				},
-				OnVerification: &fs_base.OnVerification{
-					EffectiveTime:   60 * 10, //10分钟
-					CombinationMode: 1,       //数字验证
-				},
+				OnVerification: strategydef.GetOnVerificationDefault(),
 				OnQRLogin: &fs_base.OnQRLogin{
 					RefreshDuration: 60, //单位秒
 				},

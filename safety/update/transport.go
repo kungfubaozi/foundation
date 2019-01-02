@@ -35,6 +35,7 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
+		httptransport.ServerBefore(format.Metadata()),
 		zipkinServer,
 	}
 

@@ -11,6 +11,18 @@ service Authenticate {
     rpc Check (CheckRequest) returns (fs.base.Response);
 
     rpc Offline (OfflineRequest) returns (fs.base.Response);
+
+    rpc Refresh (RefreshRequest) returns (RefreshResponse);
+}
+
+message RefreshRequest {
+    fs.base.Meta meta = 1;
+    string refreshToken = 2;
+}
+
+message RefreshResponse {
+    fs.base.State state = 1;
+    string accessToken = 2;
 }
 
 message OfflineRequest {
@@ -19,6 +31,7 @@ message OfflineRequest {
 
 message CheckRequest {
     string token = 1;
+    fs.base.Metadata metadata = 2;
 }
 
 message NewResponse {
@@ -31,13 +44,13 @@ message NewResponse {
 message Authorize {
     string userId = 1;
     string timestamp = 2;
-    string appId = 3;
-    string projectId = 4;
+    string projectId = 3;
+    string clientId = 4;
     string device = 5;
     int64 platform = 6;
     string userAgent = 7;
     string ip = 8;
-    string token = 9;
-    string id = 10;
-    string ab = 11; //缩写(用作token的多设备登录)
+    string accessToken = 9;
+    string ab = 10; //缩写(用作token的多设备登录)
+    string refreshToken = 11;
 }

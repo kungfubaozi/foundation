@@ -1,9 +1,11 @@
 package main
 
-import "zskparker.com/foundation/base/state/cmd/statesvc"
+import (
+	"zskparker.com/foundation/base/validate/cmd/validatesvc"
+)
 
 func main() {
 
-	statesvc.StartService()
+	validatesvc.StartService()
 
 }

@@ -9,16 +9,20 @@ import (
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"zskparker.com/foundation/base/authenticate/pb"
+	"zskparker.com/foundation/base/function"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/base/project"
 )
 
 type Endpoints struct {
 	OfflineEndpoint endpoint.Endpoint
 	NewEndpoint     endpoint.Endpoint
 	CheckEndpoint   endpoint.Endpoint
+	RefreshEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, functioncli function.Service,
+	projectcli project.Service) Endpoints {
 
 	var offlineEndpoint endpoint.Endpoint
 	{
@@ -39,6 +43,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		checkEndpoint = MakeCheckEndpoint(svc)
 		checkEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(checkEndpoint)
 		checkEndpoint = zipkin.TraceEndpoint(trace, "Check")(checkEndpoint)
+
 	}
 
 	return Endpoints{

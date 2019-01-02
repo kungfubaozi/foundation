@@ -9,7 +9,6 @@ message Meta {
     string latitude = 3;
     string validate = 4;
     string id = 5;
-    string func = 6; //请求的功能编号
 }
 
 message State {
@@ -32,6 +31,7 @@ message Metadata {
     string device = 6;
     string userAgent = 7;
     int64 platform = 8;
+    string api = 9;
 }
 
 message KeyValue {

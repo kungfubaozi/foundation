@@ -1,1 +1,1 @@
-package apigateway
+package main

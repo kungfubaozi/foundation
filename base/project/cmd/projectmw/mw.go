@@ -19,6 +19,7 @@ func Middleware(projectcli project.Service) endpoint.Middleware {
 			if !resp.State.Ok {
 				return errno.ErrResponse(resp.State)
 			}
+
 			return next(ctx, request)
 		}
 	}

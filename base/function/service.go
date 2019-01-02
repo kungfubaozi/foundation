@@ -8,11 +8,11 @@ import (
 )
 
 type Service interface {
-	Add(ctx context.Context, in *fs_base_function.AddRequest) (*fs_base_function.AddResponse, error)
+	Add(ctx context.Context, in *fs_base_function.UpsertResponse) (*fs_base_function.UpsertResponse, error)
 
 	Remove(ctx context.Context, in *fs_base_function.RemoveRequest) (*fs_base.Response, error)
 
-	Update(ctx context.Context, in *fs_base_function.UpdateRequest) (*fs_base.Response, error)
+	Update(ctx context.Context, in *fs_base_function.UpsertResponse) (*fs_base.Response, error)
 
 	Get(ctx context.Context, in *fs_base_function.GetRequest) (*fs_base_function.GetResponse, error)
 }

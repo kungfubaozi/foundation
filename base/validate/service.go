@@ -56,13 +56,18 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 
 	//查找最后一次同个操作的时间
 	vl, err := repo.FindLast(voucher)
+
+	fmt.Println("mgo err", err)
+
 	if err == mgo.ErrNotFound {
 		vl = &verification{
-			CreateAt: time.Now().UnixNano() - in.OnVerification.ExpiredTime*10e9,
+			CreateAt: time.Now().UnixNano(),
 			Do:       in.Do,
 			Voucher:  voucher,
 		}
+		err = nil
 	}
+
 	if err != nil {
 		return &fs_base_validate.CreateResponse{
 			State: errno.ErrSystem,
@@ -70,13 +75,13 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	}
 
 	//限制时间
-	if time.Now().UnixNano()-vl.CreateAt <= in.OnVerification.ExpiredTime*10e9 {
+	if time.Now().UnixNano()-vl.CreateAt <= in.OnVerification.EffectiveTime*1000*1e6 {
 		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		var code string
 		if in.OnVerification.CombinationMode == 1 {
 			code = fmt.Sprintf("%06v", rnd.Int31n(1000000))
 		} else {
-			code = strings.ToLower(utils.GetRandomString())
+			code = strings.ToUpper(utils.GetRandomString())[0:8]
 		}
 		b, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
 		if err != nil {

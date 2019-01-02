@@ -3,7 +3,6 @@ package statisticscli
 import (
 	"fmt"
 	"github.com/Shopify/sarama"
-	"zskparker.com/foundation/analysis/statistics"
 )
 
 type Statistics interface {
@@ -52,8 +51,4 @@ func NewConnect(addr string) (Statistics, error) {
 		return nil, err
 	}
 	return &istatistics{producer: producer}, nil
-}
-
-func NewClient() statistics.Service {
-
 }

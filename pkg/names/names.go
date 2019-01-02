@@ -1,12 +1,13 @@
 package names
 
 const (
-	F_SVC_MESSAGE       = "foundation.svc.message"
-	F_SVC_STATE         = "foundation.svc.state"
-	F_SVC_VALIDATE      = "foundation.svc.validate"
-	F_SVC_REPORTER      = "foundation.svc.reporter"
-	F_SVC_USER          = "foundation.svc.user"
-	F_SVC_SAFETY_UPDATE = "foundation.svc.safety.update"
+	F_SVC_MESSAGE             = "foundation.svc.message"
+	F_SVC_STATE               = "foundation.svc.state"
+	F_SVC_VALIDATE            = "foundation.svc.validate"
+	F_SVC_REPORTER            = "foundation.svc.reporter"
+	F_SVC_USER                = "foundation.svc.user"
+	F_SVC_SAFETY_UPDATE       = "foundation.svc.safety.update"
+	F_SVC_SAFETY_VERIFICATION = "foundation.svc.safety.verification"
 )
 
 const (

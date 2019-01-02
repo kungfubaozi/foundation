@@ -46,7 +46,7 @@ func NewClient(consulAddr string) reporter.Service {
 		tags        []string
 		passingOnly = true
 		endpoints   = reporter.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_STATE, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_REPORTER, tags, passingOnly)
 	)
 	{
 		factory := Factory(reporter.MakeWriteEndpoint)

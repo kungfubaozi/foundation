@@ -9,23 +9,12 @@ service Verification {
     //新建验证
     rpc New (NewRequest) returns (NewResponse);
 
-    //获取功能模块的验证模式
-    rpc GetFuncVerMode (GetFuncVerModeRequest) returns (GetFuncVerModeResponse);
-
-}
-
-message GetFuncVerModeRequest {
-    string func = 1;
-}
-
-message GetFuncVerModeResponse {
-    fs.base.State state = 1;
-    int64 mode = 2;
 }
 
 message NewRequest {
     int64 do = 1;
     int64 funcId = 2;
+    string to = 3;
 }
 
 message NewResponse {

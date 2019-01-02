@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter"
 	"zskparker.com/foundation/entry/login/pb"
@@ -18,7 +19,8 @@ type Service interface {
 }
 
 type loginService struct {
-	reportercli reporter.Service
+	reportercli     reporter.Service
+	authenticatecli authenticate.Service
 }
 
 func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_base.Response, error) {
