@@ -2,13 +2,11 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"github.com/pborman/uuid"
 )
 
 func main() {
 	//a := "9s8df098kllfd"
-	fmt.Println(100100 << 1)
-	fmt.Println(100100 << 2)
-
-	fmt.Println(time.Now().UnixNano()-1542125745114871000 <= 60*1000*1e6)
+	str := fmt.Sprintf("%s.%s", "e6875cefb1a057adcb37adae3e53359a", uuid.New())
+	fmt.Println(str[0:32])
 }

@@ -32,8 +32,9 @@ func EncodeAccessToken(authorize *fs_base_authenticate.Authorize) (string, error
 		UserId:    authorize.UserId,
 		ProjectId: authorize.ProjectId,
 		ClientId:  authorize.UserId,
-		TokenAb:   uuid.New(),
+		UUID:      authorize.AccessTokenUUID,
 		Access:    true,
+		Relation:  authorize.Relation,
 	}
 	return encodeToken(time.Minute*10, sa)
 }
@@ -43,8 +44,9 @@ func EncodeRefreshToken(authorize *fs_base_authenticate.Authorize) (string, erro
 		UserId:    authorize.UserId,
 		ProjectId: authorize.ProjectId,
 		ClientId:  authorize.UserId,
-		TokenAb:   uuid.New(),
+		UUID:      authorize.RefreshTokenUUID,
 		Access:    false,
+		Relation:  authorize.Relation,
 	}
 	return encodeToken(time.Hour*24*7, sa)
 }

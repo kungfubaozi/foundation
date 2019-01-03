@@ -5,6 +5,7 @@ type SimpleAuthorize struct {
 	UserId    string
 	ProjectId string
 	ClientId  string
-	TokenAb   string
+	UUID      string
 	Access    bool
+	Relation  string
 }

@@ -6,11 +6,9 @@ import "zskparker.com/foundation/base/pb/base.proto";
 
 service Authenticate {
 
-    rpc New (Authorize) returns (NewResponse);
+    rpc New (NewRequest) returns (NewResponse);
 
     rpc Check (CheckRequest) returns (fs.base.Response);
-
-    rpc Offline (OfflineRequest) returns (fs.base.Response);
 
     rpc Refresh (RefreshRequest) returns (RefreshResponse);
 }
@@ -25,20 +23,21 @@ message RefreshResponse {
     string accessToken = 2;
 }
 
-message OfflineRequest {
-    string userId = 1;
-}
-
 message CheckRequest {
-    string token = 1;
-    fs.base.Metadata metadata = 2;
+    fs.base.Metadata metadata = 1;
+    int64 maxOnlineCount = 2;
 }
 
 message NewResponse {
     fs.base.State state = 1;
     string refreshToken = 2;
     string accessToken = 3;
-    string timestamp = 4;
+    string session = 4;
+}
+
+message NewRequest {
+    int64 maxOnlineCount = 1;
+    Authorize authorize = 2;
 }
 
 message Authorize {
@@ -50,7 +49,7 @@ message Authorize {
     int64 platform = 6;
     string userAgent = 7;
     string ip = 8;
-    string accessToken = 9;
-    string ab = 10; //缩写(用作token的多设备登录)
-    string refreshToken = 11;
+    string accessTokenUUID = 9;
+    string refreshTokenUUID = 10;
+    string relation = 11;
 }

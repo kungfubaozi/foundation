@@ -1,10 +1,17 @@
 package errno
 
-import "zskparker.com/foundation/base/pb"
+import (
+	"errors"
+	"zskparker.com/foundation/base/pb"
+)
 
 func ErrResponse(state *fs_base.State) (*fs_base.Response, error) {
 	return &fs_base.Response{State: state}, nil
 }
+
+var (
+	ERROR = errors.New("err")
+)
 
 var (
 	Ok               = &fs_base.State{Ok: true, Message: "ok", Code: 0}
@@ -23,4 +30,7 @@ var (
 	ErrPhoneValidate = &fs_base.State{Ok: false, Message: "err phone validate", Code: 10013}
 	ErrEmailValidate = &fs_base.State{Ok: false, Message: "err email validate", Code: 10014}
 	ErrFaceValidate  = &fs_base.State{Ok: false, Message: "err face validate", Code: 10015}
+	ErrToken         = &fs_base.State{Ok: false, Message: "err token", Code: 10016}
+	ErrTokenExpired  = &fs_base.State{Ok: false, Message: "err token expired", Code: 10017}
+	ErrUserState     = &fs_base.State{Ok: false, Message: "err user state", Code: 10018}
 )

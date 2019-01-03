@@ -9,26 +9,22 @@ import (
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"zskparker.com/foundation/base/authenticate/pb"
-	"zskparker.com/foundation/base/function"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/project"
 )
 
 type Endpoints struct {
-	OfflineEndpoint endpoint.Endpoint
 	NewEndpoint     endpoint.Endpoint
 	CheckEndpoint   endpoint.Endpoint
 	RefreshEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, functioncli function.Service,
-	projectcli project.Service) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
 
-	var offlineEndpoint endpoint.Endpoint
+	var refreshEndpoint endpoint.Endpoint
 	{
-		offlineEndpoint = MakeOfflineEndpoint(svc)
-		offlineEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(offlineEndpoint)
-		offlineEndpoint = zipkin.TraceEndpoint(trace, "Offline")(offlineEndpoint)
+		refreshEndpoint = MakeRefreshEndpoint(svc)
+		refreshEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(refreshEndpoint)
+		refreshEndpoint = zipkin.TraceEndpoint(trace, "Refresh")(refreshEndpoint)
 	}
 
 	var newEndpoint endpoint.Endpoint
@@ -47,22 +43,21 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, funct
 	}
 
 	return Endpoints{
-		OfflineEndpoint: offlineEndpoint,
-		NewEndpoint:     newEndpoint,
-		CheckEndpoint:   checkEndpoint,
+		NewEndpoint:   newEndpoint,
+		CheckEndpoint: checkEndpoint,
 	}
 
-}
-
-func MakeOfflineEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return svc.Offline(ctx, request.(*fs_base_authenticate.OfflineRequest))
-	}
 }
 
 func MakeNewEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return svc.New(ctx, request.(*fs_base_authenticate.Authorize))
+		return svc.New(ctx, request.(*fs_base_authenticate.NewRequest))
+	}
+}
+
+func MakeRefreshEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.Refresh(ctx, request.(*fs_base_authenticate.RefreshRequest))
 	}
 }
 
@@ -72,15 +67,15 @@ func MakeCheckEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
-func (g Endpoints) Offline(ctx context.Context, in *fs_base_authenticate.OfflineRequest) (*fs_base.Response, error) {
-	resp, err := g.OfflineEndpoint(ctx, in)
+func (g Endpoints) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
+	resp, err := g.NewEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*fs_base.Response), nil
+	return resp.(*fs_base_authenticate.RefreshResponse), nil
 }
 
-func (g Endpoints) New(ctx context.Context, in *fs_base_authenticate.Authorize) (*fs_base_authenticate.NewResponse, error) {
+func (g Endpoints) New(ctx context.Context, in *fs_base_authenticate.NewRequest) (*fs_base_authenticate.NewResponse, error) {
 	resp, err := g.NewEndpoint(ctx, in)
 	if err != nil {
 		return nil, err

@@ -163,6 +163,13 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 					Mode: []int64{
 						1, 2, 3, 4, 5, 6,
 					},
+					MaxCountOfOnline: &fs_base.MaxCountOfOnline{
+						Android: 1,
+						IOS:     1,
+						Windows: 1,
+						MacOS:   1,
+						Web:     0, //无限制
+					},
 					Verification: 1,
 					MaxCountOfErrorPassword: []*fs_base.MaxCountOfErrorPassword{
 						{

@@ -7,6 +7,7 @@ import (
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/state/pb"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/names"
 )
 
 type Service interface {
@@ -37,13 +38,17 @@ func (svc *stateService) Upsert(ctx context.Context, in *fs_base_state.UpsertReq
 func (svc *stateService) Get(ctx context.Context, in *fs_base_state.GetRequest) (*fs_base_state.GetResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
-
+	resp := &fs_base_state.GetResponse{}
 	i, e := repo.Get(in.Key)
 	if e != nil {
 		return &fs_base_state.GetResponse{State: errno.ErrSystem}, nil
 	}
+	if i == names.F_USER_STATE_FROZE {
+		resp.State = errno.ErrFroze
+		return resp, nil
+	}
 	return &fs_base_state.GetResponse{
-		State:  errno.Ok,
+		State:  resp.State,
 		Status: i,
 	}, nil
 }

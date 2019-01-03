@@ -133,6 +133,7 @@ message OnLogin {
     repeated MaxCountOfErrorPassword maxCountOfErrorPassword = 4; //当用户输入密码达到对应次数时
     repeated MaxCountOfInvalidAccount maxCountOfInvalidAccount = 5; //当用户输入账号达到对应次数时
     int64 submitlal = 6; //是否提交经纬度信息
+    MaxCountOfOnline MaxCountOfOnline = 7; //最大在线数量
 }
 
 //既一个用户（IP/Device）在规定的时间内输入多次错误的用户账号，可以怀疑是刷数据等其他操作
@@ -146,6 +147,14 @@ message MaxCountOfErrorPassword {
     int64 count = 1; //错误次数
     int64 action = 2;
     int64 expiredTime = 3; //过期时间
+}
+
+message MaxCountOfOnline {
+    int64 android = 1; //1
+    int64 windows = 2; //1
+    int64 macOS = 3; //1
+    int64 web = 4; //默认0（无限）
+    int64 iOS = 5; //1
 }
 
 message OnVerification {
