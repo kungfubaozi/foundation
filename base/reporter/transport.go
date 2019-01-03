@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/ratelimit"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/sony/gobreaker"
@@ -20,10 +19,8 @@ type GRPCServer struct {
 	write grpctransport.Handler
 }
 
-func MakeGRPCServer(endpoints Endpoints, logger log.Logger) fs_base_reporter.ReporterServer {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-	}
+func MakeGRPCServer(endpoints Endpoints) fs_base_reporter.ReporterServer {
+	options := []grpctransport.ServerOption{}
 
 	return &GRPCServer{
 		write: grpctransport.NewServer(
@@ -35,8 +32,11 @@ func MakeGRPCServer(endpoints Endpoints, logger log.Logger) fs_base_reporter.Rep
 }
 
 func MakeGRPCClient(conn *grpc.ClientConn) Service {
-	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1000))
+	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
+	options := []grpctransport.ClientOption{
 
+		grpctransport.ClientBefore(format.GRPCMetadata()),
+	}
 	var writeEndpoint endpoint.Endpoint
 	{
 		writeEndpoint = grpctransport.NewClient(conn,
@@ -45,7 +45,7 @@ func MakeGRPCClient(conn *grpc.ClientConn) Service {
 			format.GrpcMessage,
 			format.GrpcMessage,
 			fs_base.Response{},
-			nil).Endpoint()
+			options...).Endpoint()
 		writeEndpoint = limiter(writeEndpoint)
 		writeEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Write",
@@ -53,7 +53,7 @@ func MakeGRPCClient(conn *grpc.ClientConn) Service {
 		}))(writeEndpoint)
 	}
 
-	return &Endpoints{
+	return Endpoints{
 		WriteEndpoint: writeEndpoint,
 	}
 }

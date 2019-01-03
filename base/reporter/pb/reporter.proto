@@ -14,9 +14,9 @@ service Reporter {
 message WriteRequest {
 
     string svc = 1;
-    int64 do = 2;
+    string func = 2;
     string who = 3;
-    string timestamp = 4;
+    int64 timestamp = 4;
     string where = 5;
     string date = 6;
 

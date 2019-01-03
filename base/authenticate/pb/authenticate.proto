@@ -8,9 +8,15 @@ service Authenticate {
 
     rpc New (NewRequest) returns (NewResponse);
 
-    rpc Check (CheckRequest) returns (fs.base.Response);
+    rpc Check (CheckRequest) returns (CheckResponse);
 
     rpc Refresh (RefreshRequest) returns (RefreshResponse);
+
+    rpc OfflineUser (OfflineUserRequest) returns (fs.base.Response);
+}
+
+message OfflineUserRequest {
+    string userId = 1;
 }
 
 message RefreshRequest {
@@ -26,6 +32,17 @@ message RefreshResponse {
 message CheckRequest {
     fs.base.Metadata metadata = 1;
     int64 maxOnlineCount = 2;
+    bool allowOtherProjectUserToLogin = 3;
+    string accessToken = 4;
+}
+
+message CheckResponse {
+    fs.base.State state = 1;
+    string userId = 2;
+    string projectId = 3;
+    string clientId = 4;
+    string relation = 5;
+    int64 level = 6;
 }
 
 message NewResponse {
@@ -52,4 +69,5 @@ message Authorize {
     string accessTokenUUID = 9;
     string refreshTokenUUID = 10;
     string relation = 11;
+    int64 level = 12;
 }

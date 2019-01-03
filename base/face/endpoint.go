@@ -14,7 +14,7 @@ type Endpoints struct {
 	RemoveFaceEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints() Endpoints {
+func NewEndpoints(svc Service) Endpoints {
 
 	var updateEndpoint endpoint.Endpoint
 	{
@@ -54,5 +54,29 @@ func NewEndpoints() Endpoints {
 func MakeUpdateEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return svc.Update(ctx, request.(*fs_base_face.UpdateRequest))
+	}
+}
+
+func MakeCompareEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.Compare(ctx, request.(*fs_base_face.CompareRequest))
+	}
+}
+
+func MakeSearchEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.Search(ctx, request.(*fs_base_face.SearchRequest))
+	}
+}
+
+func MakeAddFaceEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.AddFace(ctx, request.(*fs_base_face.AddFaceRequest))
+	}
+}
+
+func MakeRemoveFaceEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.RemoveFace(ctx, request.(*fs_base_face.RemoveFaceRequest))
 	}
 }

@@ -8,7 +8,7 @@ import (
 type Statistics interface {
 	Close()
 
-	Event(who, where, time string, do int64)
+	Event(who, where, function string, time int64)
 }
 
 type istatistics struct {
@@ -19,11 +19,11 @@ func (s *istatistics) Close() {
 	s.producer.Close()
 }
 
-func (s *istatistics) Event(who, where, time string, do int64) {
+func (s *istatistics) Event(who, where, function string, time int64) {
 	s.Kafka(&sarama.ProducerMessage{
 		Topic: "foundation_statistics_streaming",
 		Key:   sarama.StringEncoder("statistics"),
-		Value: sarama.ByteEncoder(fmt.Sprintf("%d;%s;%s;%s", do, who, where, time)),
+		Value: sarama.ByteEncoder(fmt.Sprintf("%s;%s;%s;%d", function, who, where, time)),
 	})
 }
 

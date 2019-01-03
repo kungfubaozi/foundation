@@ -4,7 +4,7 @@ import (
 	"context"
 	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/reporter"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/entry/login/pb"
 )
 
@@ -19,7 +19,7 @@ type Service interface {
 }
 
 type loginService struct {
-	reportercli     reporter.Service
+	reportercli     reportercli.Channel
 	authenticatecli authenticate.Service
 }
 
@@ -39,7 +39,7 @@ func (svc *loginService) EntryByQRCode(ctx context.Context, in *fs_entry_login.E
 	panic("implement me")
 }
 
-func NewService(reportercli reporter.Service) Service {
+func NewService(reportercli reportercli.Channel) Service {
 	var service Service
 	{
 		service = &loginService{reportercli: reportercli}

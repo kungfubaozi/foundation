@@ -18,5 +18,5 @@ type Service interface {
 
 type frozeService struct {
 	session     *mgo.Session
-	reportercli reporter.Service
+	reportercli logger.Service
 }

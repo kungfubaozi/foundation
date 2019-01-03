@@ -6,6 +6,7 @@ import (
 	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/names"
 )
 
@@ -19,26 +20,40 @@ import (
 func Middleware(authenticatecli authenticate.Service) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-			stragety := ctx.Value("strategy").(*fs_base.ProjectStrategy)
+			strategy := ctx.Value("strategy").(*fs_base.ProjectStrategy)
 			meta := ctx.Value("meta").(*fs_base.Metadata)
 
 			var c int64
 			if meta.Platform == names.F_PLATFORM_ANDROID {
-				c = stragety.Events.OnLogin.MaxCountOfOnline.Android
+				c = strategy.Events.OnLogin.MaxCountOfOnline.Android
 			} else if meta.Platform == names.F_PLATFORM_WEB {
-				c = stragety.Events.OnLogin.MaxCountOfOnline.Web
+				c = strategy.Events.OnLogin.MaxCountOfOnline.Web
 			} else if meta.Platform == names.F_PLATFORM_MAC_OS {
-				c = stragety.Events.OnLogin.MaxCountOfOnline.MacOS
+				c = strategy.Events.OnLogin.MaxCountOfOnline.MacOS
 			} else if meta.Platform == names.F_PLATFORM_WINDOWD {
-				c = stragety.Events.OnLogin.MaxCountOfOnline.Windows
+				c = strategy.Events.OnLogin.MaxCountOfOnline.Windows
 			} else if meta.Platform == names.F_PLATFORM_IOS {
-				c = stragety.Events.OnLogin.MaxCountOfOnline.IOS
+				c = strategy.Events.OnLogin.MaxCountOfOnline.IOS
 			}
 
 			resp, err := authenticatecli.Check(ctx, &fs_base_authenticate.CheckRequest{
-				Metadata:       meta,
-				MaxOnlineCount: c,
+				Metadata:                     meta,
+				MaxOnlineCount:               c,
+				AllowOtherProjectUserToLogin: strategy.Events.OnLogin.AllowOtherProjectUserToLogin == 2,
 			})
+
+			if err != nil {
+				return errno.ErrResponse(errno.ErrSystem)
+			}
+
+			if !resp.State.Ok {
+				return errno.ErrResponse(resp.State)
+			}
+
+			meta.ClientId = resp.ClientId
+			meta.ProjectId = resp.ProjectId
+			meta.UserId = resp.UserId
+			meta.Level = resp.Level
 
 			return next(ctx, request)
 		}

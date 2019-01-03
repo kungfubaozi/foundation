@@ -16,6 +16,8 @@ type repository interface {
 
 	Del(userId, key string) error
 
+	DelAll(userId string) error
+
 	Close()
 }
 
@@ -25,6 +27,11 @@ type authenticateRepository struct {
 
 func (repo *authenticateRepository) Del(userId, key string) error {
 	_, err := repo.conn.Do("HDEL", "auth."+userId, key)
+	return err
+}
+
+func (repo *authenticateRepository) DelAll(userId string) error {
+	_, err := repo.conn.Do("DEL", "auth."+userId)
 	return err
 }
 

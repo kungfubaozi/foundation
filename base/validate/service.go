@@ -3,10 +3,10 @@ package validate
 import (
 	"context"
 	"fmt"
+	"github.com/twinj/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
 	"math/rand"
-	"strconv"
 	"strings"
 	"time"
 	"zskparker.com/foundation/base/message/cmd/messagecli"
@@ -27,9 +27,9 @@ type Service interface {
 }
 
 type validateService struct {
-	session *mgo.Session
-	channel messagecli.MessageChannel
-	state   state.Service
+	session    *mgo.Session
+	messagecli messagecli.Channel
+	state      state.Service
 }
 
 func (svc *validateService) GetRepo() repository {
@@ -47,11 +47,11 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	}
 
 	//验证凭证(通过操作有时间等限制)
-	voucher := in.Metadata.Ip + ";" + strconv.FormatInt(in.Do, 10)
+	voucher := in.Metadata.Ip + ";" + in.Func
 
 	//有用户ID设置为凭证
 	if len(in.Metadata.UserId) > 0 {
-		voucher = in.Metadata.UserId + ";" + strconv.FormatInt(in.Do, 10)
+		voucher = in.Metadata.UserId + ";" + in.Func
 	}
 
 	//查找最后一次同个操作的时间
@@ -62,7 +62,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	if err == mgo.ErrNotFound {
 		vl = &verification{
 			CreateAt: time.Now().UnixNano(),
-			Do:       in.Do,
+			Func:     in.Func,
 			Voucher:  voucher,
 		}
 		err = nil
@@ -91,7 +91,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		}
 
 		vl = &verification{
-			VerId:    utils.RandomMD5(voucher),
+			VerId:    uuid.NewV4().String(),
 			CreateAt: time.Now().UnixNano(),
 			Code:     string(b),
 		}
@@ -99,13 +99,13 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		//send code
 		switch in.Mode {
 		case 1: //phone
-			svc.channel.SendSMS(&fs_base.DirectMessage{
+			svc.messagecli.SendSMS(&fs_base.DirectMessage{
 				To:      in.To,
 				Content: fmt.Sprintf(osenv.GetValidateTemplate(), code, in.OnVerification.EffectiveTime),
 			})
 			break
 		case 2: //email
-			svc.channel.SendEmail(&fs_base.DirectMessage{
+			svc.messagecli.SendEmail(&fs_base.DirectMessage{
 				To:      in.To,
 				Content: fmt.Sprintf(osenv.GetValidateTemplate(), code, in.OnVerification.EffectiveTime),
 			})
@@ -151,7 +151,7 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	if len(in.Code) == 0 && in.Do < 10100 {
+	if len(in.Code) == 0 && len(in.Func) == 0 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
 
@@ -161,7 +161,7 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 	}
 
 	//检查时间和操作
-	if time.Now().UnixNano()-vl.CreateAt < in.OnVerification.EffectiveTime*60*1e9 && in.Do == vl.Do {
+	if time.Now().UnixNano()-vl.CreateAt < in.OnVerification.EffectiveTime*60*1e9 && in.Func == vl.Func {
 
 		//验证状态
 		resp, err := svc.state.Get(context.Background(), &fs_base_state.GetRequest{
@@ -196,10 +196,10 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 	return errno.ErrResponse(errno.ErrExpired)
 }
 
-func NewService(session *mgo.Session, channel messagecli.MessageChannel, state state.Service) Service {
+func NewService(session *mgo.Session, messagecli messagecli.Channel, state state.Service) Service {
 	var svc Service
 	{
-		svc = &validateService{session: session, channel: channel, state: state}
+		svc = &validateService{session: session, messagecli: messagecli, state: state}
 	}
 	return svc
 }

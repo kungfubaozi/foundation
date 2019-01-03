@@ -27,11 +27,11 @@ message Metadata {
     string projectId = 2;
     string userId = 3;
     string ip = 4;
-    string token = 5;
-    string device = 6;
-    string userAgent = 7;
-    int64 platform = 8;
-    string api = 9;
+    string device = 5;
+    string userAgent = 6;
+    int64 platform = 7;
+    string api = 8;
+    int64 level = 9;
 }
 
 message KeyValue {

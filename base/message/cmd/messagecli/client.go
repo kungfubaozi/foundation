@@ -21,7 +21,7 @@ import (
 	"zskparker.com/foundation/pkg/names"
 )
 
-type MessageChannel interface {
+type Channel interface {
 	SendMessage(directMessage *fs_base.DirectMessage)
 
 	SendSMS(directMessage *fs_base.DirectMessage)
@@ -73,7 +73,7 @@ func (impl *mqMessageImpl) send(key string, directMessage *fs_base.DirectMessage
 	})
 }
 
-func NewMQClient(messageAMQPAddr string) (MessageChannel, error) {
+func NewMQClient(messageAMQPAddr string) (Channel, error) {
 	conn, err := amqp.Dial(messageAMQPAddr)
 	if err != nil {
 		fmt.Println("message connect to message queue error.")

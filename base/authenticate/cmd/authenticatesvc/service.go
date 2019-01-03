@@ -43,9 +43,11 @@ func StartService() {
 	if err != nil {
 		panic(err)
 	}
-	defer ch.Close()
+	rp, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_SAFETY_AUTHENTICATE)
+	defer rp.Close()
 
-	service := authenticate.NewService(statecli.NewClient(osenv.GetConsulAddr(), zipkinTracer), usercli.NewClient(), reportercli.NewClient(osenv.GetConsulAddr()), pool,
+	service := authenticate.NewService(statecli.NewClient(osenv.GetConsulAddr(), zipkinTracer), usercli.NewClient(zipkinTracer),
+		rp, pool,
 		ch)
 	endpoints := authenticate.NewEndpoints(service, zipkinTracer, logger)
 	svc := authenticate.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)

@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"context"
+	"fmt"
 	"gopkg.in/mgo.v2"
 	"time"
 	"zskparker.com/foundation/analysis/statistics/cmd/statisticscli"
@@ -29,17 +30,20 @@ func (svc *reporterService) Write(ctx context.Context, in *fs_base_reporter.Writ
 	defer repo.Close()
 
 	log := &logger{
-		date:      utils.FormatDate(time.Now(), utils.YYYYMMDD),
-		timestamp: in.Timestamp,
-		do:        in.Do,
-		where:     in.Where,
-		who:       in.Who,
+		Date:      utils.FormatDate(time.Now(), utils.YYYYMMDD),
+		Timestamp: in.Timestamp,
+		Func:      in.Func,
+		Where:     in.Where,
+		Who:       in.Who,
 	}
 
+	fmt.Println(log)
+
 	err := repo.Write(log)
+	fmt.Println(err)
 
 	//发送到统计里
-	svc.statistics.Event(in.Who, in.Where, in.Timestamp, in.Do)
+	svc.statistics.Event(in.Who, in.Where, in.Func, in.Timestamp)
 
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)

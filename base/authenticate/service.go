@@ -2,36 +2,51 @@ package authenticate
 
 import (
 	"context"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
-	"github.com/pborman/uuid"
+	"github.com/twinj/uuid"
 	"time"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/message/cmd/messagecli"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/reporter"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/state"
 	"zskparker.com/foundation/base/state/pb"
 	"zskparker.com/foundation/base/user"
 	"zskparker.com/foundation/base/user/pb"
-	"zskparker.com/foundation/pkg/authorize"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/names"
 )
 
 type Service interface {
 	New(ctx context.Context, in *fs_base_authenticate.NewRequest) (*fs_base_authenticate.NewResponse, error)
 
-	Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base.Response, error)
+	Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error)
 
 	Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error)
+
+	OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error)
 }
 
 //只检查用户、状态，以及策略等鉴权问题
 type authenticateService struct {
 	statecli    state.Service
 	usercli     user.Service
-	reportercli reporter.Service
-	messsagecli messagecli.MessageChannel
+	reportercli reportercli.Channel
+	messsagecli messagecli.Channel
 	pool        *redis.Pool
+}
+
+func (svc *authenticateService) OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error) {
+	repo := svc.GetRepo()
+	defer repo.Close()
+
+	err := repo.DelAll(in.UserId)
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	return errno.ErrResponse(errno.Ok)
 }
 
 func (svc *authenticateService) GetRepo() repository {
@@ -46,13 +61,14 @@ func (svc *authenticateService) sizeCheck() {
 
 }
 
-func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base.Response, error) {
-	accessTokenClaims, err := authorize.DecodeToken(in.Metadata.Token)
+func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error) {
+	resp := &fs_base_authenticate.CheckResponse{}
+	accessTokenClaims, err := decodeToken(in.AccessToken)
 	if err != nil {
-		return errno.ErrResponse(errno.ErrToken)
+		resp.State = errno.ErrToken
+		return resp, nil
 	}
 	token := accessTokenClaims.Token
-	resp := &fs_base.Response{}
 	if !token.Access {
 		resp.State = errno.ErrToken
 		return resp, nil
@@ -61,14 +77,15 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 	defer repo.Close()
 	auth, err := repo.Get(token.UserId, token.ClientId, token.UUID)
 	if err != nil {
-		return errno.ErrResponse(errno.ErrTokenExpired)
+		resp.State = errno.ErrTokenExpired
+		return resp, nil
 	}
 
 	//这里不需要检查在线数量
-	errc := make(chan error, 3)
+	errc := make(chan error, 2)
 
 	//检查用户状态
-	go func(r *fs_base.Response) {
+	go func(r *fs_base_authenticate.CheckResponse) {
 		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{})
 		if e != nil {
 			errc <- e
@@ -82,7 +99,7 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 	}(resp)
 
 	//检查是否存在用户
-	go func(r *fs_base.Response) {
+	go func(r *fs_base_authenticate.CheckResponse) {
 		a, e := svc.usercli.FindByUserId(context.Background(), &fs_base_user.FindRequest{
 			Value: auth.UserId,
 		})
@@ -94,6 +111,11 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 			errc <- errno.ERROR
 			return
 		}
+		//if !in.AllowOtherProjectUserToLogin && a.FromProjectId != auth.ProjectId {
+		//	r.State = errno.ErrProjectAccess
+		//	errc <- errno.ERROR
+		//}
+		resp.Level = a.Level
 		errc <- err
 	}(resp)
 
@@ -104,8 +126,15 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 	if accessTokenClaims.VerifyExpiresAt(time.Now().UnixNano(), true) {
 		if in.Metadata.UserAgent == auth.UserAgent && in.Metadata.Platform == auth.Platform &&
 			in.Metadata.Device == auth.Device && token.Relation == auth.Relation &&
-			token.UUID == auth.AccessTokenUUID {
+			token.UUID == auth.AccessTokenUUID && token.ClientId == auth.ClientId {
 			resp.State = errno.Ok
+
+			resp.UserId = auth.UserId
+			resp.ProjectId = auth.ProjectId
+			resp.ClientId = auth.ClientId
+			resp.Relation = auth.Relation
+			resp.Level = auth.Level
+
 			return resp, nil
 		}
 	}
@@ -114,23 +143,24 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 }
 
 func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticate.NewRequest) (*fs_base_authenticate.NewResponse, error) {
-	in.Authorize.AccessTokenUUID = uuid.New()
-	in.Authorize.RefreshTokenUUID = uuid.New()
+	in.Authorize.AccessTokenUUID = uuid.NewV4().String()
+	in.Authorize.RefreshTokenUUID = uuid.NewV4().String()
 	//关联id，用于关联两个token(accessToken.refreshToken)
-	in.Authorize.Relation = uuid.New()
+	in.Authorize.Relation = uuid.NewV4().String()
 	var accessToken, refreshToken string
 	errc := make(chan error, 2)
 	go func() {
-		a, err := authorize.EncodeAccessToken(in.Authorize)
+		a, err := encodeAccessToken(in.Authorize)
 		accessToken = a
 		errc <- err
 	}()
 	go func() {
-		a, err := authorize.EncodeRefreshToken(in.Authorize)
+		a, err := encodeRefreshToken(in.Authorize)
 		refreshToken = a
 		errc <- err
 	}()
 	if err := <-errc; err != nil {
+		fmt.Println("encode err", err)
 		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
 	}
 	repo := svc.GetRepo()
@@ -138,31 +168,34 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	//检查在线数量
 	v, err := repo.SizeOf(in.Authorize.UserId)
 	if err != nil {
+		fmt.Println("size of", err)
 		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
 	}
+	fmt.Println("size ", len(v))
 	if v != nil && len(v) > 0 {
 		//offline
 		c := 0
 		for _, k := range v {
-			key := k.(string)
-			if key[0:32] == in.Authorize.ClientId {
+			key := b2s(k.([]uint8))
+			if key[0:36] == in.Authorize.ClientId {
 				c++
 				if c >= int(in.MaxOnlineCount) {
 					repo.Del(in.Authorize.UserId, key) //这里不作错误处理
 					//send offline message
 					svc.messsagecli.SendOffline(&fs_base.DirectMessage{
-						To:      key[33:],
+						To:      key[37:],
 						Content: "offline",
 					})
-					break
 				}
 			}
 		}
 	}
 	err = repo.Add(in.Authorize)
 	if err != nil {
+		fmt.Println("add", err)
 		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
 	}
+	svc.reportercli.Write(names.F_FUNC_LOGIN, in.Authorize.UserId, in.Authorize.Ip)
 	return &fs_base_authenticate.NewResponse{
 		State:        errno.Ok,
 		RefreshToken: refreshToken,
@@ -171,8 +204,16 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	}, nil
 }
 
-func NewService(statecli state.Service, usercli user.Service, reportercli reporter.Service,
-	pool *redis.Pool, messsagecli messagecli.MessageChannel) Service {
+func b2s(bs []uint8) string {
+	var ba []byte
+	for _, b := range bs {
+		ba = append(ba, byte(b))
+	}
+	return string(ba)
+}
+
+func NewService(statecli state.Service, usercli user.Service, reportercli reportercli.Channel,
+	pool *redis.Pool, messsagecli messagecli.Channel) Service {
 	var svc Service
 	{
 		svc = &authenticateService{statecli: statecli, usercli: usercli, reportercli: reportercli,

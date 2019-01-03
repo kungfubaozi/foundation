@@ -2,7 +2,6 @@ package reporter
 
 import (
 	"gopkg.in/mgo.v2"
-	"strconv"
 )
 
 type repository interface {
@@ -12,11 +11,11 @@ type repository interface {
 }
 
 type logger struct {
-	do        int64
-	who       string
-	where     string
-	timestamp string
-	date      string
+	Func      string `bson:"func"`
+	Who       string `bson:"who"`
+	Where     string `bson:"where"`
+	Timestamp int64  `bson:"timestamp"`
+	Date      string `bson:"date"`
 }
 
 type reporterRepository struct {
@@ -28,5 +27,5 @@ func (repo *reporterRepository) Close() {
 }
 
 func (repo *reporterRepository) Write(logger *logger) error {
-	return repo.session.DB("foundation_logger").C(strconv.FormatInt(logger.do, 10) + "_" + logger.date).Insert(logger)
+	return repo.session.DB("foundation_logger").C(logger.Func + "_" + logger.Date).Insert(logger)
 }

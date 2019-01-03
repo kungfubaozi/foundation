@@ -22,15 +22,22 @@ service Function {
 
 message GetRequest {
     string api = 1;
+    string func = 2;
 }
 
 message GetResponse {
     fs.base.State state = 1;
-    string func = 2;
-    bool verification = 3;
-    string zh = 4;
-    string en = 5;
-    string api = 6;
+    Func func = 2;
+}
+
+message Func {
+    string func = 1;
+    bool verification = 2;
+    string zh = 3;
+    string en = 4;
+    string api = 5;
+    int64 fcv = 6; //首选验证模式
+    int64 level = 7;
 }
 
 message UpsertResponse {
@@ -47,5 +54,7 @@ message UpsertRequest {
     string zh = 2;
     string en = 3;
     bool verification = 4; //是否需要验证
-    string func = 5;
+    int64 fcv = 5; //首选验证模式
+    string func = 6;
+    int64 level = 7;
 }

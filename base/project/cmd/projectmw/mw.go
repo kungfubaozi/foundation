@@ -19,7 +19,8 @@ func Middleware(projectcli project.Service) endpoint.Middleware {
 			if !resp.State.Ok {
 				return errno.ErrResponse(resp.State)
 			}
-
+			ctx = context.WithValue(ctx, "strategy", resp.Strategy)
+			ctx = context.WithValue(ctx, "project", resp.Info)
 			return next(ctx, request)
 		}
 	}

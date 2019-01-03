@@ -7,12 +7,9 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"os"
-	"zskparker.com/foundation/base/message/cmd/messagecli"
 	"zskparker.com/foundation/base/state/cmd/statecli"
 	"zskparker.com/foundation/base/user"
-	"zskparker.com/foundation/base/validate"
-	"zskparker.com/foundation/base/validate/cmd/validatecli"
-	"zskparker.com/foundation/base/validate/pb"
+	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
@@ -43,17 +40,12 @@ func StartService() {
 	}
 	defer session.Close()
 
-	message, err := messagecli.NewMQClient(osenv.GetMessageAMQPAddr())
-	if err != nil {
-		panic(err)
-	}
-
-	service := user.NewService(session, statecli.NewClient(osenv.GetConsulAddr(), zipkinTracer), authenticatecli)
-	endpoints := validate.NewEndpoints(service, zipkinTracer, logger)
-	svc := validate.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
+	service := user.NewService(session, statecli.NewClient(osenv.GetConsulAddr(), zipkinTracer))
+	endpoints := user.NewEndpoints(service, zipkinTracer, logger)
+	svc := user.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()
-	fs_base_validate.RegisterValidateServer(gs, svc)
+	fs_base_user.RegisterUserServer(gs, svc)
 
 	errc := make(chan error)
 

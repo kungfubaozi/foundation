@@ -23,10 +23,6 @@ func GetRandomString() string {
 	return string(result)
 }
 
-func RandomMD5(key string) string {
-	return Md5(GetRandomString() + string(time.Now().UnixNano()) + key)
-}
-
 func Md5(s string) string {
 	h := md5.New()
 	h.Write([]byte(s))

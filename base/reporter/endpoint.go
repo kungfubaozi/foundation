@@ -2,7 +2,9 @@ package reporter
 
 import (
 	"context"
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/sony/gobreaker"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/pb"
 )
@@ -13,8 +15,14 @@ type Endpoints struct {
 
 func NewEndpoints(svc Service) Endpoints {
 
+	var writeEndpoint endpoint.Endpoint
+	{
+		writeEndpoint = MakeWriteEndpoint(svc)
+		writeEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(writeEndpoint)
+	}
+
 	return Endpoints{
-		WriteEndpoint: MakeWriteEndpoint(svc),
+		WriteEndpoint: writeEndpoint,
 	}
 
 }

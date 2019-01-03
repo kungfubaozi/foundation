@@ -12,13 +12,13 @@ const (
 )
 
 const (
-	F_DO_LOGIN             int64 = 10101
-	F_DO_LOGIN_VER         int64 = 10101
-	F_DO_REGISTER          int64 = 10201
-	F_DO_UPDATE_PASSWORD   int64 = 10301
-	F_DO_UPDATE_PHONE      int64 = 10302
-	F_DO_UPDATE_EMAIL      int64 = 10303
-	F_DO_UPDATE_ENTERPRISE int64 = 10304
+	F_FUNC_LOGIN             string = "8f537f6a"
+	F_FUNC_LOGIN_VER         string = "d2d0371b"
+	F_FUNC_REGISTER          string = "f83152ac"
+	F_FUNC_UPDATE_PASSWORD   string = "b60ed019"
+	F_FUNC_UPDATE_PHONE      string = "cd994e0f"
+	F_FUNC_UPDATE_EMAIL      string = "ecf8ecc2"
+	F_FUNC_UPDATE_ENTERPRISE string = "4fea4bba"
 )
 
 const (
@@ -34,4 +34,10 @@ const (
 	F_PLATFORM_WINDOWD = 4 << 3
 	F_PLATFORM_MAC_OS  = 4 << 4
 	F_PLATFORM_WEB     = 4 << 5
+)
+
+const (
+	F_VALIDATE_FACE  = 5 << 1
+	F_VALIDATE_EMAIL = 5 << 2
+	F_VALIDATE_PHONE = 5 << 3
 )

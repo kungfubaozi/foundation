@@ -12,13 +12,14 @@ import (
 	"zskparker.com/foundation/base/interceptor/pb"
 	"zskparker.com/foundation/base/project"
 	"zskparker.com/foundation/base/project/cmd/projectmw"
+	"zskparker.com/foundation/base/validate/cmd/validatemw"
 )
 
 type Endpoints struct {
 	AuthEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, authenticatecli authenticate.Service, projectcli project.Service) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, authenticatecli authenticate.Service, projectcli project.Service, validatecli validatemw.Client) Endpoints {
 
 	var authEndpoint endpoint.Endpoint
 	{
@@ -26,6 +27,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, authenticatecli authenti
 		authEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(authEndpoint)
 		authEndpoint = zipkin.TraceEndpoint(trace, "Auth")(authEndpoint)
 
+		authEndpoint = validatemw.Middleware(validatecli)(authEndpoint)
 		authEndpoint = authenticatemw.Middleware(authenticatecli)(authEndpoint)
 		authEndpoint = projectmw.Middleware(projectcli)(authEndpoint)
 	}

@@ -33,4 +33,5 @@ var (
 	ErrToken         = &fs_base.State{Ok: false, Message: "err token", Code: 10016}
 	ErrTokenExpired  = &fs_base.State{Ok: false, Message: "err token expired", Code: 10017}
 	ErrUserState     = &fs_base.State{Ok: false, Message: "err user state", Code: 10018}
+	ErrProjectAccess = &fs_base.State{Ok: false, Message: "err project access", Code: 10020}
 )

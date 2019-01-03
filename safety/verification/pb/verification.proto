@@ -12,7 +12,7 @@ service Verification {
 }
 
 message NewRequest {
-    int64 do = 1;
+    string func = 1;
     int64 funcId = 2;
     string to = 3;
 }

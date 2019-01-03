@@ -2,18 +2,16 @@ package user
 
 import (
 	"context"
+	"github.com/twinj/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
 	"time"
-	"zskparker.com/foundation/base/authenticate"
-	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/state"
 	"zskparker.com/foundation/base/state/pb"
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/names"
-	"zskparker.com/foundation/pkg/utils"
 )
 
 //gRPC
@@ -38,9 +36,8 @@ type Service interface {
 }
 
 type userService struct {
-	session         *mgo.Session
-	statecli        state.Service
-	authenticatecli authenticate.Service
+	session  *mgo.Session
+	statecli state.Service
 }
 
 func (svc *userService) findByKey(ctx context.Context, key, value string) (*fs_base_user.FindResponse, error) {
@@ -91,18 +88,6 @@ func (svc *userService) UpdatePhone(ctx context.Context, in *fs_base_user.Update
 
 	meta := ctx.Value("meta").(*fs_base.Metadata)
 
-	//offline user
-	r, err := svc.authenticatecli.Offline(ctx, &fs_base_authenticate.OfflineRequest{
-		UserId: meta.UserId,
-	})
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
-	}
-
-	if !r.State.Ok {
-		return errno.ErrResponse(r.State)
-	}
-
 	//update
 	repo := svc.GetRepo()
 	defer repo.Close()
@@ -126,22 +111,11 @@ func (svc *userService) UpdateEmail(ctx context.Context, in *fs_base_user.Update
 	}
 	meta := ctx.Value("meta").(*fs_base.Metadata)
 
-	//offline user
-	r, err := svc.authenticatecli.Offline(ctx, &fs_base_authenticate.OfflineRequest{
-		UserId: meta.UserId,
-	})
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
-	}
-
-	if !r.State.Ok {
-		return errno.ErrResponse(r.State)
-	}
 	//update
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	err = repo.UpdateEmail(meta.UserId, in.Value)
+	err := repo.UpdateEmail(meta.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -155,22 +129,11 @@ func (svc *userService) UpdateEnterprise(ctx context.Context, in *fs_base_user.U
 	}
 	meta := ctx.Value("meta").(*fs_base.Metadata)
 
-	//offline user
-	r, err := svc.authenticatecli.Offline(ctx, &fs_base_authenticate.OfflineRequest{
-		UserId: meta.UserId,
-	})
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
-	}
-
-	if !r.State.Ok {
-		return errno.ErrResponse(r.State)
-	}
 	//update
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	err = repo.UpdateEnterprise(meta.UserId, in.Value)
+	err := repo.UpdateEnterprise(meta.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -184,22 +147,11 @@ func (svc *userService) UpdatePassword(ctx context.Context, in *fs_base_user.Upd
 	}
 	meta := ctx.Value("meta").(*fs_base.Metadata)
 
-	//offline user
-	r, err := svc.authenticatecli.Offline(ctx, &fs_base_authenticate.OfflineRequest{
-		UserId: meta.UserId,
-	})
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
-	}
-
-	if !r.State.Ok {
-		return errno.ErrResponse(r.State)
-	}
 	//update
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	err = repo.UpdatePassword(meta.UserId, in.Value)
+	err := repo.UpdatePassword(meta.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -215,7 +167,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	u := &user{
 		CreateAt:      time.Now().UnixNano(),
 		Password:      string(p),
-		UserId:        utils.RandomMD5(in.Phone),
+		UserId:        uuid.NewV4().String(),
 		Email:         in.Email,
 		Level:         in.Level,
 		Phone:         in.Phone,
@@ -238,10 +190,10 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	return errno.ErrResponse(resp.State)
 }
 
-func NewService(session *mgo.Session, statecli state.Service, authenticatecli authenticate.Service) Service {
+func NewService(session *mgo.Session, statecli state.Service) Service {
 	var svc Service
 	{
-		svc = &userService{session: session, statecli: statecli, authenticatecli: authenticatecli}
+		svc = &userService{session: session, statecli: statecli}
 	}
 	return svc
 }

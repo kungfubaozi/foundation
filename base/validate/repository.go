@@ -20,7 +20,7 @@ type verification struct {
 	Code     string `bson:"code"`
 	CreateAt int64  `bson:"create_at"`
 	To       string `bson:"to"`
-	Do       int64  `bson:"do"`
+	Func     string `bson:"func"`
 	Voucher  string `bson:"voucher"`
 }
 

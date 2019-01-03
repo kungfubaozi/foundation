@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/reporter"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/strategy/def"
 	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/base/validate/pb"
@@ -18,6 +18,7 @@ type Service interface {
 
 type verificationService struct {
 	validatecli validate.Service
+	reportercli reportercli.Channel
 }
 
 func (svc *verificationService) New(ctx context.Context, in *fs_safety_verification.NewRequest) (*fs_safety_verification.NewResponse, error) {
@@ -54,10 +55,10 @@ func (svc *verificationService) New(ctx context.Context, in *fs_safety_verificat
 	}, nil
 }
 
-func NewService(validatecli validate.Service, reportercli reporter.Service) Service {
+func NewService(validatecli validate.Service, reportercli reportercli.Channel) Service {
 	var svc Service
 	{
-		svc = &verificationService{validatecli: validatecli}
+		svc = &verificationService{validatecli: validatecli, reportercli: reportercli}
 	}
 	return svc
 }

@@ -71,9 +71,9 @@ func StartService() {
 	}()
 
 	go func() {
-		addr := osenv.GetAMQPAddr()
+		addr := osenv.GetMessageAMQPAddr()
 		if len(addr) > 0 {
-			conn, err := amqp.Dial(osenv.GetMessageAMQPAddr())
+			conn, err := amqp.Dial(addr)
 			if err != nil {
 				fmt.Println("connect to message queue error.")
 				panic(err)
@@ -97,19 +97,19 @@ func StartService() {
 					if err == nil {
 						switch m.Type {
 						case "message":
-							cli.SendMessage(context.TODO(), msg)
+							cli.SendMessage(context.Background(), msg)
 							break
 						case "sms":
-							cli.SendSMS(context.TODO(), msg)
+							cli.SendSMS(context.Background(), msg)
 							break
 						case "email":
-							cli.SendEmail(context.TODO(), msg)
+							cli.SendEmail(context.Background(), msg)
 							break
 						case "offline":
-							cli.SendOffline(context.TODO(), msg)
+							cli.SendOffline(context.Background(), msg)
 							break
 						case "broadcast":
-							cli.SendBroadcast(context.TODO(), msg)
+							cli.SendBroadcast(context.Background(), msg)
 							break
 						}
 					}

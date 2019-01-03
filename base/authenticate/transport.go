@@ -24,9 +24,10 @@ import (
 )
 
 type GRPCServer struct {
-	new     grpctransport.Handler
-	check   grpctransport.Handler
-	refresh grpctransport.Handler
+	new         grpctransport.Handler
+	check       grpctransport.Handler
+	refresh     grpctransport.Handler
+	offlineUser grpctransport.Handler
 }
 
 func (g *GRPCServer) New(ctx context.Context, in *fs_base_authenticate.NewRequest) (*fs_base_authenticate.NewResponse, error) {
@@ -51,6 +52,14 @@ func (g *GRPCServer) Refresh(ctx context.Context, in *fs_base_authenticate.Refre
 		return nil, err
 	}
 	return resp.(*fs_base_authenticate.RefreshResponse), nil
+}
+
+func (g *GRPCServer) OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error) {
+	_, resp, err := g.refresh.ServeGRPC(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base.Response), nil
 }
 
 func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
@@ -99,6 +108,11 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Check", logger)))...),
 		refresh: grpctransport.NewServer(
 			endpoints.RefreshEndpoint,
+			format.GrpcMessage,
+			format.GrpcMessage,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Refresh", logger)))...),
+		offlineUser: grpctransport.NewServer(
+			endpoints.OfflineUserEndpoint,
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Refresh", logger)))...),
@@ -165,9 +179,27 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(refreshEndpoint)
 	}
 
+	var offlineUserEndpoint endpoint.Endpoint
+	{
+		offlineUserEndpoint = grpctransport.NewClient(conn,
+			"fs.base.authenticate.Authenticate",
+			"OfflineUser",
+			format.GrpcMessage,
+			format.GrpcMessage,
+			fs_base.Response{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
+		offlineUserEndpoint = limiter(offlineUserEndpoint)
+		offlineUserEndpoint = opentracing.TraceClient(otTracer, "OfflineUser")(offlineUserEndpoint)
+		offlineUserEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "OfflineUser",
+			Timeout: 5 * time.Second,
+		}))(offlineUserEndpoint)
+	}
+
 	return Endpoints{
-		NewEndpoint:     newEndpoint,
-		CheckEndpoint:   checkEndpoint,
-		RefreshEndpoint: refreshEndpoint,
+		NewEndpoint:         newEndpoint,
+		CheckEndpoint:       checkEndpoint,
+		RefreshEndpoint:     refreshEndpoint,
+		OfflineUserEndpoint: offlineUserEndpoint,
 	}
 }

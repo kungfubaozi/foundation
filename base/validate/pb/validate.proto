@@ -21,7 +21,7 @@ message CreateResponse {
 
 message CreateRequest {
     string userId = 1;
-    int64 do = 2; //做什么
+    string func = 2; //功能块
     int64 mode = 3; //验证模式(1:phone,2:email,3:face)
     string to = 4;
 
@@ -33,8 +33,13 @@ message VerificationRequest {
 
     string verId = 1;
     string code = 2;
-    int64 do = 3;
+    string func = 3;
 
     fs.base.OnVerification onVerification = 4; //项目配置
     fs.base.Metadata metadata = 5;
+}
+
+message VerificationResponse {
+    fs.base.State state = 1;
+    string to = 2;
 }

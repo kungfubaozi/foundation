@@ -6,7 +6,7 @@ import (
 	"time"
 	"zskparker.com/foundation/base/face/pb"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/reporter"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/osenv"
 )
@@ -25,8 +25,8 @@ type Service interface {
 
 //独立模块
 type faceService struct {
-	session  *mgo.Session
-	reporter reporter.Service
+	session     *mgo.Session
+	reportercli reportercli.Channel
 }
 
 func (svc *faceService) Update(ctx context.Context, in *fs_base_face.UpdateRequest) (*fs_base.Response, error) {
@@ -124,10 +124,10 @@ func (svc *faceService) GetRepo() repository {
 	return &faceRepository{session: svc.session.Clone()}
 }
 
-func NewService(session *mgo.Session, reporter reporter.Service) Service {
+func NewService(session *mgo.Session, reportercli reportercli.Channel) Service {
 	var svc Service
 	{
-		svc = &faceService{session: session, reporter: reporter}
+		svc = &faceService{session: session, reportercli: reportercli}
 	}
 	return svc
 }

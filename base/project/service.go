@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"github.com/twinj/uuid"
 	"gopkg.in/mgo.v2"
 	"time"
 	"zskparker.com/foundation/base/pb"
@@ -12,7 +13,6 @@ import (
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/names"
-	"zskparker.com/foundation/pkg/utils"
 )
 
 type Service interface {
@@ -107,7 +107,7 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 	defer repo.Close()
 
 	p := &project{
-		Id:       utils.RandomMD5(in.En),
+		Id:       uuid.NewV4().String(),
 		Logo:     in.Logo,
 		ZH:       in.Zh,
 		EN:       in.En,
@@ -115,27 +115,27 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 		Desc:     in.Desc,
 		Platforms: []*platform{
 			{
-				ClientId: utils.RandomMD5("Android"),
+				ClientId: uuid.NewV4().String(),
 				Platform: names.F_PLATFORM_ANDROID,
 				Enabled:  true,
 			},
 			{
-				ClientId: utils.RandomMD5("iOS"),
+				ClientId: uuid.NewV4().String(),
 				Platform: names.F_PLATFORM_IOS,
 				Enabled:  true,
 			},
 			{
-				ClientId: utils.RandomMD5("Windows"),
+				ClientId: uuid.NewV4().String(),
 				Platform: names.F_PLATFORM_WINDOWD,
 				Enabled:  true,
 			},
 			{
-				ClientId: utils.RandomMD5("MacOS"),
+				ClientId: uuid.NewV4().String(),
 				Platform: names.F_PLATFORM_MAC_OS,
 				Enabled:  true,
 			},
 			{
-				ClientId: utils.RandomMD5("Web"),
+				ClientId: uuid.NewV4().String(),
 				Platform: names.F_PLATFORM_WEB,
 				Enabled:  true,
 			},

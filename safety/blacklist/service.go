@@ -16,5 +16,5 @@ type Service interface {
 
 type blacklistService struct {
 	session     *mgo.Session
-	reportercli reporter.Service
+	reportercli logger.Service
 }

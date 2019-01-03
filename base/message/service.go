@@ -60,7 +60,7 @@ func (svc *mqttService) SendOffline(ctx context.Context, in *fs_base.DirectMessa
 	}
 	e := svc.client.Publish("offline/"+in.To, 0, false, string(i))
 	if e.Error() != nil {
-		return errno.ErrResponse(errno.ErrSystem)
+		return errno.ErrResponse(errno.ErrRequest)
 	}
 	return errno.ErrResponse(errno.Ok)
 }

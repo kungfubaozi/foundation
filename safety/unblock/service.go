@@ -16,5 +16,5 @@ type Service interface {
 type unblockService struct {
 	session     *mgo.Session
 	usercli     user.Service
-	reportercli reporter.Service
+	reportercli logger.Service
 }

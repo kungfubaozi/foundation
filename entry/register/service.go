@@ -27,6 +27,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 	if !resp.Ok {
 		return errno.ErrResponse(resp)
 	}
+
 }
 
 //从第三方注册不需要验证码
