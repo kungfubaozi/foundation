@@ -16,12 +16,12 @@ type repository interface {
 }
 
 type verification struct {
-	VerId    string `bson:"ver_id"`
-	Code     string `bson:"code"`
-	CreateAt int64  `bson:"create_at"`
-	To       string `bson:"to"`
-	Func     string `bson:"func"`
-	Voucher  string `bson:"voucher"`
+	VerId    bson.ObjectId `bson:"_id"`
+	Code     string        `bson:"code"`
+	CreateAt int64         `bson:"create_at"`
+	To       string        `bson:"to"`
+	Func     string        `bson:"func"`
+	Voucher  string        `bson:"voucher"`
 }
 
 type validateRepository struct {
@@ -44,7 +44,7 @@ func (svc *validateRepository) FindLast(voucher string) (*verification, error) {
 
 func (svc *validateRepository) Get(id string) (*verification, error) {
 	ver := &verification{}
-	err := svc.collection().Find(bson.M{"ver_id": id}).One(ver)
+	err := svc.collection().Find(bson.M{"_id": id}).One(ver)
 	return ver, err
 }
 

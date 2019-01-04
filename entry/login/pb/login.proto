@@ -7,22 +7,30 @@ import "zskparker.com/foundation/base/pb/base.proto";
 service Login {
 
     //使用密码账号登录(手机，邮箱，企业号)
-    rpc EntryByAP (EntryByAPRequest) returns (fs.base.Response);
+    rpc EntryByAP (EntryByAPRequest) returns (EntryResponse);
 
     //使用第三方登录
-    rpc EntryByOAuth (EntryByOAuthRequest) returns (fs.base.Response);
+    rpc EntryByOAuth (EntryByOAuthRequest) returns (EntryResponse);
 
     //使用验证码登录(手机，邮箱)
-    rpc EntryByValidateCode (EntryByValidateCodeRequest) returns (fs.base.Response);
+    rpc EntryByValidateCode (EntryByValidateCodeRequest) returns (EntryResponse);
 
     //使用二维码登录(有平台限制)
-    rpc EntryByQRCode (EntryByQRCodeRequest) returns (fs.base.Response);
+    rpc EntryByQRCode (EntryByQRCodeRequest) returns (EntryResponse);
 
-    //游客登录
-    rpc EntryByTourist(EntryByTouristRequest) returns (fs.base.Response);
+
+    //刷脸登录
+    rpc EntryByFace (EntryByFaceRequest) returns (EntryResponse);
 }
 
-message EntryByTouristRequest {
+message EntryResponse {
+    fs.base.State state = 1;
+    string refreshToken = 2;
+    string accessToken = 3;
+    string session = 4;
+}
+
+message EntryByFaceRequest {
     fs.base.Meta meta = 1;
 }
 

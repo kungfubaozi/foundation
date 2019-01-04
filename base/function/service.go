@@ -2,7 +2,7 @@ package function
 
 import (
 	"context"
-	"github.com/twinj/uuid"
+	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2"
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/base/pb"
@@ -10,12 +10,6 @@ import (
 )
 
 type Service interface {
-	Add(ctx context.Context, in *fs_base_function.UpsertRequest) (*fs_base_function.UpsertResponse, error)
-
-	Remove(ctx context.Context, in *fs_base_function.RemoveRequest) (*fs_base.Response, error)
-
-	Update(ctx context.Context, in *fs_base_function.UpsertRequest) (*fs_base.Response, error)
-
 	Get(ctx context.Context, in *fs_base_function.GetRequest) (*fs_base_function.GetResponse, error)
 }
 
@@ -40,14 +34,14 @@ func (svc *functionService) Add(ctx context.Context, in *fs_base_function.Upsert
 			State: errno.ErrRequest,
 		}, nil
 	}
+	uid, _ := uuid.NewV1()
 	f = &function{
-		Func:         uuid.NewV4().String()[24:],
-		ZH:           in.Zh,
-		API:          in.Api,
-		Level:        in.Level,
-		EN:           in.En,
-		Fcv:          in.Fcv,
-		Verification: in.Verification,
+		Func:  uuid.NewV5(uid, in.Api).String()[24:],
+		ZH:    in.Zh,
+		API:   in.Api,
+		Level: in.Level,
+		EN:    in.En,
+		Fcv:   in.Fcv,
 	}
 	err = repo.Add(f)
 	if err != nil {
@@ -93,12 +87,11 @@ func (svc *functionService) Get(ctx context.Context, in *fs_base_function.GetReq
 	return &fs_base_function.GetResponse{
 		State: errno.Ok,
 		Func: &fs_base_function.Func{
-			Zh:           function.ZH,
-			Api:          function.API,
-			En:           function.EN,
-			Fcv:          function.Fcv,
-			Verification: function.Verification,
-			Func:         function.Func,
+			Zh:   function.ZH,
+			Api:  function.API,
+			En:   function.EN,
+			Fcv:  function.Fcv,
+			Func: function.Func,
 		},
 	}, nil
 }

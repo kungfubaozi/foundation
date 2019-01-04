@@ -20,14 +20,14 @@ type repository interface {
 }
 
 type function struct {
-	Func         string `bson:"func"`
-	API          string `bson:"api"`
-	CreateAt     string `bson:"create_at"`
-	ZH           string `bson:"zh"`
-	EN           string `bson:"en"`
-	Verification bool   `bson:"verification"` //是否需要验证
-	Fcv          int64  `bson:"fcv"`          //首选验证模式
-	Level        int64  `bson:"level"`
+	Func      string `bson:"func"`
+	API       string `bson:"api"`
+	CreateAt  string `bson:"create_at"`
+	ZH        string `bson:"zh"`
+	EN        string `bson:"en"`
+	Fcv       int64  `bson:"fcv"` //首选验证模式
+	Level     int64  `bson:"level"`
+	ProjectId string `bson:"project_id"`
 }
 
 type functionRepository struct {

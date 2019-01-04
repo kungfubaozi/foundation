@@ -9,6 +9,14 @@ func GetValidateTemplate() string {
 	return os.Getenv("VALIDATE_TEMPLATE")
 }
 
+func GetNodeNumber() int64 {
+	i, e := strconv.ParseInt(os.Getenv("NODE"), 10, 64)
+	if e != nil {
+		return 1
+	}
+	return i
+}
+
 func GetConsulAddr() string {
 	s := os.Getenv("CONSUL_ADDR")
 	if len(s) == 0 {

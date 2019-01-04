@@ -59,7 +59,7 @@ message NewRequest {
 
 message Authorize {
     string userId = 1;
-    string timestamp = 2;
+    int64 timestamp = 2;
     string projectId = 3;
     string clientId = 4;
     string device = 5;

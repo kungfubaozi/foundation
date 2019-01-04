@@ -2,8 +2,8 @@ package project
 
 import (
 	"context"
-	"github.com/twinj/uuid"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/project/pb"
@@ -13,6 +13,7 @@ import (
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/utils"
 )
 
 type Service interface {
@@ -85,7 +86,7 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 	resp.Info = gp
 
 	r, err := svc.strategycli.Get(ctx, &fs_base_strategy.GetRequest{
-		ProjectId: p.Id,
+		ProjectId: p.Id.Hex(),
 	})
 	if err != nil {
 		return resp, nil
@@ -106,8 +107,10 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 	repo := svc.GetRepo()
 	defer repo.Close()
 
+	node := utils.NodeGenerate()
+
 	p := &project{
-		Id:       uuid.NewV4().String(),
+		Id:       bson.NewObjectId(),
 		Logo:     in.Logo,
 		ZH:       in.Zh,
 		EN:       in.En,
@@ -115,27 +118,27 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 		Desc:     in.Desc,
 		Platforms: []*platform{
 			{
-				ClientId: uuid.NewV4().String(),
+				ClientId: node.Generate().Base64(),
 				Platform: names.F_PLATFORM_ANDROID,
 				Enabled:  true,
 			},
 			{
-				ClientId: uuid.NewV4().String(),
+				ClientId: node.Generate().Base64(),
 				Platform: names.F_PLATFORM_IOS,
 				Enabled:  true,
 			},
 			{
-				ClientId: uuid.NewV4().String(),
+				ClientId: node.Generate().Base64(),
 				Platform: names.F_PLATFORM_WINDOWD,
 				Enabled:  true,
 			},
 			{
-				ClientId: uuid.NewV4().String(),
+				ClientId: node.Generate().Base64(),
 				Platform: names.F_PLATFORM_MAC_OS,
 				Enabled:  true,
 			},
 			{
-				ClientId: uuid.NewV4().String(),
+				ClientId: node.Generate().Base64(),
 				Platform: names.F_PLATFORM_WEB,
 				Enabled:  true,
 			},
@@ -150,7 +153,7 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 
 	go func() {
 		svc.strategycli.New(ctx, &fs_base.ProjectStrategy{
-			ProjectId: p.Id,
+			ProjectId: p.Id.Hex(),
 			CreateAt:  p.CreateAt,
 			Version:   1,
 			Configuration: &fs_base.Configuration{

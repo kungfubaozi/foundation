@@ -6,15 +6,6 @@ import "zskparker.com/foundation/base/pb/base.proto";
 
 service Function {
 
-    //添加功能(用作身份验证/统计运维等)
-    rpc Add (UpsertRequest) returns (UpsertResponse);
-
-    //移除功能
-    rpc Remove (RemoveRequest) returns (fs.base.Response);
-
-    //更新
-    rpc Update (UpsertRequest) returns (fs.base.Response);
-
     //admin or gRPC
     rpc Get (GetRequest) returns (GetResponse);
 
@@ -23,6 +14,7 @@ service Function {
 message GetRequest {
     string api = 1;
     string func = 2;
+    string projectId = 3;
 }
 
 message GetResponse {
@@ -32,12 +24,11 @@ message GetResponse {
 
 message Func {
     string func = 1;
-    bool verification = 2;
-    string zh = 3;
-    string en = 4;
-    string api = 5;
-    int64 fcv = 6; //首选验证模式
-    int64 level = 7;
+    string zh = 2;
+    string en = 3;
+    string api = 4;
+    int64 fcv = 5; //验证模式
+    int64 level = 6;
 }
 
 message UpsertResponse {
@@ -53,8 +44,6 @@ message UpsertRequest {
     string api = 1;
     string zh = 2;
     string en = 3;
-    bool verification = 4; //是否需要验证
-    int64 fcv = 5; //首选验证模式
-    string func = 6;
-    int64 level = 7;
+    int64 fcv = 4; //首选验证模式
+    int64 level = 5;
 }

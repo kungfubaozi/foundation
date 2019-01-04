@@ -3,9 +3,9 @@ package validate
 import (
 	"context"
 	"fmt"
-	"github.com/twinj/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"math/rand"
 	"strings"
 	"time"
@@ -91,7 +91,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		}
 
 		vl = &verification{
-			VerId:    uuid.NewV4().String(),
+			VerId:    bson.NewObjectId(),
 			CreateAt: time.Now().UnixNano(),
 			Code:     string(b),
 		}
@@ -120,7 +120,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 
 		//添加到状态管理里
 		resp, err := svc.state.Upsert(context.Background(), &fs_base_state.UpsertRequest{
-			Key:    vl.Voucher + "-" + vl.VerId,
+			Key:    vl.Voucher + "-" + vl.VerId.Hex(),
 			Status: states.F_STATE_WAITING,
 		})
 
@@ -137,7 +137,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		}
 
 		return &fs_base_validate.CreateResponse{
-			VerId: vl.VerId,
+			VerId: vl.VerId.Hex(),
 			State: errno.Ok,
 		}, nil
 	}
@@ -165,7 +165,7 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 
 		//验证状态
 		resp, err := svc.state.Get(context.Background(), &fs_base_state.GetRequest{
-			Key: vl.Voucher + "-" + vl.VerId,
+			Key: vl.Voucher + "-" + vl.VerId.Hex(),
 		})
 		if err != nil {
 			return errno.ErrResponse(errno.ErrSystem)
@@ -180,7 +180,7 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 			if bcrypt.CompareHashAndPassword([]byte(vl.Code), []byte(code)) != nil {
 				//更新状态
 				resp, err := svc.state.Upsert(context.Background(), &fs_base_state.UpsertRequest{
-					Key:    vl.Voucher + "-" + vl.VerId,
+					Key:    vl.Voucher + "-" + vl.VerId.Hex(),
 					Status: states.F_STATE_OK,
 				})
 				if err != nil {

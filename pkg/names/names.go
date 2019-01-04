@@ -12,16 +12,6 @@ const (
 )
 
 const (
-	F_FUNC_LOGIN             string = "8f537f6a"
-	F_FUNC_LOGIN_VER         string = "d2d0371b"
-	F_FUNC_REGISTER          string = "f83152ac"
-	F_FUNC_UPDATE_PASSWORD   string = "b60ed019"
-	F_FUNC_UPDATE_PHONE      string = "cd994e0f"
-	F_FUNC_UPDATE_EMAIL      string = "ecf8ecc2"
-	F_FUNC_UPDATE_ENTERPRISE string = "4fea4bba"
-)
-
-const (
 	F_STATE_OK         int64 = 3 << 1
 	F_USER_STATE_FROZE int64 = 3 << 2 //用户状态冻结
 	F_USER_STATE_LOCK  int64 = 3 << 3 //用户被锁定
@@ -40,4 +30,12 @@ const (
 	F_VALIDATE_FACE  = 5 << 1
 	F_VALIDATE_EMAIL = 5 << 2
 	F_VALIDATE_PHONE = 5 << 3
+)
+
+const (
+	F_FCV_FACE  = 6 << 6
+	F_FCV_EMAIL = 6 << 7
+	F_FCV_PHONE = 6 << 8
+	F_FCV_AUTH  = 6 << 9
+	F_FCV_NONE  = 6 << 10
 )

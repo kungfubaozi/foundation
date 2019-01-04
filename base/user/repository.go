@@ -64,14 +64,14 @@ func (repo *userRepository) collection() *mgo.Collection {
 }
 
 type user struct {
-	UserId        string `bson:"user_id"`
-	Username      string `bson:"username"`
-	Password      string `bson:"password"`
-	Enterprise    string `bson:"enterprise"`
-	CreateAt      int64  `bson:"create_at"`
-	Phone         string `bson:"phone"`
-	Email         string `bson:"email"`
-	Level         int64  `bson:"level"`
-	FromProjectId string `bson:"from_project_id"`
-	FromAppId     string `bson:"from_app_id"`
+	UserId        bson.ObjectId `bson:"_id"`
+	Username      string        `bson:"username"`
+	Password      string        `bson:"password"`
+	Enterprise    string        `bson:"enterprise"`
+	CreateAt      int64         `bson:"create_at"`
+	Phone         string        `bson:"phone"`
+	Email         string        `bson:"email"`
+	Level         int64         `bson:"level"`
+	FromProjectId string        `bson:"from_project_id"`
+	FromAppId     string        `bson:"from_app_id"`
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
-	"github.com/twinj/uuid"
 	"time"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/message/cmd/messagecli"
@@ -15,7 +14,7 @@ import (
 	"zskparker.com/foundation/base/user"
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/errno"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/utils"
 )
 
 type Service interface {
@@ -143,10 +142,11 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 }
 
 func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticate.NewRequest) (*fs_base_authenticate.NewResponse, error) {
-	in.Authorize.AccessTokenUUID = uuid.NewV4().String()
-	in.Authorize.RefreshTokenUUID = uuid.NewV4().String()
+	node := utils.NodeGenerate()
+	in.Authorize.AccessTokenUUID = node.Generate().Base64()
+	in.Authorize.RefreshTokenUUID = node.Generate().Base64()
 	//关联id，用于关联两个token(accessToken.refreshToken)
-	in.Authorize.Relation = uuid.NewV4().String()
+	in.Authorize.Relation = node.Generate().Base64()
 	var accessToken, refreshToken string
 	errc := make(chan error, 2)
 	go func() {
@@ -195,7 +195,6 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 		fmt.Println("add", err)
 		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
 	}
-	svc.reportercli.Write(names.F_FUNC_LOGIN, in.Authorize.UserId, in.Authorize.Ip)
 	return &fs_base_authenticate.NewResponse{
 		State:        errno.Ok,
 		RefreshToken: refreshToken,

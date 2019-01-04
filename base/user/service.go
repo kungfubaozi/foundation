@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"github.com/twinj/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/state"
@@ -51,7 +51,7 @@ func (svc *userService) findByKey(ctx context.Context, key, value string) (*fs_b
 	}
 	return &fs_base_user.FindResponse{
 		State:         errno.Ok,
-		UserId:        user.UserId,
+		UserId:        user.UserId.Hex(),
 		FromProjectId: user.FromProjectId,
 		FromAppId:     user.FromAppId,
 		Level:         user.Level,
@@ -62,7 +62,7 @@ func (svc *userService) findByKey(ctx context.Context, key, value string) (*fs_b
 }
 
 func (svc *userService) FindByUserId(ctx context.Context, in *fs_base_user.FindRequest) (*fs_base_user.FindResponse, error) {
-	return svc.findByKey(ctx, "user_id", in.Value)
+	return svc.findByKey(ctx, "_id", in.Value)
 }
 
 func (svc *userService) FindByPhone(ctx context.Context, in *fs_base_user.FindRequest) (*fs_base_user.FindResponse, error) {
@@ -167,7 +167,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	u := &user{
 		CreateAt:      time.Now().UnixNano(),
 		Password:      string(p),
-		UserId:        uuid.NewV4().String(),
+		UserId:        bson.NewObjectId(),
 		Email:         in.Email,
 		Level:         in.Level,
 		Phone:         in.Phone,
@@ -181,7 +181,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 		return errno.ErrResponse(errno.ErrSystem)
 	}
 	resp, err := svc.statecli.Upsert(ctx, &fs_base_state.UpsertRequest{
-		Key:    u.UserId,
+		Key:    u.UserId.Hex(),
 		Status: names.F_STATE_OK,
 	})
 	if err != nil {

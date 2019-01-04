@@ -1,0 +1,23 @@
+package strategy
+
+import (
+	"zskparker.com/foundation/base/function/pb"
+	"zskparker.com/foundation/pkg/model"
+	"zskparker.com/foundation/pkg/names"
+)
+
+func GetUpdateProjectStrategyFunc() *fs_pkg_model.APIFunction {
+	f := &fs_pkg_model.APIFunction{
+		Prefix: "/api/fds/env/strategy",
+		Infix:  "/update",
+	}
+	f.Function = &fs_base_function.Func{
+		Api:   f.Prefix + f.Infix,
+		Zh:    "更新策略",
+		En:    "UpdateStrategy",
+		Func:  "7551e6a14638",
+		Level: 5,
+		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
+	}
+	return f
+}
