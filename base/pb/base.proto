@@ -32,6 +32,8 @@ message Metadata {
     int64 platform = 7;
     string api = 8;
     int64 level = 9;
+
+    string token = 10;
 }
 
 message KeyValue {

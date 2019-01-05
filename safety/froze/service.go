@@ -4,7 +4,7 @@ import (
 	"context"
 	"gopkg.in/mgo.v2"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/reporter"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/safety/froze/pb"
 )
 
@@ -18,5 +18,5 @@ type Service interface {
 
 type frozeService struct {
 	session     *mgo.Session
-	reportercli logger.Service
+	reportercli reportercli.Channel
 }

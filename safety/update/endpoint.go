@@ -8,7 +8,6 @@ import (
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/safety/update/pb"
 )
@@ -28,9 +27,6 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		updatePhone = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updatePhone)
 		updatePhone = zipkin.TraceEndpoint(trace, "UpdatePhone")(updatePhone)
 
-		updatePhone = functionmw.Middleware(func(request interface{}) *fs_base.Meta {
-			return request.(*fs_safety_update.UpdateRequest).Meta
-		})(updatePhone)
 	}
 
 	var updateEmail endpoint.Endpoint

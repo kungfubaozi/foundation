@@ -23,7 +23,7 @@ type verificationService struct {
 
 func (svc *verificationService) New(ctx context.Context, in *fs_safety_verification.NewRequest) (*fs_safety_verification.NewResponse, error) {
 	fmt.Println("new verification")
-	if in.Do <= 0 && in.FuncId <= 0 {
+	if len(in.Func) <= 0 && in.FuncId <= 0 {
 		return &fs_safety_verification.NewResponse{
 			State: errno.ErrRequest,
 		}, nil
@@ -43,7 +43,7 @@ func (svc *verificationService) New(ctx context.Context, in *fs_safety_verificat
 		req.OnVerification = strategydef.GetOnVerificationDefault()
 	}
 	req.To = in.To
-	req.Do = in.Do
+	req.Func = in.Func
 	req.Metadata = meta
 	if meta != nil { //鉴权信息不为空的情况下
 

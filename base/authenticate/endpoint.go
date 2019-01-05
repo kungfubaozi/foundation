@@ -108,10 +108,10 @@ func (g Endpoints) New(ctx context.Context, in *fs_base_authenticate.NewRequest)
 	return resp.(*fs_base_authenticate.NewResponse), nil
 }
 
-func (g Endpoints) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base.Response, error) {
+func (g Endpoints) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error) {
 	resp, err := g.CheckEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*fs_base.Response), nil
+	return resp.(*fs_base_authenticate.CheckResponse), nil
 }

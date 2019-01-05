@@ -23,9 +23,9 @@ func Metadata() kithttp.RequestFunc {
 		meta.Device = request.Header.Get("X-User-Device")
 		meta.ClientId = request.Header.Get("X-Client-Id")
 		meta.Ip = request.Header.Get("X-Real-IP")
-		meta.Token = request.Header.Get("Authorization")
 		meta.UserAgent = request.Header.Get("User-Agent")
 		meta.Api = request.URL.Path
+		meta.Token = request.Header.Get("Authorization")
 		return context.WithValue(ctx, "meta", meta)
 	}
 }

@@ -33,7 +33,6 @@ message CheckRequest {
     fs.base.Metadata metadata = 1;
     int64 maxOnlineCount = 2;
     bool allowOtherProjectUserToLogin = 3;
-    string accessToken = 4;
 }
 
 message CheckResponse {

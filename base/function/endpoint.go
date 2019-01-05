@@ -30,6 +30,14 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 
 }
 
+func (g Endpoints) Get(ctx context.Context, in *fs_base_function.GetRequest) (*fs_base_function.GetResponse, error) {
+	resp, err := g.GetEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base_function.GetResponse), nil
+}
+
 func MakeGetEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return svc.Get(ctx, request.(*fs_base_function.GetRequest))

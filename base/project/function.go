@@ -3,6 +3,7 @@ package project
 import (
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/pkg/model"
+	"zskparker.com/foundation/pkg/names"
 )
 
 func GetCreateProject() *fs_pkg_model.APIFunction {
@@ -15,7 +16,8 @@ func GetCreateProject() *fs_pkg_model.APIFunction {
 		Zh:    "新建项目",
 		En:    "CreateProject",
 		Func:  "3c7cec044485",
-		Level: 1,
+		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
+		Level: 4,
 	}
 	return f
 }
@@ -30,7 +32,8 @@ func GetRemoveProject() *fs_pkg_model.APIFunction {
 		Zh:    "移除项目",
 		En:    "RemoveProject",
 		Func:  "4974f1c3a33b",
-		Level: 1,
+		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
+		Level: 4,
 	}
 	return f
 }
@@ -45,7 +48,8 @@ func GetUpdateProject() *fs_pkg_model.APIFunction {
 		Zh:    "更新项目",
 		En:    "UpdateProject",
 		Func:  "5451dbc0b529",
-		Level: 1,
+		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
+		Level: 4,
 	}
 	return f
 }

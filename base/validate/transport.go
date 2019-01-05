@@ -15,7 +15,6 @@ import (
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"time"
-	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/validate/pb"
 	"zskparker.com/foundation/pkg/format"
 )
@@ -62,7 +61,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			"Verification",
 			format.GrpcMessage,
 			format.GrpcMessage,
-			fs_base.Response{},
+			fs_base_validate.VerificationResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		verificationEndpoint = limiter(verificationEndpoint)
 		verificationEndpoint = opentracing.TraceClient(otTracer, "Verification")(verificationEndpoint)
@@ -95,12 +94,12 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 	}
 }
 
-func (g *GRPCServer) Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base.Response, error) {
+func (g *GRPCServer) Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base_validate.VerificationResponse, error) {
 	_, resp, err := g.verification.ServeGRPC(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*fs_base.Response), nil
+	return resp.(*fs_base_validate.VerificationResponse), nil
 }
 
 func (g *GRPCServer) Create(ctx context.Context, in *fs_base_validate.CreateRequest) (*fs_base_validate.CreateResponse, error) {

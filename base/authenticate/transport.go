@@ -38,12 +38,12 @@ func (g *GRPCServer) New(ctx context.Context, in *fs_base_authenticate.NewReques
 	return resp.(*fs_base_authenticate.NewResponse), nil
 }
 
-func (g *GRPCServer) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base.Response, error) {
+func (g *GRPCServer) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error) {
 	_, resp, err := g.check.ServeGRPC(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*fs_base.Response), nil
+	return resp.(*fs_base_authenticate.CheckResponse), nil
 }
 
 func (g *GRPCServer) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
@@ -152,7 +152,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			"Check",
 			format.GrpcMessage,
 			format.GrpcMessage,
-			fs_base.Response{},
+			fs_base_authenticate.CheckResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		checkEndpoint = limiter(checkEndpoint)
 		checkEndpoint = opentracing.TraceClient(otTracer, "Check")(checkEndpoint)
@@ -169,7 +169,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			"Refresh",
 			format.GrpcMessage,
 			format.GrpcMessage,
-			fs_base.Response{},
+			fs_base_authenticate.RefreshResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		refreshEndpoint = limiter(refreshEndpoint)
 		refreshEndpoint = opentracing.TraceClient(otTracer, "Refresh")(refreshEndpoint)

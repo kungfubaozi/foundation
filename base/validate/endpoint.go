@@ -8,7 +8,6 @@ import (
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/validate/pb"
 )
 
@@ -40,12 +39,12 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 
 }
 
-func (g *Endpoints) Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base.Response, error) {
+func (g *Endpoints) Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base_validate.VerificationResponse, error) {
 	resp, err := g.VerificationEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*fs_base.Response), nil
+	return resp.(*fs_base_validate.VerificationResponse), nil
 }
 
 func (g *Endpoints) Create(ctx context.Context, in *fs_base_validate.CreateRequest) (*fs_base_validate.CreateResponse, error) {

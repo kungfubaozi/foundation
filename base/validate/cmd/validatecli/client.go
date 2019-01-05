@@ -15,9 +15,10 @@ import (
 	"time"
 	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/osenv"
 )
 
-func NewClient(consulAddr string, tracer *zipkin.Tracer) validate.Service {
+func NewClient(tracer *zipkin.Tracer) validate.Service {
 	var (
 		retryMax     = 3
 		retryTimeout = 500 * time.Millisecond
@@ -38,9 +39,7 @@ func NewClient(consulAddr string, tracer *zipkin.Tracer) validate.Service {
 	var client consulsd.Client
 	{
 		consulConfig := api.DefaultConfig()
-		if len(consulAddr) > 0 {
-			consulConfig.Address = consulAddr
-		}
+		consulConfig.Address = osenv.GetConsulAddr()
 		consulClient, err := api.NewClient(consulConfig)
 		if err != nil {
 			panic(err)

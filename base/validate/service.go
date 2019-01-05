@@ -21,7 +21,7 @@ import (
 )
 
 type Service interface {
-	Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base.Response, error)
+	Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base_validate.VerificationResponse, error)
 
 	Create(ctx context.Context, in *fs_base_validate.CreateRequest) (*fs_base_validate.CreateResponse, error)
 }
@@ -147,17 +147,17 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	}, nil
 }
 
-func (svc *validateService) Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base.Response, error) {
+func (svc *validateService) Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base_validate.VerificationResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
 
 	if len(in.Code) == 0 && len(in.Func) == 0 {
-		return errno.ErrResponse(errno.ErrRequest)
+		return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 	}
 
 	vl, err := repo.Get(in.VerId)
 	if err != nil {
-		return errno.ErrResponse(errno.ErrRequest)
+		return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 	}
 
 	//检查时间和操作
@@ -168,10 +168,10 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 			Key: vl.Voucher + "-" + vl.VerId.Hex(),
 		})
 		if err != nil {
-			return errno.ErrResponse(errno.ErrSystem)
+			return &fs_base_validate.VerificationResponse{State: errno.ErrSystem}, nil
 		}
 		if !resp.State.Ok {
-			return errno.ErrResponse(resp.State)
+			return &fs_base_validate.VerificationResponse{State: resp.State}, nil
 		}
 
 		//需要在等待验证状态
@@ -184,16 +184,16 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 					Status: states.F_STATE_OK,
 				})
 				if err != nil {
-					return errno.ErrResponse(errno.ErrSystem)
+					return &fs_base_validate.VerificationResponse{State: errno.ErrSystem}, nil
 				}
-				return errno.ErrResponse(resp.State)
+				return &fs_base_validate.VerificationResponse{State: resp.State, To: vl.To}, nil
 			} else {
-				return errno.ErrResponse(errno.ErrInvalid)
+				return &fs_base_validate.VerificationResponse{State: errno.ErrInvalid}, nil
 			}
 		}
 	}
 
-	return errno.ErrResponse(errno.ErrExpired)
+	return &fs_base_validate.VerificationResponse{State: errno.ErrExpired}, nil
 }
 
 func NewService(session *mgo.Session, messagecli messagecli.Channel, state state.Service) Service {

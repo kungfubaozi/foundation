@@ -4,7 +4,7 @@ import (
 	"context"
 	"gopkg.in/mgo.v2"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/reporter"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user"
 	"zskparker.com/foundation/safety/unblock/pb"
 )
@@ -16,5 +16,5 @@ type Service interface {
 type unblockService struct {
 	session     *mgo.Session
 	usercli     user.Service
-	reportercli logger.Service
+	reportercli reportercli.Channel
 }

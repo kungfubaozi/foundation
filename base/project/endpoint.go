@@ -30,11 +30,19 @@ func NewEndpoints(svc Service) Endpoints {
 }
 
 func (g Endpoints) New(ctx context.Context, in *fs_base_project.NewRequest) (*fs_base.Response, error) {
-
+	resp, err := g.NewEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base.Response), nil
 }
 
 func (g Endpoints) Get(ctx context.Context, in *fs_base_project.GetRequest) (*fs_base_project.GetResponse, error) {
-
+	resp, err := g.GetEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base_project.GetResponse), nil
 }
 
 func MakeNewEndpoint(svc Service) endpoint.Endpoint {

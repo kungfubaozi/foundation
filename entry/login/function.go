@@ -23,7 +23,7 @@ func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
 func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/api/fds/env/entry",
-		Infix:  "/face",
+		Infix:  "/ap",
 	}
 	f.Function = &fs_base_function.Func{
 		Api:   f.Prefix + f.Infix,
@@ -38,7 +38,7 @@ func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 func GetEntryByOAuthFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/api/fds/env/entry",
-		Infix:  "/face",
+		Infix:  "/oatuh",
 	}
 	f.Function = &fs_base_function.Func{
 		Api:   f.Prefix + f.Infix,
@@ -53,7 +53,7 @@ func GetEntryByOAuthFunc() *fs_pkg_model.APIFunction {
 func GetEntryByValidateCodeFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/api/fds/env/entry",
-		Infix:  "/face",
+		Infix:  "/vc",
 	}
 	f.Function = &fs_base_function.Func{
 		Api:   f.Prefix + f.Infix,
@@ -68,7 +68,7 @@ func GetEntryByValidateCodeFunc() *fs_pkg_model.APIFunction {
 func GetEntryByQRCodeFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/api/fds/env/entry",
-		Infix:  "/face",
+		Infix:  "/qrcode",
 	}
 	f.Function = &fs_base_function.Func{
 		Api:   f.Prefix + f.Infix,

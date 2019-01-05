@@ -46,7 +46,7 @@ func StartService() {
 		panic(err)
 	}
 
-	service := validate.NewService(session, message, statecli.NewClient(osenv.GetConsulAddr(), zipkinTracer))
+	service := validate.NewService(session, message, statecli.NewClient(zipkinTracer))
 	endpoints := validate.NewEndpoints(service, zipkinTracer, logger)
 	svc := validate.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

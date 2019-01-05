@@ -7,8 +7,6 @@ import (
 	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/entry/register/pb"
 	"zskparker.com/foundation/pkg/errno"
-	"zskparker.com/foundation/pkg/names"
-	"zskparker.com/foundation/safety/verification"
 )
 
 type Service interface {
@@ -23,16 +21,12 @@ type registerService struct {
 }
 
 func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.FromAPRequest) (*fs_base.Response, error) {
-	resp := verification.FromRequestMeta(svc.validatecli, in.Meta, names.F_DO_REGISTER)
-	if !resp.Ok {
-		return errno.ErrResponse(resp)
-	}
-
+	panic(errno.ERROR)
 }
 
 //从第三方注册不需要验证码
 func (svc *registerService) FromOAuth(ctx context.Context, in *fs_entry_register.FromOAuthRequest) (*fs_base.Response, error) {
-
+	panic(errno.ERROR)
 }
 
 func NewService(usercli user.Service, validatecli validate.Service) Service {

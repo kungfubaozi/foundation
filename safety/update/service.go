@@ -5,10 +5,8 @@ import (
 	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/user"
-	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/pkg/errno"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/safety/update/pb"
 )
 
@@ -35,28 +33,28 @@ func (svc *updateService) update(ctx context.Context, in *fs_safety_update.Updat
 	}
 	var err error
 	resp := &fs_base.Response{State: errno.Ok}
-	switch c {
-	case names.F_FUNC_UPDATE_PHONE:
-		resp, err = svc.usercli.UpdatePhone(ctx, &fs_base_user.UpdateRequest{
-			Value: in.Value,
-		})
-		break
-	case names.F_FUNC_UPDATE_EMAIL:
-		resp, err = svc.usercli.UpdateEmail(ctx, &fs_base_user.UpdateRequest{
-			Value: in.Value,
-		})
-		break
-	case names.F_FUNC_UPDATE_PASSWORD:
-		resp, err = svc.usercli.UpdatePassword(ctx, &fs_base_user.UpdateRequest{
-			Value: in.Value,
-		})
-		break
-	case names.F_FUNC_UPDATE_ENTERPRISE:
-		resp, err = svc.usercli.UpdateEnterprise(ctx, &fs_base_user.UpdateRequest{
-			Value: in.Value,
-		})
-		break
-	}
+	//switch c {
+	//case names.F_FUNC_UPDATE_PHONE:
+	//	resp, err = svc.usercli.UpdatePhone(ctx, &fs_base_user.UpdateRequest{
+	//		Value: in.Value,
+	//	})
+	//	break
+	//case names.F_FUNC_UPDATE_EMAIL:
+	//	resp, err = svc.usercli.UpdateEmail(ctx, &fs_base_user.UpdateRequest{
+	//		Value: in.Value,
+	//	})
+	//	break
+	//case names.F_FUNC_UPDATE_PASSWORD:
+	//	resp, err = svc.usercli.UpdatePassword(ctx, &fs_base_user.UpdateRequest{
+	//		Value: in.Value,
+	//	})
+	//	break
+	//case names.F_FUNC_UPDATE_ENTERPRISE:
+	//	resp, err = svc.usercli.UpdateEnterprise(ctx, &fs_base_user.UpdateRequest{
+	//		Value: in.Value,
+	//	})
+	//	break
+	//}
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -64,19 +62,19 @@ func (svc *updateService) update(ctx context.Context, in *fs_safety_update.Updat
 }
 
 func (svc *updateService) UpdatePhone(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
-	return svc.update(ctx, in, names.F_FUNC_UPDATE_PHONE)
+	panic(errno.ERROR)
 }
 
 func (svc *updateService) UpdateEnterprise(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
-	return svc.update(ctx, in, names.F_FUNC_UPDATE_ENTERPRISE)
+	panic(errno.ERROR)
 }
 
 func (svc *updateService) UpdateEmail(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
-	return svc.update(ctx, in, names.F_FUNC_UPDATE_EMAIL)
+	panic(errno.ERROR)
 }
 
 func (svc *updateService) UpdatePassword(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
-	return svc.update(ctx, in, names.F_FUNC_UPDATE_PASSWORD)
+	panic(errno.ERROR)
 }
 
 func NewService(userlci user.Service, validatecli validate.Service) Service {

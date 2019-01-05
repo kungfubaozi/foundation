@@ -62,7 +62,7 @@ func (svc *authenticateService) sizeCheck() {
 
 func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error) {
 	resp := &fs_base_authenticate.CheckResponse{}
-	accessTokenClaims, err := decodeToken(in.AccessToken)
+	accessTokenClaims, err := decodeToken(in.Metadata.Token)
 	if err != nil {
 		resp.State = errno.ErrToken
 		return resp, nil
@@ -175,15 +175,16 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	if v != nil && len(v) > 0 {
 		//offline
 		c := 0
+		i := len(in.Authorize.UserId)
 		for _, k := range v {
 			key := b2s(k.([]uint8))
-			if key[0:36] == in.Authorize.ClientId {
+			if key[0:i] == in.Authorize.ClientId {
 				c++
 				if c >= int(in.MaxOnlineCount) {
 					repo.Del(in.Authorize.UserId, key) //这里不作错误处理
 					//send offline message
 					svc.messsagecli.SendOffline(&fs_base.DirectMessage{
-						To:      key[37:],
+						To:      key[i+1:],
 						Content: "offline",
 					})
 				}

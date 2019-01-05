@@ -1,17 +1,30 @@
 package functionsvc
 
 import (
+	"fmt"
+	"github.com/go-kit/kit/log"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	"google.golang.org/grpc"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"net"
+	"os"
 	"zskparker.com/foundation/base/function"
+	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/base/invite"
 	"zskparker.com/foundation/base/project"
 	"zskparker.com/foundation/base/refresh"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/strategy"
 	"zskparker.com/foundation/base/usersync"
 	"zskparker.com/foundation/entry/login"
 	"zskparker.com/foundation/entry/register"
+	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/model"
+	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/osenv"
+	"zskparker.com/foundation/pkg/registration"
+	"zskparker.com/foundation/pkg/serv"
 	"zskparker.com/foundation/safety/blacklist"
 	"zskparker.com/foundation/safety/froze"
 	"zskparker.com/foundation/safety/unblock"
@@ -20,11 +33,57 @@ import (
 )
 
 func StartService() {
+	var logger log.Logger
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+		logger = log.With(logger, "caller", log.DefaultCaller)
+	}
 
-}
+	var otTracer stdopentracing.Tracer
+	{
+		otTracer = stdopentracing.GlobalTracer()
+	}
 
-func upsert(c *mgo.Collection, function *fs_pkg_model.APIFunction) {
-	c.Upsert(bson.M{"api": function.Function.Api}, function)
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_FUNCTION, osenv.GetMicroPortString())
+	defer reporter.Close()
+
+	session, err := db.CreateSession(osenv.GetMongoDBAddr())
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	//插入默认功能
+	insertDef(session)
+
+	rs, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_FUNCTION)
+	if err != nil {
+		panic(err)
+	}
+	defer rs.Close()
+
+	service := function.NewService(session, rs)
+	endpoints := function.NewEndpoints(service, zipkinTracer, logger)
+	svc := function.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
+
+	gs := grpc.NewServer()
+	fs_base_function.RegisterFunctionServer(gs, svc)
+
+	errc := make(chan error)
+
+	registration.NewRegistrar(gs, names.F_SVC_FUNCTION, osenv.GetConsulAddr())
+
+	go func() {
+		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())
+		if err != nil {
+			fmt.Println(err)
+			errc <- err
+		}
+		errc <- gs.Serve(grpcListener)
+	}()
+
+	logger.Log("exit", <-errc)
 }
 
 func insertDef(session *mgo.Session) {
@@ -88,4 +147,15 @@ func insertDef(session *mgo.Session) {
 	//froze
 	upsert(c, froze.GetRequestFrozeFunc())
 
+}
+
+func upsert(c *mgo.Collection, f *fs_pkg_model.APIFunction) {
+	c.Upsert(bson.M{"api": f.Function.Api}, &function.FunctionModel{
+		Func:  f.Function.Func,
+		ZH:    f.Function.Zh,
+		Level: f.Function.Level,
+		Fcv:   f.Function.Fcv,
+		EN:    f.Function.En,
+		API:   f.Prefix + f.Infix,
+	})
 }

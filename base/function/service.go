@@ -6,6 +6,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/pkg/errno"
 )
 
@@ -14,7 +15,8 @@ type Service interface {
 }
 
 type functionService struct {
-	session *mgo.Session
+	session     *mgo.Session
+	reportercli reportercli.Channel
 }
 
 func (svc *functionService) Add(ctx context.Context, in *fs_base_function.UpsertRequest) (*fs_base_function.UpsertResponse, error) {
@@ -35,7 +37,7 @@ func (svc *functionService) Add(ctx context.Context, in *fs_base_function.Upsert
 		}, nil
 	}
 	uid, _ := uuid.NewV1()
-	f = &function{
+	f = &FunctionModel{
 		Func:  uuid.NewV5(uid, in.Api).String()[24:],
 		ZH:    in.Zh,
 		API:   in.Api,
@@ -74,12 +76,15 @@ func (svc *functionService) Update(ctx context.Context, in *fs_base_function.Ups
 func (svc *functionService) Get(ctx context.Context, in *fs_base_function.GetRequest) (*fs_base_function.GetResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
-	var function *function
+	var function *FunctionModel
 	var err error
-	if len(in.Func) == 0 {
+	if len(in.Func) != 0 {
 		function, err = repo.FindByFunc(in.Func)
 	} else {
 		function, err = repo.Get(in.Api)
+	}
+	if err == mgo.ErrNotFound && len(in.Func) == 0 { //不是通过func查找的返回未找到
+		return &fs_base_function.GetResponse{State: errno.ErrFunctionInvalid}, nil
 	}
 	if err != nil {
 		return &fs_base_function.GetResponse{State: errno.ErrSystem}, nil
@@ -96,10 +101,10 @@ func (svc *functionService) Get(ctx context.Context, in *fs_base_function.GetReq
 	}, nil
 }
 
-func NewService(session *mgo.Session) Service {
+func NewService(session *mgo.Session, reportercli reportercli.Channel) Service {
 	var svc Service
 	{
-		svc = &functionService{session: session}
+		svc = &functionService{session: session, reportercli: reportercli}
 	}
 	return svc
 }

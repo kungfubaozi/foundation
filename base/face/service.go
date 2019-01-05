@@ -32,6 +32,7 @@ type faceService struct {
 func (svc *faceService) Update(ctx context.Context, in *fs_base_face.UpdateRequest) (*fs_base.Response, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
+	panic(errno.ERROR)
 }
 
 func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareRequest) (*fs_base.Response, error) {
@@ -61,6 +62,7 @@ func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareReq
 func (svc *faceService) Search(ctx context.Context, in *fs_base_face.SearchRequest) (*fs_base_face.SearchResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
+	panic(errno.ERROR)
 }
 
 func (svc *faceService) AddFace(ctx context.Context, in *fs_base_face.AddFaceRequest) (*fs_base.Response, error) {
