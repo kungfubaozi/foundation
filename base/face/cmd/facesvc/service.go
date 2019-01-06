@@ -33,6 +33,9 @@ func StartService() {
 	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_FACE, osenv.GetMicroPortString())
 	defer reporter.Close()
 
+	pool := db.CreatePool(osenv.GetRedisAddr())
+	defer pool.Close()
+
 	session, err := db.CreateSession(osenv.GetMongoDBAddr())
 	if err != nil {
 		panic(err)
@@ -42,7 +45,7 @@ func StartService() {
 	rch, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_FACE)
 	defer rch.Close()
 
-	service := face.NewService(session, rch)
+	service := face.NewService(session, rch, pool)
 	endpoints := face.NewEndpoints(service, zipkinTracer, logger)
 	svc := face.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

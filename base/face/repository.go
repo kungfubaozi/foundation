@@ -1,8 +1,13 @@
 package face
 
 import (
+	"crypto/tls"
+	"encoding/json"
+	"github.com/garyburd/redigo/redis"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
+	"net/http"
 )
 
 type repository interface {
@@ -12,11 +17,69 @@ type repository interface {
 
 	Delete(userId string) error
 
+	GetToken() (string, error)
+
+	SetToken(token string) error
+
 	Close()
 }
 
 type faceRepository struct {
 	session *mgo.Session
+	conn    redis.Conn
+}
+
+func (repo *faceRepository) GetToken() (string, error) {
+	t, err := redis.String(repo.conn.Do("get", "baidu_access_token"))
+	if err != nil && err == redis.ErrNil {
+		token, err := resetAccessToken()
+		if err != nil {
+			return "", err
+		}
+		err = repo.SetToken(token)
+		if err == nil {
+			return token, nil
+		}
+	}
+	if err != nil {
+		return "", err
+	}
+	return t, nil
+}
+
+func (repo *faceRepository) SetToken(token string) error {
+	_, err := repo.conn.Do("set", "baidu_access_token", token)
+	return err
+}
+
+//获取accessToken
+func resetAccessToken() (string, error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	resp, err := client.Get("https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials" +
+		"&client_id=dsU7P5P3lRT9wR8pQDLlOyBX&client_secret=wXOnBUX87GDh14rPMdWZe31WrhxhX1ZM")
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode == 200 {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		at := &accessToken{}
+		err = json.Unmarshal(body, at)
+		if err != nil {
+			return "", err
+		}
+		if len(at.Error) > 0 {
+			return "", RequestErr
+		}
+		return at.AccessToken, nil
+	}
+	return "", RequestErr
 }
 
 func (repo *faceRepository) Get(userId string) (*faceset, error) {

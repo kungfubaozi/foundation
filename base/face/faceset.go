@@ -2,6 +2,7 @@ package face
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,11 +25,9 @@ type accessToken struct {
 
 type UserFaceToken string
 
-var currentToken *accessToken
-
 //注册人脸(image,image_type,group_id,user_id)
-func RegisterFace(base64Face, userId, groupId string) (map[string]interface{}, error) {
-	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/user/add", map[string]interface{}{
+func RegisterFace(base64Face, userId, groupId, token string) (map[string]interface{}, error) {
+	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/user/add", token, map[string]interface{}{
 		"group_id":   groupId,
 		"user_id":    userId,
 		"image":      base64Face,
@@ -37,8 +36,8 @@ func RegisterFace(base64Face, userId, groupId string) (map[string]interface{}, e
 }
 
 //更新人脸
-func UpdateFace(base64Face, userId, groupId string) (map[string]interface{}, error) {
-	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/user/update", map[string]interface{}{
+func UpdateFace(base64Face, userId, groupId, token string) (map[string]interface{}, error) {
+	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/user/update", token, map[string]interface{}{
 		"group_id":   groupId,
 		"user_id":    userId,
 		"image":      base64Face,
@@ -47,23 +46,23 @@ func UpdateFace(base64Face, userId, groupId string) (map[string]interface{}, err
 }
 
 //删除人脸
-func DeleteFace(userId, groupId string) (map[string]interface{}, error) {
-	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/user/delete", map[string]interface{}{
+func DeleteFace(userId, groupId, token string) (map[string]interface{}, error) {
+	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/user/delete", token, map[string]interface{}{
 		"group_id": groupId,
 		"user_id":  userId,
 	})
 }
 
 //创建用户组
-func createFaceset(groupId string) (map[string]interface{}, error) {
-	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/group/add", map[string]interface{}{
+func createFaceset(groupId, token string) (map[string]interface{}, error) {
+	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/faceset/group/add", token, map[string]interface{}{
 		"group_id": groupId,
 	})
 }
 
 //对比人脸
-func faceCompare(needMatchBase64Face, targetFaceToken string) (map[string]interface{}, error) {
-	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/match", []map[string]interface{}{
+func faceCompare(needMatchBase64Face, targetFaceToken, token string) (map[string]interface{}, error) {
+	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/match", token, []map[string]interface{}{
 		{
 			"image":      needMatchBase64Face,
 			"image_type": "BASE64",
@@ -76,8 +75,8 @@ func faceCompare(needMatchBase64Face, targetFaceToken string) (map[string]interf
 }
 
 //人脸搜索
-func faceSearch(base64Face, groupId string) (map[string]interface{}, error) {
-	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/search", map[string]interface{}{
+func faceSearch(base64Face, groupId, token string) (map[string]interface{}, error) {
+	return faceAI("https://aip.baidubce.com/rest/2.0/face/v3/search", token, map[string]interface{}{
 		"image":         base64Face,
 		"image_type":    "BASE64",
 		"group_id_list": groupId,
@@ -86,20 +85,18 @@ func faceSearch(base64Face, groupId string) (map[string]interface{}, error) {
 }
 
 //统一请求
-func faceAI(url string, values interface{}) (map[string]interface{}, error) {
-	if currentToken == nil {
-		err := resetAccessToken()
-		if err != nil {
-			return nil, RequestErr
-		}
-	}
+func faceAI(url, token string, values interface{}) (map[string]interface{}, error) {
 	b, err := json.Marshal(values)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.Post(url+"?access_token="+currentToken.AccessToken, "application/json",
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	resp, err := client.Post(url+"?access_token="+token, "application/json",
 		bytes.NewReader(b))
-	fmt.Println("url", resp.Request.URL)
+	//	fmt.Println("url", resp.Request.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -117,40 +114,7 @@ func faceAI(url string, values interface{}) (map[string]interface{}, error) {
 		}
 		code := v["error_code"].(float64)
 		fmt.Println("error_code", code)
-		if code == 100 || code == 110 || code == 111 {
-			err = resetAccessToken()
-			if err != nil {
-				return nil, RequestErr
-			}
-			return faceAI(url, values)
-		}
-		return v, RequestErr
+		return v, nil
 	}
 	return nil, RequestErr
-}
-
-//获取accessToken
-func resetAccessToken() error {
-	resp, err := http.Get("https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=dsU7P5P3lRT9wR8pQDLlOyBX&client_secret=wXOnBUX87GDh14rPMdWZe31WrhxhX1ZM")
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode == 200 {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		at := &accessToken{}
-		err = json.Unmarshal(body, at)
-		if err != nil {
-			return err
-		}
-		if len(at.Error) > 0 {
-			return RequestErr
-		}
-		currentToken = at
-		return nil
-	}
-	return RequestErr
 }

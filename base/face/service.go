@@ -2,6 +2,8 @@ package face
 
 import (
 	"context"
+	"fmt"
+	"github.com/garyburd/redigo/redis"
 	"gopkg.in/mgo.v2"
 	"time"
 	"zskparker.com/foundation/base/face/pb"
@@ -25,6 +27,7 @@ type Service interface {
 type faceService struct {
 	session     *mgo.Session
 	reportercli reportercli.Channel
+	pool        *redis.Pool
 }
 
 func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareRequest) (*fs_base.Response, error) {
@@ -36,7 +39,12 @@ func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareReq
 		return errno.ErrResponse(errno.ErrRequest)
 	}
 
-	values, err := faceCompare(in.Base64Face, fs.FaceToken)
+	token, err := repo.GetToken()
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	values, err := faceCompare(in.Base64Face, fs.FaceToken, token)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrFaceProcess)
 	}
@@ -44,7 +52,7 @@ func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareReq
 		return errno.ErrResponse(errno.ErrSystem)
 	}
 	//分数大于环境设置分数（默认为80.0）
-	if values["score"].(float64) > osenv.GetFaceCompareScore() {
+	if values["result"].(map[string]interface{})["score"].(float64) > osenv.GetFaceCompareScore() {
 		//对比成功
 		return errno.ErrResponse(errno.Ok)
 	}
@@ -52,16 +60,22 @@ func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareReq
 }
 
 func (svc *faceService) Search(ctx context.Context, in *fs_base_face.SearchRequest) (*fs_base_face.SearchResponse, error) {
-	values, err := faceSearch(in.Base64Face, "user")
+	repo := svc.GetRepo()
+	defer repo.Close()
+	token, err := repo.GetToken()
+	if err != nil {
+		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
+	}
+	values, err := faceSearch(in.Base64Face, "user", token)
 	if err != nil {
 		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
 	}
 	if values["error_code"].(float64) != 0 {
 		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
 	}
-	userList := values["user_list"].([]map[string]interface{})
+	userList := values["result"].(map[string]interface{})["user_list"].([]interface{})
 	if len(userList) > 0 {
-		face := userList[0]
+		face := userList[0].(map[string]interface{})
 		if face["score"].(float64) > osenv.GetFaceCompareScore() {
 			userId := face["user_id"].(string)
 
@@ -83,14 +97,20 @@ func (svc *faceService) Upsert(ctx context.Context, in *fs_base_face.UpsertReque
 		CreateAt: time.Now().UnixNano(),
 	}
 
-	values, err := RegisterFace(in.Base64Face, in.UserId, "user")
+	token, err := repo.GetToken()
+	if err != nil {
+		fmt.Println("token", err)
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	values, err := RegisterFace(in.Base64Face, in.UserId, "user", token)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
 	code := values["error_code"].(float64)
 	if code == 223105 { //用户存在则更新用户
 		//update face
-		values, err = UpdateFace(in.Base64Face, in.UserId, "user")
+		values, err = UpdateFace(in.Base64Face, in.UserId, "user", token)
 		if err != nil {
 			return errno.ErrResponse(errno.ErrSystem)
 		}
@@ -98,7 +118,7 @@ func (svc *faceService) Upsert(ctx context.Context, in *fs_base_face.UpsertReque
 		if code != 0 {
 			return errno.ErrResponse(errno.ErrSystem)
 		}
-		fs.FaceToken = values["face_token"].(string)
+		fs.FaceToken = values["result"].(map[string]interface{})["face_token"].(string)
 		err = repo.Upsert(fs)
 		if err != nil {
 			return errno.ErrResponse(errno.ErrRequest)
@@ -120,7 +140,12 @@ func (svc *faceService) RemoveFace(ctx context.Context, in *fs_base_face.RemoveF
 		return errno.ErrResponse(errno.ErrRequest)
 	}
 
-	values, err := DeleteFace(in.UserId, "user")
+	token, err := repo.GetToken()
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	values, err := DeleteFace(in.UserId, "user", token)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -132,13 +157,13 @@ func (svc *faceService) RemoveFace(ctx context.Context, in *fs_base_face.RemoveF
 }
 
 func (svc *faceService) GetRepo() repository {
-	return &faceRepository{session: svc.session.Clone()}
+	return &faceRepository{session: svc.session.Clone(), conn: svc.pool.Get()}
 }
 
-func NewService(session *mgo.Session, reportercli reportercli.Channel) Service {
+func NewService(session *mgo.Session, reportercli reportercli.Channel, pool *redis.Pool) Service {
 	var svc Service
 	{
-		svc = &faceService{session: session, reportercli: reportercli}
+		svc = &faceService{session: session, reportercli: reportercli, pool: pool}
 	}
 	return svc
 }

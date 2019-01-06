@@ -78,17 +78,17 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Upsert", logger)))...),
 		compare: grpctransport.NewServer(
-			endpoints.UpsertEndpoint,
+			endpoints.CompareEndpoint,
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Compare", logger)))...),
 		remove: grpctransport.NewServer(
-			endpoints.UpsertEndpoint,
+			endpoints.RemoveFaceEndpoint,
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Remove", logger)))...),
 		search: grpctransport.NewServer(
-			endpoints.UpsertEndpoint,
+			endpoints.SearchEndpoint,
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Search", logger)))...),
@@ -117,7 +117,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		compareEndpoint = opentracing.TraceClient(otTracer, "Compare")(compareEndpoint)
 		compareEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Compare",
-			Timeout: 5 * time.Second,
+			Timeout: 30 * time.Second,
 		}))(compareEndpoint)
 	}
 
@@ -134,7 +134,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		searchEndpoint = opentracing.TraceClient(otTracer, "Search")(searchEndpoint)
 		searchEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Search",
-			Timeout: 5 * time.Second,
+			Timeout: 30 * time.Second,
 		}))(searchEndpoint)
 	}
 
@@ -151,7 +151,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		upsertEndpoint = opentracing.TraceClient(otTracer, "Upsert")(upsertEndpoint)
 		upsertEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Upsert",
-			Timeout: 5 * time.Second,
+			Timeout: 30 * time.Second,
 		}))(upsertEndpoint)
 	}
 
@@ -168,7 +168,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		removeEndpoint = opentracing.TraceClient(otTracer, "Remove")(removeEndpoint)
 		removeEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Remove",
-			Timeout: 5 * time.Second,
+			Timeout: 30 * time.Second,
 		}))(removeEndpoint)
 	}
 
