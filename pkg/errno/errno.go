@@ -36,4 +36,5 @@ var (
 	ErrProjectAccess   = &fs_base.State{Ok: false, Message: "err project access", Code: 10020}
 	ErrFunction        = &fs_base.State{Ok: false, Message: "err function", Code: 10021}
 	ErrFunctionInvalid = &fs_base.State{Ok: false, Message: "err function invalid", Code: 10022}
+	ErrInvalidFace     = &fs_base.State{Ok: false, Message: "err invalid face", Code: 10023}
 )

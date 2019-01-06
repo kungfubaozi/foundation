@@ -10,6 +10,7 @@ const (
 	F_SVC_SAFETY_VERIFICATION = "foundation.svc.safety.verification"
 	F_SVC_SAFETY_AUTHENTICATE = "foundation.svc.safety.authenticate"
 	F_SVC_FUNCTION            = "foundation.svc.function"
+	F_SVC_FACE                = "foundation.svc.face"
 )
 
 const (

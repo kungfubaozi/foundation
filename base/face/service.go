@@ -12,13 +12,11 @@ import (
 )
 
 type Service interface {
-	Update(ctx context.Context, in *fs_base_face.UpdateRequest) (*fs_base.Response, error)
-
 	Compare(ctx context.Context, in *fs_base_face.CompareRequest) (*fs_base.Response, error)
 
 	Search(ctx context.Context, in *fs_base_face.SearchRequest) (*fs_base_face.SearchResponse, error)
 
-	AddFace(ctx context.Context, in *fs_base_face.AddFaceRequest) (*fs_base.Response, error)
+	Upsert(ctx context.Context, in *fs_base_face.UpsertRequest) (*fs_base.Response, error)
 
 	RemoveFace(ctx context.Context, in *fs_base_face.RemoveFaceRequest) (*fs_base.Response, error)
 }
@@ -27,12 +25,6 @@ type Service interface {
 type faceService struct {
 	session     *mgo.Session
 	reportercli reportercli.Channel
-}
-
-func (svc *faceService) Update(ctx context.Context, in *fs_base_face.UpdateRequest) (*fs_base.Response, error) {
-	repo := svc.GetRepo()
-	defer repo.Close()
-	panic(errno.ERROR)
 }
 
 func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareRequest) (*fs_base.Response, error) {
@@ -60,12 +52,29 @@ func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareReq
 }
 
 func (svc *faceService) Search(ctx context.Context, in *fs_base_face.SearchRequest) (*fs_base_face.SearchResponse, error) {
-	repo := svc.GetRepo()
-	defer repo.Close()
-	panic(errno.ERROR)
+	values, err := faceSearch(in.Base64Face, "user")
+	if err != nil {
+		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
+	}
+	if values["error_code"].(float64) != 0 {
+		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
+	}
+	userList := values["user_list"].([]map[string]interface{})
+	if len(userList) > 0 {
+		face := userList[0]
+		if face["score"].(float64) > osenv.GetFaceCompareScore() {
+			userId := face["user_id"].(string)
+
+			return &fs_base_face.SearchResponse{
+				State:  errno.Ok,
+				UserId: userId,
+			}, nil
+		}
+	}
+	return &fs_base_face.SearchResponse{State: errno.ErrInvalidFace}, nil
 }
 
-func (svc *faceService) AddFace(ctx context.Context, in *fs_base_face.AddFaceRequest) (*fs_base.Response, error) {
+func (svc *faceService) Upsert(ctx context.Context, in *fs_base_face.UpsertRequest) (*fs_base.Response, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
 

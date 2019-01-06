@@ -6,25 +6,17 @@ import "zskparker.com/foundation/base/pb/base.proto";
 
 service Face {
 
-    //更新人脸
-    rpc Update (UpdateRequest) returns (fs.base.Response);
-
     //人脸对比
     rpc Compare (CompareRequest) returns (fs.base.Response);
 
     //在人脸库里搜索
     rpc Search (SearchRequest) returns (SearchResponse);
 
-    //添加人脸
-    rpc AddFace (AddFaceRequest) returns (fs.base.Response);
+    //添加/更新人脸
+    rpc Upsert (UpsertRequest) returns (fs.base.Response);
 
     //移除人脸
     rpc RemoveFace (RemoveFaceRequest) returns (fs.base.Response);
-}
-
-message UpdateRequest {
-    string userId = 1;
-    string faceToken = 2;
 }
 
 message SearchRequest {
@@ -42,7 +34,7 @@ message RemoveFaceRequest {
     string userId = 1;
 }
 
-message AddFaceRequest {
+message UpsertRequest {
     string userId = 1;
     string base64Face = 2;
 }
