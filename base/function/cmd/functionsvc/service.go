@@ -97,7 +97,7 @@ func insertDef(session *mgo.Session) {
 	upsert(c, login.GetEntryByQRCodeFunc())
 
 	//safety verification functions
-	upsert(c, verification.GetNewFunc())
+	upsert(c, verification.GetRegisterFunc())
 
 	//register functions
 	upsert(c, register.GetFromAPFunc())

@@ -33,10 +33,7 @@ func MakeGRPCServer(endpoints Endpoints) fs_base_reporter.ReporterServer {
 
 func MakeGRPCClient(conn *grpc.ClientConn) Service {
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
-	options := []grpctransport.ClientOption{
-
-		grpctransport.ClientBefore(format.GRPCMetadata()),
-	}
+	options := []grpctransport.ClientOption{}
 	var writeEndpoint endpoint.Endpoint
 	{
 		writeEndpoint = grpctransport.NewClient(conn,

@@ -11,15 +11,25 @@ service Register {
 
     rpc FromOAuth (FromOAuthRequest) returns (fs.base.Response);
 
+    //管理员注册
+    rpc Admin (AdminRequest) returns (fs.base.Response);
+
+}
+
+message AdminRequest {
+    string password = 1;
+    string enterprise = 2;
+    string phone = 3;
+    string email = 4;
+    fs.base.Meta meta = 5;
 }
 
 message FromAPRequest {
     string password = 1;
     string enterprise = 2;
-    int64 level = 3;
-    string phone = 4;
-    string email = 5;
-    fs.base.Meta meta = 6;
+    string phone = 3;
+    string email = 4;
+    fs.base.Meta meta = 5;
 }
 
 message FromOAuthRequest {

@@ -29,6 +29,7 @@ message Func {
     string api = 4;
     int64 fcv = 5; //验证模式
     int64 level = 6;
+    int64 type = 7;
 }
 
 message UpsertResponse {

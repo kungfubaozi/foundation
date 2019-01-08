@@ -48,7 +48,7 @@ func (repo *projectRepository) Enable(projectId string, platform int64, open boo
 
 func (repo *projectRepository) Get(clientId string) (*project, error) {
 	p := &project{}
-	err := repo.collection().Find(bson.M{"$elemMatch": bson.M{"client_id": clientId}}).One(p)
+	err := repo.collection().Find(bson.M{"platforms": bson.M{"$elemMatch": bson.M{"client_id": clientId}}}).One(p)
 	return p, err
 }
 

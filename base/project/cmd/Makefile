@@ -3,7 +3,7 @@ build:
 	docker build -t fs-base-project .
 
 run:
-	docker run -p 58089:58081 -e CONSUL_ADDR=http://192.168.80.67:8500 \
+	docker run -p 58089:58089 -e CONSUL_ADDR=http://192.168.80.67:8500 \
     -e MONGODB_ADDR=192.168.2.60:27017 \
     -e MICRO_PORT=58089 \
     -e NODE=1 \

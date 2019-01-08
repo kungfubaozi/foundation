@@ -13,8 +13,7 @@ service Verification {
 
 message NewRequest {
     string func = 1;
-    int64 funcId = 2;
-    string to = 3;
+    string to = 2;
 }
 
 message NewResponse {

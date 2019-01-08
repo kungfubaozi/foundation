@@ -1,4 +1,4 @@
-package usersvc
+package strategysvc
 
 import (
 	"fmt"
@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"os"
-	"zskparker.com/foundation/base/state/cmd/statecli"
-	"zskparker.com/foundation/base/user"
-	"zskparker.com/foundation/base/user/pb"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
+	"zskparker.com/foundation/base/strategy"
+	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
@@ -18,7 +18,6 @@ import (
 )
 
 func StartService() {
-
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -31,7 +30,7 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_USER, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_STRATEGY, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	session, err := db.CreateSession(osenv.GetMongoDBAddr())
@@ -40,16 +39,22 @@ func StartService() {
 	}
 	defer session.Close()
 
-	service := user.NewService(session, statecli.NewClient(zipkinTracer))
-	endpoints := user.NewEndpoints(service, zipkinTracer, logger)
-	svc := user.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
+	rs, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_STRATEGY)
+	if err != nil {
+		panic(err)
+	}
+	defer rs.Close()
+
+	service := strategy.NewService(session, rs)
+	endpoints := strategy.NewEndpoints(service, zipkinTracer, logger)
+	svc := strategy.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()
-	fs_base_user.RegisterUserServer(gs, svc)
+	fs_base_strategy.RegisterStrategyServer(gs, svc)
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_USER, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, names.F_SVC_STRATEGY, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())
@@ -61,5 +66,4 @@ func StartService() {
 	}()
 
 	logger.Log("exit", <-errc)
-
 }

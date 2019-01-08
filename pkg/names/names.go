@@ -8,9 +8,11 @@ const (
 	F_SVC_USER                = "foundation.svc.user"
 	F_SVC_SAFETY_UPDATE       = "foundation.svc.safety.update"
 	F_SVC_SAFETY_VERIFICATION = "foundation.svc.safety.verification"
-	F_SVC_SAFETY_AUTHENTICATE = "foundation.svc.safety.authenticate"
+	F_SVC_AUTHENTICATE        = "foundation.svc.authenticate"
 	F_SVC_FUNCTION            = "foundation.svc.function"
 	F_SVC_FACE                = "foundation.svc.face"
+	F_SVC_STRATEGY            = "foundation.svc.strategy"
+	F_SVC_PROJECT             = "foundation.svc.project"
 )
 
 const (
@@ -18,6 +20,10 @@ const (
 	F_USER_STATE_FROZE int64 = 3 << 2 //用户状态冻结
 	F_USER_STATE_LOCK  int64 = 3 << 3 //用户被锁定
 	F_USER_VALIDATE    int64 = 3 << 3 //需要通过手机验证才可继续
+)
+
+const (
+	F_FUNC_TYPE_HIDE int64 = 8 << 2
 )
 
 const (

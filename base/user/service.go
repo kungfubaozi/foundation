@@ -164,7 +164,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
-	u := &user{
+	u := &User{
 		CreateAt:      time.Now().UnixNano(),
 		Password:      string(p),
 		UserId:        bson.NewObjectId(),
@@ -176,6 +176,13 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	}
 	repo := svc.GetRepo()
 	defer repo.Close()
+	//注册管理员(系统管理员)
+	if in.Level == 5 {
+		i := repo.FindAdmin()
+		if i != 0 {
+			return errno.ErrResponse(errno.ErrRequest)
+		}
+	}
 	err = repo.Add(u)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
@@ -187,7 +194,10 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
-	return errno.ErrResponse(resp.State)
+	return &fs_base.Response{
+		State:   resp.State,
+		Content: u.UserId.Hex(),
+	}, nil
 }
 
 func NewService(session *mgo.Session, statecli state.Service) Service {

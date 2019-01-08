@@ -3,7 +3,6 @@ package verification
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -20,6 +19,7 @@ import (
 	"net/http"
 	"time"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/safety/verification/pb"
 )
 
@@ -27,29 +27,33 @@ type GRPCServer struct {
 	new grpctransport.Handler
 }
 
-func MakeHTPPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
+func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
 	zipkinServer := zipkin.HTTPServerTrace(zipkinTracer)
 
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
-		httptransport.ServerBefore(format.Metadata()),
+		httptransport.ServerBefore(fs_metadata_transport.HTTPToContext()),
 		zipkinServer,
 	}
+
 	m := http.NewServeMux()
-	m.Handle("/new", httptransport.NewServer(
+	m.Handle(GetRegisterFunc().Infix, httptransport.NewServer(
 		endpoints.NewEndpoint,
-		decodeHTTPNew,
+		decodeHTTPNewRegister,
 		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "New", logger)))...,
+		append(options,
+			httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "NewRegister", logger)))...,
 	))
 
 	return m
 }
 
-func decodeHTTPNew(_ context.Context, r *http.Request) (interface{}, error) {
-	fmt.Println("enter decode")
+func decodeHTTPNewRegister(_ context.Context, r *http.Request) (interface{}, error) {
 	var req *fs_safety_verification.NewRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
+	if req != nil {
+		req.Func = "ef274cc105ad"
+	}
 	return req, err
 }
 
@@ -58,6 +62,7 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(fs_metadata_transport.GRPCToContext()),
 		zipkinServer,
 	}
 	return &GRPCServer{
@@ -72,7 +77,7 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 func (g *GRPCServer) New(ctx context.Context, in *fs_safety_verification.NewRequest) (*fs_safety_verification.NewResponse, error) {
 	_, resp, err := g.new.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_safety_verification.NewResponse{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_safety_verification.NewResponse), nil
 }
@@ -83,6 +88,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 
 	options := []grpctransport.ClientOption{
 		zipkinClient,
+		grpctransport.ClientBefore(fs_metadata_transport.ContextToGRPC()),
 	}
 
 	var newEndpoint endpoint.Endpoint

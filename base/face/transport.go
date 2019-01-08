@@ -59,7 +59,7 @@ func (g *GRPCServer) RemoveFace(ctx context.Context, in *fs_base_face.RemoveFace
 	return resp.(*fs_base.Response), nil
 }
 
-func MakeHTPPHandler() {
+func MakeHTTPHandler() {
 
 }
 
@@ -101,7 +101,6 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 
 	options := []grpctransport.ClientOption{
 		zipkinClient,
-		grpctransport.ClientBefore(format.GRPCMetadata()),
 	}
 
 	var compareEndpoint endpoint.Endpoint

@@ -8,6 +8,7 @@ import (
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
+	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/safety/verification/pb"
 )
 
@@ -15,13 +16,15 @@ type Endpoints struct {
 	NewEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client *functionmw.MWServices) Endpoints {
 
 	var newEndpoint endpoint.Endpoint
 	{
 		newEndpoint = MakeNewEndpoint(svc)
 		newEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(newEndpoint)
 		newEndpoint = zipkin.TraceEndpoint(trace, "New")(newEndpoint)
+
+		newEndpoint = functionmw.WithExpress(logger, client, GetRegisterFunc().Function.Func)(newEndpoint)
 	}
 
 	return Endpoints{

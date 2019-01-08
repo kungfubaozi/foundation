@@ -1,0 +1,5 @@
+package registersvc
+
+func StartService() {
+
+}

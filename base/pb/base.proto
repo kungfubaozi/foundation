@@ -19,6 +19,7 @@ message State {
 
 message Response {
     State state = 1;
+    string content = 2;
 }
 
 //作为服务间传输用

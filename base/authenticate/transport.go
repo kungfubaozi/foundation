@@ -21,6 +21,7 @@ import (
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/transport"
 )
 
 type GRPCServer struct {
@@ -67,7 +68,7 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
-		httptransport.ServerBefore(format.Metadata()),
+		httptransport.ServerBefore(fs_metadata_transport.HTTPToContext()),
 		zipkinServer,
 	}
 
@@ -92,6 +93,7 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(fs_metadata_transport.GRPCToContext()),
 		zipkinServer,
 	}
 
@@ -125,7 +127,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 
 	options := []grpctransport.ClientOption{
 		zipkinClient,
-		grpctransport.ClientBefore(format.GRPCMetadata()),
+		grpctransport.ClientBefore(fs_metadata_transport.ContextToGRPC()),
 	}
 
 	var newEndpoint endpoint.Endpoint

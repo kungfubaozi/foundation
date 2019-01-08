@@ -63,7 +63,7 @@ func NewRegistrar(gs *grpc.Server, name, consulAddr string) error {
 		Name:    name,
 		Address: ip,
 		ID:      id,
-		Tags:    []string{"Foundation gRPC Server"},
+		Tags:    []string{"Foundation Server"},
 		Port:    int(checkPort),
 		Check:   &check,
 	}

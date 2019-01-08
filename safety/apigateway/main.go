@@ -36,7 +36,7 @@ func main() {
 	{
 		//verification
 		endpoints := verificationcli.NewEndpoints(osenv.GetConsulAddr(), zipkinTracer)
-		r.PathPrefix("/api/rpfds/safety/verification").Handler(http.StripPrefix("/api/rpfds/safety/verification", verification.MakeHTPPHandler(
+		r.PathPrefix(verification.GetRegisterFunc().Prefix).Handler(http.StripPrefix(verification.GetRegisterFunc().Prefix, verification.MakeHTTPHandler(
 			endpoints, tracer, zipkinTracer, logger)))
 	}
 

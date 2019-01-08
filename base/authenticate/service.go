@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
+	"sync"
 	"time"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/message/cmd/messagecli"
@@ -148,18 +149,29 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	//关联id，用于关联两个token(accessToken.refreshToken)
 	in.Authorize.Relation = node.Generate().Base64()
 	var accessToken, refreshToken string
-	errc := make(chan error, 2)
+	var err error
+	wg := sync.WaitGroup{}
+	errc := func(e error) {
+		if err == nil {
+			err = e
+		}
+	}
+	wg.Add(1)
 	go func() {
 		a, err := encodeAccessToken(in.Authorize)
 		accessToken = a
-		errc <- err
+		errc(err)
+		wg.Done()
 	}()
+	wg.Add(1)
 	go func() {
 		a, err := encodeRefreshToken(in.Authorize)
 		refreshToken = a
-		errc <- err
+		errc(err)
+		wg.Done()
 	}()
-	if err := <-errc; err != nil {
+	wg.Wait()
+	if err != nil {
 		fmt.Println("encode err", err)
 		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
 	}

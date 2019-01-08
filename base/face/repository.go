@@ -106,5 +106,5 @@ func (repo *faceRepository) Close() {
 }
 
 func (repo *faceRepository) collection(userId string) *mgo.Collection {
-	return repo.session.DB("foundation").C("faceset_" + userId[0:1])
+	return repo.session.DB("foundation").C("faceset_" + userId[0:5])
 }

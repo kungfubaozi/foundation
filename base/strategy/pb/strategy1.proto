@@ -9,11 +9,8 @@ service Strategy {
     //查找
     rpc Get (GetRequest) returns (GetResponse);
 
-    //新建
-    rpc New ( fs.base.ProjectStrategy) returns (fs.base.Response);
-
     //更新
-    rpc Update (UpsertRequest) returns (fs.base.Response);
+    rpc Upsert (UpsertRequest) returns (fs.base.Response);
 }
 
 message GetRequest {

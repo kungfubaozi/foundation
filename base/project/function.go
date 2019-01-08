@@ -8,7 +8,7 @@ import (
 
 func GetCreateProject() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
-		Prefix: "/api/fds/env/project",
+		Prefix: "/fds/api/env/project",
 		Infix:  "/create",
 	}
 	f.Function = &fs_base_function.Func{
@@ -17,6 +17,7 @@ func GetCreateProject() *fs_pkg_model.APIFunction {
 		En:    "CreateProject",
 		Func:  "3c7cec044485",
 		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 4,
 	}
 	return f
@@ -24,7 +25,7 @@ func GetCreateProject() *fs_pkg_model.APIFunction {
 
 func GetRemoveProject() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
-		Prefix: "/api/fds/env/project",
+		Prefix: "/fds/api/env/project",
 		Infix:  "/remove",
 	}
 	f.Function = &fs_base_function.Func{
@@ -33,6 +34,7 @@ func GetRemoveProject() *fs_pkg_model.APIFunction {
 		En:    "RemoveProject",
 		Func:  "4974f1c3a33b",
 		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 4,
 	}
 	return f
@@ -40,7 +42,7 @@ func GetRemoveProject() *fs_pkg_model.APIFunction {
 
 func GetUpdateProject() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
-		Prefix: "/api/fds/env/project",
+		Prefix: "/fds/api/env/project",
 		Infix:  "/update",
 	}
 	f.Function = &fs_base_function.Func{
@@ -49,6 +51,7 @@ func GetUpdateProject() *fs_pkg_model.APIFunction {
 		En:    "UpdateProject",
 		Func:  "5451dbc0b529",
 		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 4,
 	}
 	return f

@@ -33,7 +33,7 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_SAFETY_AUTHENTICATE, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_AUTHENTICATE, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	pool := db.CreatePool(osenv.GetRedisAddr())
@@ -43,10 +43,10 @@ func StartService() {
 	if err != nil {
 		panic(err)
 	}
-	rp, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_SAFETY_AUTHENTICATE)
+	rp, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_AUTHENTICATE)
 	defer rp.Close()
 
-	service := authenticate.NewService(statecli.NewClient(osenv.GetConsulAddr(), zipkinTracer), usercli.NewClient(zipkinTracer),
+	service := authenticate.NewService(statecli.NewClient(zipkinTracer), usercli.NewClient(zipkinTracer),
 		rp, pool,
 		ch)
 	endpoints := authenticate.NewEndpoints(service, zipkinTracer, logger)
@@ -57,7 +57,7 @@ func StartService() {
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_SAFETY_AUTHENTICATE, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, names.F_SVC_AUTHENTICATE, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())

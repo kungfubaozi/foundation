@@ -111,7 +111,7 @@ message OnQRLogin {
 
 message OnRegister {
     int64 openReview = 1; //  开启审核
-    repeated int64 mode = 2; //  支持的注册模式(1-5)
+    int64 mode = 2; //  1:手机  2：邮箱  3：第三方账号
     repeated OnRegisterOpeningTime openingTime = 3; //开放时间
     int64 anIPRegistrationInterval = 4; //一个IP注册间隔
     int64 anDeviceRegistrationInterval = 5; //一个设备注册间隔

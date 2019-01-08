@@ -49,6 +49,7 @@ func TestNewClient(t *testing.T) {
 	}
 
 	fmt.Println(resp.State)
+	fmt.Println(resp.UserId)
 
 	//str, err := resetAccessToken()
 	//if err != nil {

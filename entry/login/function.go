@@ -3,11 +3,12 @@ package login
 import (
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/pkg/model"
+	"zskparker.com/foundation/pkg/names"
 )
 
 func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
-		Prefix: "/api/fds/env/entry",
+		Prefix: "/fds/api/env/entry",
 		Infix:  "/face",
 	}
 	f.Function = &fs_base_function.Func{
@@ -15,6 +16,7 @@ func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
 		Zh:    "刷脸登录",
 		En:    "EntryByFace",
 		Func:  "547ad4cc8ddc",
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 5, //刷脸登录目前只对最高管理员开放
 	}
 	return f
@@ -22,7 +24,7 @@ func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
 
 func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
-		Prefix: "/api/fds/env/entry",
+		Prefix: "/fds/api/env/entry",
 		Infix:  "/ap",
 	}
 	f.Function = &fs_base_function.Func{
@@ -30,6 +32,7 @@ func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 		Zh:    "密码登录",
 		En:    "EntryByAP",
 		Func:  "8423a0ce0eb3",
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}
 	return f
@@ -37,7 +40,7 @@ func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 
 func GetEntryByOAuthFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
-		Prefix: "/api/fds/env/entry",
+		Prefix: "/fds/api/fds/env/entry",
 		Infix:  "/oatuh",
 	}
 	f.Function = &fs_base_function.Func{
@@ -45,6 +48,7 @@ func GetEntryByOAuthFunc() *fs_pkg_model.APIFunction {
 		Zh:    "第三方登录",
 		En:    "EntryByOAuth",
 		Func:  "3a8a4ba0f66a",
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}
 	return f
@@ -60,6 +64,7 @@ func GetEntryByValidateCodeFunc() *fs_pkg_model.APIFunction {
 		Zh:    "验证码登录",
 		En:    "EntryByValidateCode",
 		Func:  "bf7a04fcc618",
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}
 	return f
@@ -75,6 +80,7 @@ func GetEntryByQRCodeFunc() *fs_pkg_model.APIFunction {
 		Zh:    "二维码登录",
 		En:    "EntryByQRCode",
 		Func:  "84f9cb3a0619",
+		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}
 	return f

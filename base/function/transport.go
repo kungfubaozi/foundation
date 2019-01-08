@@ -46,7 +46,6 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 
 	options := []grpctransport.ClientOption{
 		zipkinClient,
-		grpctransport.ClientBefore(format.GRPCMetadata()),
 	}
 
 	var getEndpoint endpoint.Endpoint

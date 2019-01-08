@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"os"
+	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
 	"zskparker.com/foundation/pkg/db"
@@ -43,8 +44,14 @@ func StartService() {
 	}
 	defer session.Close()
 
-	service := verification.NewService(validatecli.NewClient(osenv.GetConsulAddr(), zipkinTracer), reportercli.NewClient(osenv.GetConsulAddr()))
-	endpoints := verification.NewEndpoints(service, zipkinTracer, logger)
+	rc, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_SAFETY_VERIFICATION)
+	if err != nil {
+		panic(err)
+	}
+	defer rc.Close()
+
+	service := verification.NewService(validatecli.NewClient(zipkinTracer), rc)
+	endpoints := verification.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
 	svc := verification.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()

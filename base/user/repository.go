@@ -6,9 +6,9 @@ import (
 )
 
 type repository interface {
-	Add(user *user) error
+	Add(user *User) error
 
-	Get(value, key string) (*user, error)
+	Get(value, key string) (*User, error)
 
 	Close()
 
@@ -19,6 +19,8 @@ type repository interface {
 	UpdateEnterprise(userId, enterprise string) error
 
 	UpdateEmail(userId, email string) error
+
+	FindAdmin() int
 }
 
 type userRepository struct {
@@ -29,12 +31,24 @@ func (repo *userRepository) Close() {
 	repo.session.Close()
 }
 
-func (repo *userRepository) Add(user *user) error {
+func (repo *userRepository) FindAdmin() int {
+	i, err := repo.collection().Find(bson.M{"level": 5}).Count()
+	if err != nil && err == mgo.ErrNotFound {
+		i = 0
+		err = nil
+	}
+	if err != nil {
+		return -1
+	}
+	return i
+}
+
+func (repo *userRepository) Add(user *User) error {
 	return repo.collection().Insert(user)
 }
 
-func (repo *userRepository) Get(value, key string) (*user, error) {
-	user := &user{}
+func (repo *userRepository) Get(value, key string) (*User, error) {
+	user := &User{}
 	err := repo.collection().Find(bson.M{key: value}).One(user)
 	return user, err
 }
@@ -63,7 +77,7 @@ func (repo *userRepository) collection() *mgo.Collection {
 	return repo.session.DB("foundation").C("user")
 }
 
-type user struct {
+type User struct {
 	UserId        bson.ObjectId `bson:"_id"`
 	Username      string        `bson:"username"`
 	Password      string        `bson:"password"`

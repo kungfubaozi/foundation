@@ -20,6 +20,7 @@ import (
 	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/safety/update/pb"
 )
 
@@ -35,7 +36,7 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
-		httptransport.ServerBefore(format.Metadata()),
+		httptransport.ServerBefore(fs_metadata_transport.HTTPToContext()),
 		zipkinServer,
 	}
 
@@ -77,6 +78,7 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 	zipkinServer := zipkin.GRPCServerTrace(tracer)
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(fs_metadata_transport.GRPCToContext()),
 		zipkinServer,
 	}
 	return &GRPCServer{
@@ -108,8 +110,8 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 	zipkinClient := zipkin.GRPCClientTrace(zipkinTracer)
 
 	options := []grpctransport.ClientOption{
+		grpctransport.ClientBefore(fs_metadata_transport.ContextToGRPC()),
 		zipkinClient,
-		grpctransport.ClientBefore(format.GRPCMetadata()),
 	}
 	var updatePhoneEndpoint endpoint.Endpoint
 	{

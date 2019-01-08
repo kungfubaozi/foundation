@@ -2,8 +2,11 @@ package functionmw
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
 	"github.com/openzipkin/zipkin-go"
+	"sync"
 	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/authenticate/cmd/authenticatecli"
 	"zskparker.com/foundation/base/authenticate/pb"
@@ -43,50 +46,94 @@ func NewFunctionMWClient(tracer *zipkin.Tracer) *MWServices {
 	}
 }
 
-func Middleware(mwcli MWServices) endpoint.Middleware {
+func WithExpress(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
+	return middleware(logger, mwcli, function)
+}
+
+func WithMeta(logger log.Logger, mwcli *MWServices) endpoint.Middleware {
+	return middleware(logger, mwcli, "")
+}
+
+func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			meta := ctx.Value("meta").(*fs_base.Metadata)
+
 			mr := ref.GetMetaInfo(request)
-			var ps *fs_base.State
+			ps := errno.Ok
 			var cf *fs_base_function.Func
 			var strategy *fs_base.ProjectStrategy
 			var project *fs_base_project.ProjectInfo
-			errc := make(chan error, 2)
+
+			errc := func(s *fs_base.State) {
+				if ps.Ok {
+					ps = s
+				}
+			}
+
+			var wg sync.WaitGroup
+
+			wg.Add(1)
 			go func() {
-				pr, _ := mwcli.projectcli.Get(ctx, &fs_base_project.GetRequest{
+				pr, _ := mwcli.projectcli.Get(context.Background(), &fs_base_project.GetRequest{
 					ClientId: meta.ClientId,
 				})
+				fmt.Println(pr)
+				if pr == nil {
+
+					errc(errno.ErrSystem)
+					wg.Done()
+					return
+				}
 				if !pr.State.Ok {
-					ps = pr.State
-					errc <- errno.ERROR
+					errc(pr.State)
+					wg.Done()
+					return
 				}
 				project = pr.Info
 				strategy = pr.Strategy
-				errc <- nil
+				wg.Done()
 			}()
 
+			wg.Add(1)
 			go func() {
-				fr, _ := mwcli.functioncli.Get(ctx, &fs_base_function.GetRequest{
-					Api: meta.Api,
+				fr, _ := mwcli.functioncli.Get(context.Background(), &fs_base_function.GetRequest{
+					Api:  meta.Api,
+					Func: function,
 				})
+				fmt.Println(fr)
+				if fr == nil {
+					errc(errno.ErrSystem)
+					wg.Done()
+					return
+				}
 				if !fr.State.Ok {
-					ps = fr.State
-					errc <- errno.ERROR
+					errc(fr.State)
+					wg.Done()
+					return
 				}
 				cf = fr.Func
-				errc <- nil
+				wg.Done()
 			}()
 
-			if err := <-errc; err != nil {
-				if ps != nil && ps == errno.ErrFunctionInvalid { //功能未找到
+			wg.Wait()
+
+			if !ps.Ok {
+				if ps == errno.ErrFunctionInvalid { //功能未找到
+					logger.Log("middleware", "function", "invalid", meta.Api)
 					cf = &fs_base_function.Func{
 						Fcv:   names.F_FCV_AUTH,
 						Level: 1,
 					}
 				} else {
-					return errno.ErrResponse(errno.ErrSystem)
+					fmt.Println("e1-1")
+					return ps, errno.ERROR
 				}
+			}
+
+			if strategy == nil || project == nil {
+				logger.Log("middleware", "check", "strategy|project", "invalid")
+				return errno.ErrSystem, errno.ERROR
 			}
 
 			metaCheck := func(face bool) bool {
@@ -113,6 +160,7 @@ func Middleware(mwcli MWServices) endpoint.Middleware {
 					Metadata:       meta,
 				})
 				ps = resp.State
+				ctx = context.WithValue(ctx, "validate_to", resp.To)
 			}
 
 			authCheck := func() {
@@ -139,6 +187,7 @@ func Middleware(mwcli MWServices) endpoint.Middleware {
 
 			//验证
 			if cf.Fcv != 0 && cf.Fcv != names.F_FCV_NONE {
+				fmt.Println("e2-0")
 				if cf.Fcv == names.F_FCV_AUTH {
 					authCheck()
 				} else if cf.Fcv == names.F_FCV_PHONE && metaCheck(false) {
@@ -166,16 +215,23 @@ func Middleware(mwcli MWServices) endpoint.Middleware {
 					}
 					validateCheck()
 				} else {
+					fmt.Println("e2")
 					return errno.ErrResponse(errno.ErrFunction)
 				}
 				if !ps.Ok {
+					fmt.Println("e3")
 					return errno.ErrResponse(ps)
 				}
 			}
 
+			logger.Log("middleware", "function", "check", "ok")
+
+			ctx = context.WithValue(ctx, "strategy", strategy)
+			ctx = context.WithValue(ctx, "project", project)
+
 			//check level
 			if meta.Level < cf.Level {
-				return errno.ErrResponse(errno.ErrRequest)
+				return errno.ErrRequest, errno.ERROR
 			}
 
 			return next(ctx, request)

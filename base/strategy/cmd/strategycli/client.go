@@ -1,4 +1,4 @@
-package authenticatecli
+package strategycli
 
 import (
 	"github.com/go-kit/kit/endpoint"
@@ -13,15 +13,15 @@ import (
 	"io"
 	"os"
 	"time"
-	"zskparker.com/foundation/base/authenticate"
+	"zskparker.com/foundation/base/strategy"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
-func NewEndpoints(tracer *zipkin.Tracer) authenticate.Endpoints {
+func NewEndpoints(tracer *zipkin.Tracer) strategy.Endpoints {
 	var (
 		retryMax     = 3
-		retryTimeout = 500 * time.Millisecond
+		retryTimeout = 3000 * time.Millisecond
 	)
 
 	var logger log.Logger
@@ -50,52 +50,40 @@ func NewEndpoints(tracer *zipkin.Tracer) authenticate.Endpoints {
 	var (
 		tags        []string
 		passingOnly = true
-		endpoints   = authenticate.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_AUTHENTICATE, tags, passingOnly)
+		endpoints   = strategy.Endpoints{}
+		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_STRATEGY, tags, passingOnly)
 	)
+
 	{
-		factory := Factory(authenticate.MakeRefreshEndpoint, otTracer, tracer, logger)
+		factory := Factory(strategy.MakeGetEndpoint, otTracer, tracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.RefreshEndpoint = retry
+		endpoints.GetEndpoint = retry
 	}
+
 	{
-		factory := Factory(authenticate.MakeNewEndpoint, otTracer, tracer, logger)
+		factory := Factory(strategy.MakeUpsertEndpoint, otTracer, tracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.NewEndpoint = retry
-	}
-	{
-		factory := Factory(authenticate.MakeCheckEndpoint, otTracer, tracer, logger)
-		endpointer := sd.NewEndpointer(instancer, factory, logger)
-		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.CheckEndpoint = retry
-	}
-	{
-		factory := Factory(authenticate.MakeOfflineUserEndpoint, otTracer, tracer, logger)
-		endpointer := sd.NewEndpointer(instancer, factory, logger)
-		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.OfflineUserEndpoint = retry
+		endpoints.UpsertEndpoint = retry
 	}
 
 	return endpoints
 }
 
-func NewClient(tracer *zipkin.Tracer) authenticate.Service {
+func NewClient(tracer *zipkin.Tracer) strategy.Service {
 	return NewEndpoints(tracer)
 }
 
-func Factory(makeEndpoint func(service authenticate.Service) endpoint.Endpoint, otTracer stdopentracing.Tracer, tracer *zipkin.Tracer, logger log.Logger) sd.Factory {
+func Factory(makeEndpoint func(service strategy.Service) endpoint.Endpoint, otTracer stdopentracing.Tracer, tracer *zipkin.Tracer, logger log.Logger) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		conn, err := grpc.Dial(instance, grpc.WithInsecure())
 		if err != nil {
 			return nil, nil, err
 		}
-		service := authenticate.MakeGRPCClient(conn, otTracer, tracer, logger)
+		service := strategy.MakeGRPCClient(conn, otTracer, tracer, logger)
 		e := makeEndpoint(service)
 		return e, conn, nil
 	}
