@@ -4,6 +4,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"sync"
 	"time"
 )
 
@@ -21,18 +22,31 @@ type stateRepository struct {
 }
 
 func (repo *stateRepository) Upset(tag string, status int64) error {
-	err := make(chan error, 2)
+	var err error
+
+	wg := sync.WaitGroup{}
+
+	errc := func(e error) {
+		if err == nil {
+			err = e
+		}
+		wg.Done()
+	}
+
+	wg.Add(1)
 	go func() {
-		err <- repo.addCacheStore(tag, status)
+		errc(repo.addCacheStore(tag, status))
 	}()
 
+	wg.Add(1)
 	go func() {
-		err <- repo.addToDataStore(tag, status)
+		errc(repo.addToDataStore(tag, status))
 	}()
 
-	e := <-err
-	if e != nil {
-		return e
+	wg.Wait()
+
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -64,6 +78,7 @@ func (repo *stateRepository) addToDataStore(tag string, status int64) error {
 		CreateAt: time.Now().UnixNano(),
 		ModifyAt: time.Now().UnixNano(),
 	}
+
 	e := repo.collection().Update(bson.M{"tag": tag}, bson.M{"$set": bson.M{"modify_at": time.Now().UnixNano(), "status": status}})
 	if e != nil && e == mgo.ErrNotFound {
 		e = repo.collection().Insert(s)

@@ -11,6 +11,7 @@ import (
 	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/entry/register/pb"
+	"zskparker.com/foundation/pkg/tags"
 )
 
 type Endpoints struct {
@@ -27,7 +28,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		fromAPEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(fromAPEndpoint)
 		fromAPEndpoint = zipkin.TraceEndpoint(trace, "FromAP")(fromAPEndpoint)
 
-		fromAPEndpoint = functionmw.WithExpress(logger, client, "ef274cc105ad")(fromAPEndpoint)
+		fromAPEndpoint = functionmw.WithExpress(logger, client, fs_function_tags.GetFromAPFuncTag())(fromAPEndpoint)
 	}
 
 	var fromOAuthEndpoint endpoint.Endpoint
@@ -36,7 +37,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		fromOAuthEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(fromOAuthEndpoint)
 		fromOAuthEndpoint = zipkin.TraceEndpoint(trace, "FromOAuth")(fromOAuthEndpoint)
 
-		fromOAuthEndpoint = functionmw.WithExpress(logger, client, "a1999c10319f")(fromOAuthEndpoint)
+		fromOAuthEndpoint = functionmw.WithExpress(logger, client, fs_function_tags.GetFromOAuthFuncTag())(fromOAuthEndpoint)
 	}
 
 	var adminEndpoint endpoint.Endpoint
@@ -45,7 +46,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		adminEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(adminEndpoint)
 		adminEndpoint = zipkin.TraceEndpoint(trace, "Admin")(adminEndpoint)
 
-		adminEndpoint = functionmw.WithExpress(logger, client, "934d601db20d")(adminEndpoint)
+		adminEndpoint = functionmw.WithExpress(logger, client, fs_function_tags.GetAdminFuncTag())(adminEndpoint)
 	}
 
 	return Endpoints{

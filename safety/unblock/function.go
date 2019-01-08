@@ -17,7 +17,7 @@ func GetUnlockFunc() *fs_pkg_model.APIFunction {
 		Zh:    "账号解封",
 		En:    "UnlockAccount",
 		Func:  "0d42b31eee5e",
-		Fcv:   names.F_FCV_PHONE,
+		Fcv:   names.F_FCV_VALIDATE_CODE,
 		Level: 1,
 	}
 	return f

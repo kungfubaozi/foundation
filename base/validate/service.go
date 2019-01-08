@@ -12,7 +12,6 @@ import (
 	"zskparker.com/foundation/base/message/cmd/messagecli"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/state"
-	"zskparker.com/foundation/base/state/pb"
 	"zskparker.com/foundation/base/validate/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/osenv"
@@ -36,6 +35,7 @@ func (svc *validateService) GetRepo() repository {
 	return &validateRepository{session: svc.session.Clone()}
 }
 
+//TODO 未加入频繁操作限制
 func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.CreateRequest) (*fs_base_validate.CreateResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
@@ -48,20 +48,16 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 
 	//验证凭证(通过操作有时间等限制)
 	voucher := in.Metadata.Ip + ";" + in.Func
-
 	//有用户ID设置为凭证
 	if len(in.Metadata.UserId) > 0 {
 		voucher = in.Metadata.UserId + ";" + in.Func
 	}
-
+	voucher = utils.Md5(voucher)
 	//查找最后一次同个操作的时间
 	vl, err := repo.FindLast(voucher)
-
-	fmt.Println("mgo err", err)
-
 	if err == mgo.ErrNotFound {
 		vl = &verification{
-			CreateAt: time.Now().UnixNano(),
+			CreateAt: time.Now().UnixNano() - 61*1e9,
 			Func:     in.Func,
 			Voucher:  voucher,
 		}
@@ -74,8 +70,8 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		}, nil
 	}
 
-	//限制时间
-	if time.Now().UnixNano()-vl.CreateAt <= in.OnVerification.EffectiveTime*1000*1e6 {
+	//限制发送间隔时间
+	if time.Now().UnixNano()-vl.CreateAt >= in.OnVerification.VoucherDuration*1e9 {
 		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 		var code string
 		if in.OnVerification.CombinationMode == 1 {
@@ -90,10 +86,14 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 			}, nil
 		}
 
-		vl = &verification{
-			VerId:    bson.NewObjectId(),
-			CreateAt: time.Now().UnixNano(),
-			Code:     string(b),
+		vl.VerId = bson.NewObjectId()
+		vl.CreateAt = time.Now().UnixNano()
+		vl.Code = string(b)
+		vl.State = states.F_STATE_WAITING
+
+		err = repo.Create(vl)
+		if err != nil {
+			return &fs_base_validate.CreateResponse{State: errno.ErrSystem}, nil
 		}
 
 		//send code
@@ -118,24 +118,6 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 			}, nil
 		}
 
-		//添加到状态管理里
-		resp, err := svc.state.Upsert(context.Background(), &fs_base_state.UpsertRequest{
-			Key:    vl.Voucher + "-" + vl.VerId.Hex(),
-			Status: states.F_STATE_WAITING,
-		})
-
-		if err != nil {
-			return &fs_base_validate.CreateResponse{
-				State: errno.ErrSystem,
-			}, nil
-		}
-
-		if !resp.State.Ok {
-			return &fs_base_validate.CreateResponse{
-				State: resp.State,
-			}, nil
-		}
-
 		return &fs_base_validate.CreateResponse{
 			VerId: vl.VerId.Hex(),
 			State: errno.Ok,
@@ -157,41 +139,38 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 
 	vl, err := repo.Get(in.VerId)
 	if err != nil {
+		fmt.Println("err1", err)
 		return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 	}
 
 	//检查时间和操作
-	if time.Now().UnixNano()-vl.CreateAt < in.OnVerification.EffectiveTime*60*1e9 && in.Func == vl.Func {
-
-		//验证状态
-		resp, err := svc.state.Get(context.Background(), &fs_base_state.GetRequest{
-			Key: vl.Voucher + "-" + vl.VerId.Hex(),
-		})
-		if err != nil {
-			return &fs_base_validate.VerificationResponse{State: errno.ErrSystem}, nil
+	if time.Now().UnixNano()-vl.CreateAt <= in.OnVerification.EffectiveTime*60*1e9 {
+		voucher := in.Metadata.Ip + ";" + in.Func
+		if len(in.Metadata.UserId) > 16 {
+			voucher = in.Metadata.UserId + ";" + in.Func
 		}
-		if !resp.State.Ok {
-			return &fs_base_validate.VerificationResponse{State: resp.State}, nil
+		md := utils.Md5(voucher)
+		if md != vl.Voucher {
+			return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 		}
-
 		//需要在等待验证状态
-		if resp.Status == states.F_STATE_WAITING {
+		if vl.State == states.F_STATE_WAITING {
 			code := strings.ToLower(in.Code)
-			if bcrypt.CompareHashAndPassword([]byte(vl.Code), []byte(code)) != nil {
-				//更新状态
-				resp, err := svc.state.Upsert(context.Background(), &fs_base_state.UpsertRequest{
-					Key:    vl.Voucher + "-" + vl.VerId.Hex(),
-					Status: states.F_STATE_OK,
-				})
+			if bcrypt.CompareHashAndPassword([]byte(vl.Code), []byte(code)) == nil {
+
+				err = repo.Update(in.VerId, states.F_STATE_OK)
 				if err != nil {
 					return &fs_base_validate.VerificationResponse{State: errno.ErrSystem}, nil
 				}
-				return &fs_base_validate.VerificationResponse{State: resp.State, To: vl.To}, nil
+
+				return &fs_base_validate.VerificationResponse{State: errno.Ok, To: vl.To}, nil
 			} else {
-				return &fs_base_validate.VerificationResponse{State: errno.ErrInvalid}, nil
+				return &fs_base_validate.VerificationResponse{State: errno.ErrValidateCode}, nil
 			}
 		}
 	}
+
+	fmt.Println("err3")
 
 	return &fs_base_validate.VerificationResponse{State: errno.ErrExpired}, nil
 }

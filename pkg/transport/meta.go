@@ -33,10 +33,13 @@ func GRPCToContext() grpc.ServerRequestFunc {
 		meta.Device = header[5]
 		meta.UserId = header[6]
 		i, e := strconv.ParseInt(header[7], 10, 64)
-		if e != nil {
-			i = 0
+		if e != nil || i == 0 {
+			i = 1
 		}
 		meta.Level = i
+
+		fmt.Println("meta", meta)
+
 		return context.WithValue(ctx, MetadataTransportKey, meta)
 	}
 }

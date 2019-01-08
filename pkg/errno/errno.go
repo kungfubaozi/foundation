@@ -36,5 +36,8 @@ var (
 	ErrProjectAccess   = &fs_base.State{Ok: false, Message: "err project access", Code: 10020}
 	ErrFunction        = &fs_base.State{Ok: false, Message: "err function", Code: 10021}
 	ErrFunctionInvalid = &fs_base.State{Ok: false, Message: "err function invalid", Code: 10022}
-	ErrInvalidFace     = &fs_base.State{Ok: false, Message: "err invalid face", Code: 10023}
+	ErrInvalidFace     = &fs_base.State{Ok: false, Message: "err invalid face", Code: 10023}  //未发现face
+	ErrPhoneNumber     = &fs_base.State{Ok: false, Message: "err phone number", Code: 10024}  //错误手机好吗
+	ErrEmailFormat     = &fs_base.State{Ok: false, Message: "err email format", Code: 10025}  //错误邮箱地址
+	ErrValidateCode    = &fs_base.State{Ok: false, Message: "err validate code", Code: 10026} //验证码错误
 )

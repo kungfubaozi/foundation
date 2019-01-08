@@ -46,7 +46,11 @@ func StartService() {
 	}
 	defer rs.Close()
 
+	//插入默认项目
+	project.InsertDef(session)
+
 	service := project.NewService(session, strategycli.NewClient(zipkinTracer), rs)
+
 	endpoints := project.NewEndpoints(service, zipkinTracer, logger)
 	svc := project.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

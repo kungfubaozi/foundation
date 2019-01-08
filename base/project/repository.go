@@ -23,6 +23,7 @@ type project struct {
 	Desc      string        `bson:"desc"`
 	CreateAt  int64         `bson:"create_at"`
 	Platforms []*platform   `bson:"platforms"`
+	Creator   string        `bson:"creator"`
 }
 
 type platform struct {
@@ -41,7 +42,7 @@ func (repo *projectRepository) Close() {
 
 func (repo *projectRepository) Enable(projectId string, platform int64, open bool) error {
 	return repo.collection().Update(
-		bson.M{"_id": projectId,
+		bson.M{"_id": bson.ObjectIdHex(projectId),
 			"platforms": bson.M{"$elemMatch": bson.M{"platform": platform}},
 		}, bson.M{"$set": bson.M{"enabled": open}})
 }

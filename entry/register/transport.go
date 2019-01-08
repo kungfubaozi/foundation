@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"time"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/entry/register/pb"
 	"zskparker.com/foundation/pkg/format"
 	"zskparker.com/foundation/pkg/transport"
@@ -34,7 +33,7 @@ type GRPCServer struct {
 func (g *GRPCServer) FromAP(ctx context.Context, in *fs_entry_register.FromAPRequest) (*fs_base.Response, error) {
 	_, resp, err := g.fromap.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -42,7 +41,7 @@ func (g *GRPCServer) FromAP(ctx context.Context, in *fs_entry_register.FromAPReq
 func (g *GRPCServer) FromOAuth(ctx context.Context, in *fs_entry_register.FromOAuthRequest) (*fs_base.Response, error) {
 	_, resp, err := g.fromoauth.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -50,7 +49,7 @@ func (g *GRPCServer) FromOAuth(ctx context.Context, in *fs_entry_register.FromOA
 func (g *GRPCServer) Admin(ctx context.Context, in *fs_entry_register.AdminRequest) (*fs_base.Response, error) {
 	_, resp, err := g.admin.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -151,7 +150,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			"FromAP",
 			format.GrpcMessage,
 			format.GrpcMessage,
-			fs_base_strategy.GetResponse{},
+			fs_base.Response{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		fromAPEndpoint = limiter(fromAPEndpoint)
 		fromAPEndpoint = opentracing.TraceClient(otTracer, "FromAP")(fromAPEndpoint)
@@ -168,7 +167,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			"FromOAuth",
 			format.GrpcMessage,
 			format.GrpcMessage,
-			fs_base_strategy.GetResponse{},
+			fs_base.Response{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		fromOAuthEndpoint = limiter(fromOAuthEndpoint)
 		fromOAuthEndpoint = opentracing.TraceClient(otTracer, "FromOAuth")(fromOAuthEndpoint)
@@ -185,7 +184,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			"Admin",
 			format.GrpcMessage,
 			format.GrpcMessage,
-			fs_base_strategy.GetResponse{},
+			fs_base.Response{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		adminEndpoint = limiter(adminEndpoint)
 		adminEndpoint = opentracing.TraceClient(otTracer, "Admin")(adminEndpoint)
@@ -198,5 +197,6 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 	return Endpoints{
 		FromOAuthEndpoint: fromOAuthEndpoint,
 		FromAPEndpoint:    fromAPEndpoint,
+		AdminEndpoint:     adminEndpoint,
 	}
 }

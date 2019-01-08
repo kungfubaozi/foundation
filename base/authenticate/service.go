@@ -63,7 +63,7 @@ func (svc *authenticateService) sizeCheck() {
 
 func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error) {
 	resp := &fs_base_authenticate.CheckResponse{}
-	accessTokenClaims, err := decodeToken(in.Metadata.Token)
+	accessTokenClaims, err := DecodeToken(in.Metadata.Token)
 	if err != nil {
 		resp.State = errno.ErrToken
 		return resp, nil

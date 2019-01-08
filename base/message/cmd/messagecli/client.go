@@ -149,6 +149,13 @@ func NewClient(consulAddr string, tracer *zipkin.Tracer) message.Service {
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
 		endpoints.SendBroadcastEndpoint = retry
 	}
+	{
+		factory := Factory(message.MakeSendSMSEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.SendSMSEndpoint = retry
+	}
 
 	return &endpoints
 }

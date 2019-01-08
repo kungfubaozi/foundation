@@ -3,7 +3,6 @@ package message
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/eclipse/paho.mqtt.golang"
 	"net/http"
 	"net/url"
@@ -30,7 +29,7 @@ type mqttService struct {
 }
 
 func (svc *mqttService) SendSMS(ctx context.Context, in *fs_base.DirectMessage) (*fs_base.Response, error) {
-	e := sms("【嘉实集团】您的验证码为%s。如非本人操作，请忽略本短信", in.To, in.Content)
+	e := sms(in.To, in.Content)
 	if e != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -87,18 +86,17 @@ func NewService(client mqtt.Client) Service {
 	return svc
 }
 
-func sms(c, mobile, infix string) error {
+func sms(mobile, c string) error {
 	appId := "EUCP-EMY-SMS0-JBZOQ"
 	secretKey := "8553947376603211"
 	timestamp := utils.FormatDate(time.Now(), utils.YYYYMMDDHHMMSS)
 	sign := utils.Md5(appId + secretKey + timestamp)
-	content := fmt.Sprintf(c, infix)
 	values := url.Values{}
 	values.Add("appId", appId)
 	values.Add("timestamp", timestamp)
 	values.Add("sign", sign)
 	values.Add("mobiles", mobile)
-	values.Add("content", content)
+	values.Add("content", c)
 	_, err := http.PostForm("http://shmtn.b2m.cn:80/simpleinter/sendSMS", values)
 	return err
 }

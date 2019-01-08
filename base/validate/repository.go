@@ -12,6 +12,8 @@ type repository interface {
 
 	FindLast(voucher string) (*verification, error)
 
+	Update(id string, state int64) error
+
 	Close()
 }
 
@@ -22,6 +24,7 @@ type verification struct {
 	To       string        `bson:"to"`
 	Func     string        `bson:"func"`
 	Voucher  string        `bson:"voucher"`
+	State    int64         `bson:"state"`
 }
 
 type validateRepository struct {
@@ -36,6 +39,11 @@ func (svc *validateRepository) Create(v *verification) error {
 	return svc.collection().Insert(v)
 }
 
+func (svc *validateRepository) Update(id string, state int64) error {
+	err := svc.collection().Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"state": state}})
+	return err
+}
+
 func (svc *validateRepository) FindLast(voucher string) (*verification, error) {
 	ver := &verification{}
 	err := svc.collection().Find(bson.M{"voucher": voucher}).Sort("-create_at").One(ver)
@@ -44,7 +52,7 @@ func (svc *validateRepository) FindLast(voucher string) (*verification, error) {
 
 func (svc *validateRepository) Get(id string) (*verification, error) {
 	ver := &verification{}
-	err := svc.collection().Find(bson.M{"_id": id}).One(ver)
+	err := svc.collection().Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(ver)
 	return ver, err
 }
 

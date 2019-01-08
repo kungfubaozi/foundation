@@ -14,16 +14,16 @@ func TestNewClient(t *testing.T) {
 	zipkinTracer, reporter := serv.NewZipkin("http://192.168.2.60:9411/api/v2/spans", names.F_SVC_STATE, "58092")
 	defer reporter.Close()
 
-	c := NewClient("http://192.168.80.67:8500", zipkinTracer)
+	c := NewClient(zipkinTracer)
 
 	ctx := context.Background()
 
-	resp, err := c.Get(ctx, &fs_base_state.GetRequest{
-		Key: "1111",
+	resp, err := c.Upsert(ctx, &fs_base_state.UpsertRequest{
+		Key:    "1111",
+		Status: 1,
 	})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(resp.Status)
-	fmt.Println(resp.State.Message)
+	fmt.Println(resp.State)
 }

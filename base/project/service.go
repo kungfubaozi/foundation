@@ -14,6 +14,7 @@ import (
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 )
 
@@ -110,41 +111,34 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 	repo := svc.GetRepo()
 	defer repo.Close()
 
+	meta := ctx.Value(fs_metadata_transport.MetadataTransportKey).(*fs_base.Metadata)
 	node := utils.NodeGenerate()
-
-	p := &project{
-		Id:       bson.NewObjectId(),
-		Logo:     in.Logo,
-		ZH:       in.Zh,
-		EN:       in.En,
-		CreateAt: time.Now().UnixNano(),
-		Desc:     in.Desc,
-		Platforms: []*platform{
-			{
-				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_ANDROID,
-				Enabled:  true,
-			},
-			{
-				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_IOS,
-				Enabled:  true,
-			},
-			{
-				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_WINDOWD,
-				Enabled:  true,
-			},
-			{
-				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_MAC_OS,
-				Enabled:  true,
-			},
-			{
-				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_WEB,
-				Enabled:  true,
-			},
+	p := defProject(in, meta.UserId, bson.NewObjectId())
+	p.Platforms = []*platform{
+		{
+			ClientId: node.Generate().Base64(),
+			Platform: names.F_PLATFORM_ANDROID,
+			Enabled:  true,
+		},
+		{
+			ClientId: node.Generate().Base64(),
+			Platform: names.F_PLATFORM_IOS,
+			Enabled:  true,
+		},
+		{
+			ClientId: node.Generate().Base64(),
+			Platform: names.F_PLATFORM_WINDOWD,
+			Enabled:  true,
+		},
+		{
+			ClientId: node.Generate().Base64(),
+			Platform: names.F_PLATFORM_MAC_OS,
+			Enabled:  true,
+		},
+		{
+			ClientId: node.Generate().Base64(),
+			Platform: names.F_PLATFORM_WEB,
+			Enabled:  true,
 		},
 	}
 
@@ -156,108 +150,7 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 
 	go func() {
 		svc.strategycli.Upsert(ctx, &fs_base_strategy.UpsertRequest{
-			Strategy: &fs_base.ProjectStrategy{
-				ProjectId: p.Id.Hex(),
-				CreateAt:  p.CreateAt,
-				Configuration: &fs_base.Configuration{
-					OpenTime: "0-24",
-				},
-				Events: &fs_base.Events{
-					OnRegister: &fs_base.OnRegister{
-						OpenReview:                   1, //不开启审核
-						Mode:                         1, //手机注册
-						AnIPRegistrationInterval:     5,
-						AnDeviceRegistrationInterval: 5,
-						Submitlal:                    1, //不提交经纬度信息
-					},
-					OnLogin: &fs_base.OnLogin{
-						AllowOtherProjectUserToLogin: 2,
-						Mode: []int64{
-							1, 2, 3, 4, 5, 6,
-						},
-						MaxCountOfOnline: &fs_base.MaxCountOfOnline{
-							Android: 1,
-							IOS:     1,
-							Windows: 1,
-							MacOS:   1,
-							Web:     0, //无限制
-						},
-						Verification: 1,
-						MaxCountOfErrorPassword: []*fs_base.MaxCountOfErrorPassword{
-							{
-								Count:  3,
-								Action: 4,
-							},
-							{
-								Count:  5,
-								Action: 5,
-							},
-							{
-								Count:       8,
-								Action:      3,
-								ExpiredTime: 10 * 60, //10分钟
-							},
-						},
-						MaxCountOfInvalidAccount: []*fs_base.MaxCountOfInvalidAccount{
-							{
-								Count:  3,
-								Action: 4,
-							},
-							{
-								Count:  5,
-								Action: 5,
-							},
-							{
-								Count:       8,
-								Action:      3,
-								ExpiredTime: 10 * 60, //10分钟
-							},
-						},
-						Submitlal: 1, //不用提交经纬度
-					},
-					OnVerification: strategydef.GetOnVerificationDefault(),
-					OnQRLogin: &fs_base.OnQRLogin{
-						RefreshDuration: 60, //单位秒
-					},
-					OnFaceLogin: &fs_base.OnFaceLogin{
-						Degree: 80,
-					},
-					OnCommonEquipmentChanges: &fs_base.OnCommonEquipmentChanges{
-						SendMessageToUser: 2,
-					},
-					OnRequestFrozen: &fs_base.OnRequestFrozen{
-						Verification: 2,
-					},
-					OnCancelFrozen: &fs_base.OnCancelFrozen{
-						Verification: 2,
-					},
-					OnChangePhoneNumber: &fs_base.OnChangePhoneNumber{
-						Verification: 2,
-					},
-					OnChangeEmail: &fs_base.OnChangeEmail{
-						Verification: 2,
-					},
-					OnChangeFace: &fs_base.OnChangeFace{
-						Verification: 2,
-					},
-					OnChangeOAuth: &fs_base.OnChangeOAuth{
-						Verification: 1,
-					},
-					OnResetPassword: &fs_base.OnResetPassword{ //两种方式都可重置密码
-						Phone: 2,
-						Email: 2,
-					},
-					OnElsewhereLogin: &fs_base.OnElsewhereLogin{
-						SendMessageToUser: 2,
-						Verification:      2,
-					},
-					OnSubmitReview: &fs_base.OnSubmitReview{},
-					OnInviteUser: &fs_base.OnInviteUser{
-						ExpireTime: 10 * 60 * 24 * 3, //3天
-						Review:     2,
-					},
-				},
-			},
+			Strategy: strategydef.DefStrategy(p.Id.Hex(), meta.UserId),
 		})
 	}()
 
@@ -273,4 +166,52 @@ func NewService(session *mgo.Session, strategycli strategy.Service, reportercli 
 		svc = &projectService{session: session, strategycli: strategycli, reportercli: reportercli}
 	}
 	return svc
+}
+
+func InsertDef(session *mgo.Session) {
+	p := defProject(&fs_base_project.NewRequest{
+		Zh:   "Foundation",
+		En:   "Foundation",
+		Desc: "Root project",
+	}, "admin", bson.ObjectIdHex("5c345ba1133cf43acf167bd9"))
+	p.Platforms = []*platform{
+		{
+			ClientId: "MTA4MjY0NzQ2ODA3MzU1MzkyMA==",
+			Platform: names.F_PLATFORM_ANDROID,
+			Enabled:  true,
+		},
+		{
+			ClientId: "MTA4MjY0NzQ2ODA3MzU1MzkyMQ==",
+			Platform: names.F_PLATFORM_IOS,
+			Enabled:  true,
+		},
+		{
+			ClientId: "MTA4MjY0NzQ2ODA3MzU1MzkyMg==",
+			Platform: names.F_PLATFORM_WINDOWD,
+			Enabled:  true,
+		},
+		{
+			ClientId: "MTA4MjY0NzQ2ODA3MzU1MzkyMw==",
+			Platform: names.F_PLATFORM_MAC_OS,
+			Enabled:  true,
+		},
+		{
+			ClientId: "MTA4MjY0NzQ2ODA3MzU1MzkyNA==",
+			Platform: names.F_PLATFORM_WEB,
+			Enabled:  true,
+		},
+	}
+	session.DB("foundation").C("project").Upsert(bson.M{"_id": p.Id}, p)
+}
+
+func defProject(in *fs_base_project.NewRequest, creator string, id bson.ObjectId) *project {
+	return &project{
+		Id:       id,
+		Logo:     in.Logo,
+		ZH:       in.Zh,
+		EN:       in.En,
+		Creator:  creator,
+		CreateAt: time.Now().UnixNano(),
+		Desc:     in.Desc,
+	}
 }

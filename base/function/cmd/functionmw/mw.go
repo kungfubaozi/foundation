@@ -26,6 +26,8 @@ import (
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/ref"
+	"zskparker.com/foundation/pkg/transport"
+	"zskparker.com/foundation/safety/blacklist"
 )
 
 type MWServices struct {
@@ -34,6 +36,7 @@ type MWServices struct {
 	validatecli     validate.Service
 	projectcli      project.Service
 	functioncli     function.Service
+	blacklistcli    blacklist.Service
 }
 
 func NewFunctionMWClient(tracer *zipkin.Tracer) *MWServices {
@@ -57,37 +60,33 @@ func WithMeta(logger log.Logger, mwcli *MWServices) endpoint.Middleware {
 func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-			meta := ctx.Value("meta").(*fs_base.Metadata)
+			meta := ctx.Value(fs_metadata_transport.MetadataTransportKey).(*fs_base.Metadata)
 
 			mr := ref.GetMetaInfo(request)
 			ps := errno.Ok
 			var cf *fs_base_function.Func
 			var strategy *fs_base.ProjectStrategy
 			var project *fs_base_project.ProjectInfo
+			var wg sync.WaitGroup
 
 			errc := func(s *fs_base.State) {
 				if ps.Ok {
 					ps = s
 				}
+				wg.Done()
 			}
-
-			var wg sync.WaitGroup
 
 			wg.Add(1)
 			go func() {
 				pr, _ := mwcli.projectcli.Get(context.Background(), &fs_base_project.GetRequest{
 					ClientId: meta.ClientId,
 				})
-				fmt.Println(pr)
 				if pr == nil {
-
 					errc(errno.ErrSystem)
-					wg.Done()
 					return
 				}
 				if !pr.State.Ok {
 					errc(pr.State)
-					wg.Done()
 					return
 				}
 				project = pr.Info
@@ -101,20 +100,47 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 					Api:  meta.Api,
 					Func: function,
 				})
-				fmt.Println(fr)
 				if fr == nil {
 					errc(errno.ErrSystem)
-					wg.Done()
 					return
 				}
 				if !fr.State.Ok {
 					errc(fr.State)
-					wg.Done()
 					return
 				}
 				cf = fr.Func
 				wg.Done()
 			}()
+
+			//wg.Add(1)
+			//go func() {
+			//	//blacklist
+			//	var userId string
+			//	if len(meta.Token) > 0 {
+			//		s, err := authenticate.DecodeToken(meta.Token)
+			//		if err != nil {
+			//			errc(errno.ErrToken)
+			//			return
+			//		}
+			//		userId = s.Token.UserId
+			//	}
+			//
+			//	br, _ := mwcli.blacklistcli.Check(context.Background(), &fs_safety_blacklist.CheckRequest{
+			//		Ip:     meta.Ip,
+			//		UserId: userId,
+			//		Device: meta.Device,
+			//	})
+			//
+			//	if br == nil {
+			//		errc(errno.ErrSystem)
+			//		return
+			//	}
+			//	if !br.State.Ok {
+			//		errc(br.State)
+			//		return
+			//	}
+			//	wg.Done()
+			//}()
 
 			wg.Wait()
 
@@ -143,7 +169,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 						return false
 					}
 				} else {
-					if len(mr.Id) == 0 && len(mr.Validate) == 0 {
+					if len(mr.Id) == 0 || len(mr.Validate) == 0 {
 						ps = errno.ErrMetaValidate
 						return false
 					}
@@ -159,6 +185,10 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 					OnVerification: strategy.Events.OnVerification,
 					Metadata:       meta,
 				})
+				if resp == nil {
+					ps = errno.ErrSystem
+					return
+				}
 				ps = resp.State
 				ctx = context.WithValue(ctx, "validate_to", resp.To)
 			}
@@ -190,30 +220,30 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 				fmt.Println("e2-0")
 				if cf.Fcv == names.F_FCV_AUTH {
 					authCheck()
-				} else if cf.Fcv == names.F_FCV_PHONE && metaCheck(false) {
-					validateCheck()
-				} else if cf.Fcv == names.F_FCV_EMAIL && metaCheck(false) {
-					validateCheck()
-				} else if cf.Fcv == names.F_FCV_FACE && metaCheck(true) {
-					faceCheck()
-				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_FACE && metaCheck(true) {
-					authCheck()
-					if !ps.Ok {
-						return errno.ErrResponse(ps)
+				} else if cf.Fcv == names.F_FCV_VALIDATE_CODE {
+					if metaCheck(false) {
+						validateCheck()
 					}
-					faceCheck()
-				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_PHONE && metaCheck(false) {
-					authCheck()
-					if !ps.Ok {
-						return errno.ErrResponse(ps)
+				} else if cf.Fcv == names.F_FCV_FACE {
+					if metaCheck(false) {
+						faceCheck()
 					}
-					validateCheck()
-				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_EMAIL && metaCheck(false) {
-					authCheck()
-					if !ps.Ok {
-						return errno.ErrResponse(ps)
+				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_FACE {
+					if metaCheck(true) {
+						authCheck()
+						if !ps.Ok {
+							return errno.ErrResponse(ps)
+						}
+						faceCheck()
 					}
-					validateCheck()
+				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_VALIDATE_CODE {
+					if metaCheck(false) {
+						authCheck()
+						if !ps.Ok {
+							return errno.ErrResponse(ps)
+						}
+						validateCheck()
+					}
 				} else {
 					fmt.Println("e2")
 					return errno.ErrResponse(errno.ErrFunction)
@@ -230,11 +260,12 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 			ctx = context.WithValue(ctx, "project", project)
 
 			//check level
-			if meta.Level < cf.Level {
-				return errno.ErrRequest, errno.ERROR
+			if meta.Level >= cf.Level {
+				fmt.Println("next")
+				return next(ctx, request)
 			}
 
-			return next(ctx, request)
+			return errno.ErrRequest, errno.ERROR
 		}
 	}
 }

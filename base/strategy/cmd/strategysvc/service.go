@@ -2,13 +2,16 @@ package strategysvc
 
 import (
 	"fmt"
+	"github.com/globalsign/mgo/bson"
 	"github.com/go-kit/kit/log"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
+	"gopkg.in/mgo.v2"
 	"net"
 	"os"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/strategy"
+	"zskparker.com/foundation/base/strategy/def"
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/names"
@@ -45,6 +48,9 @@ func StartService() {
 	}
 	defer rs.Close()
 
+	//插入默认的
+	insertDef(session)
+
 	service := strategy.NewService(session, rs)
 	endpoints := strategy.NewEndpoints(service, zipkinTracer, logger)
 	svc := strategy.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
@@ -66,4 +72,10 @@ func StartService() {
 	}()
 
 	logger.Log("exit", <-errc)
+}
+
+func insertDef(session *mgo.Session) {
+	c := session.DB("foundation").C("strategy")
+	d := strategydef.DefStrategy("5c345ba1133cf43acf167bd9", "admin")
+	c.Upsert(bson.M{"projectid": d.ProjectId}, d)
 }

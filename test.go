@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 func main() {
 
-	fmt.Println(bson.NewObjectId().Hex())
+	fmt.Println(time.Now().UnixNano()-1546938033630125600 <= 10*60*1e9)
 }

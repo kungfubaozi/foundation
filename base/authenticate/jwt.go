@@ -15,7 +15,7 @@ type UserClaims struct {
 	jwt.StandardClaims
 }
 
-func decodeToken(token string) (*UserClaims, error) {
+func DecodeToken(token string) (*UserClaims, error) {
 	t, err := jwt.ParseWithClaims(token, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return TOKEN_KEY, nil
 	})

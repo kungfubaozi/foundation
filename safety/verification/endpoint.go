@@ -24,7 +24,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		newEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(newEndpoint)
 		newEndpoint = zipkin.TraceEndpoint(trace, "New")(newEndpoint)
 
-		newEndpoint = functionmw.WithExpress(logger, client, GetRegisterFunc().Function.Func)(newEndpoint)
+		newEndpoint = functionmw.WithMeta(logger, client)(newEndpoint)
 	}
 
 	return Endpoints{

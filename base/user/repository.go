@@ -53,23 +53,23 @@ func (repo *userRepository) Get(value, key string) (*User, error) {
 	return user, err
 }
 
-func (repo *userRepository) UpdatePassword(userId, password string) error {
-	_, e := repo.collection().Upsert(bson.M{"user_id": userId}, bson.M{"$set": bson.M{"password": password}})
+func (repo *userRepository) UpdatePassword(id, password string) error {
+	_, e := repo.collection().Upsert(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"password": password}})
 	return e
 }
 
-func (repo *userRepository) UpdatePhone(userId, phone string) error {
-	_, e := repo.collection().Upsert(bson.M{"user_id": userId}, bson.M{"$set": bson.M{"phone": phone}})
+func (repo *userRepository) UpdatePhone(id, phone string) error {
+	_, e := repo.collection().Upsert(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"phone": phone}})
 	return e
 }
 
-func (repo *userRepository) UpdateEnterprise(userId, enterprise string) error {
-	_, e := repo.collection().Upsert(bson.M{"user_id": userId}, bson.M{"$set": bson.M{"enterprise": enterprise}})
+func (repo *userRepository) UpdateEnterprise(id, enterprise string) error {
+	_, e := repo.collection().Upsert(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"enterprise": enterprise}})
 	return e
 }
 
-func (repo *userRepository) UpdateEmail(userId, email string) error {
-	_, e := repo.collection().Upsert(bson.M{"user_id": userId}, bson.M{"$set": bson.M{"email": email}})
+func (repo *userRepository) UpdateEmail(id, email string) error {
+	_, e := repo.collection().Upsert(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"email": email}})
 	return e
 }
 

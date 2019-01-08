@@ -94,6 +94,9 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 			if in.Strategy.Events.OnVerification.CombinationMode > 0 {
 				p.Events.OnVerification.CombinationMode = in.Strategy.Events.OnVerification.CombinationMode
 			}
+			if in.Strategy.Events.OnVerification.VoucherDuration > 30 { //30s起算
+				p.Events.OnVerification.VoucherDuration = in.Strategy.Events.OnVerification.VoucherDuration
+			}
 		}
 		if in.Strategy.Events.OnFaceLogin != nil {
 			if in.Strategy.Events.OnFaceLogin.Degree > 0 && in.Strategy.Events.OnFaceLogin.Degree > 72.0 {

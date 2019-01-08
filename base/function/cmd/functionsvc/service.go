@@ -98,10 +98,13 @@ func insertDef(session *mgo.Session) {
 
 	//safety verification functions
 	upsert(c, verification.GetRegisterFunc())
+	upsert(c, verification.GetLoginFunc())
+	upsert(c, verification.GetAdminRegisterFunc())
 
 	//register functions
 	upsert(c, register.GetFromAPFunc())
 	upsert(c, register.GetFromOAuthFunc())
+	upsert(c, register.GetAdminFunc())
 
 	//safety update functions
 	upsert(c, update.GetUpdateEmailFunc())

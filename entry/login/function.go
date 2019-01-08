@@ -4,6 +4,7 @@ import (
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/pkg/model"
 	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/tags"
 )
 
 func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
@@ -15,7 +16,7 @@ func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "刷脸登录",
 		En:    "EntryByFace",
-		Func:  "547ad4cc8ddc",
+		Func:  fs_function_tags.GetEntryByFaceFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 5, //刷脸登录目前只对最高管理员开放
 	}
@@ -31,7 +32,7 @@ func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "密码登录",
 		En:    "EntryByAP",
-		Func:  "8423a0ce0eb3",
+		Func:  fs_function_tags.GetEntryByAPFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}
@@ -47,7 +48,7 @@ func GetEntryByOAuthFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "第三方登录",
 		En:    "EntryByOAuth",
-		Func:  "3a8a4ba0f66a",
+		Func:  fs_function_tags.GetEntryByOAuthFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}
@@ -63,7 +64,7 @@ func GetEntryByValidateCodeFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "验证码登录",
 		En:    "EntryByValidateCode",
-		Func:  "bf7a04fcc618",
+		Func:  fs_function_tags.GetEntryByValidateCodeFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}
@@ -79,7 +80,7 @@ func GetEntryByQRCodeFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "二维码登录",
 		En:    "EntryByQRCode",
-		Func:  "84f9cb3a0619",
+		Func:  fs_function_tags.GetEntryByQRCodeFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
 		Level: 1,
 	}

@@ -13,6 +13,7 @@ const (
 	F_SVC_FACE                = "foundation.svc.face"
 	F_SVC_STRATEGY            = "foundation.svc.strategy"
 	F_SVC_PROJECT             = "foundation.svc.project"
+	F_SVC_ENTRY_REGISTER      = "foundation.svc.entry.register"
 )
 
 const (
@@ -41,9 +42,8 @@ const (
 )
 
 const (
-	F_FCV_FACE  = 6 << 6
-	F_FCV_EMAIL = 6 << 7
-	F_FCV_PHONE = 6 << 8
-	F_FCV_AUTH  = 6 << 9
-	F_FCV_NONE  = 6 << 10
+	F_FCV_FACE          = 6 << 6
+	F_FCV_VALIDATE_CODE = 6 << 7
+	F_FCV_AUTH          = 6 << 9
+	F_FCV_NONE          = 6 << 10
 )

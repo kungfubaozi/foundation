@@ -4,6 +4,7 @@ import (
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/pkg/model"
 	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/tags"
 )
 
 func GetUpdatePhoneFunc() *fs_pkg_model.APIFunction {
@@ -15,8 +16,8 @@ func GetUpdatePhoneFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "更新手机",
 		En:    "UpdatePhone",
-		Func:  "71c2f4744c8a",
-		Fcv:   names.F_FCV_AUTH | names.F_FCV_PHONE,
+		Func:  fs_function_tags.GetUpdatePhoneFuncTag(),
+		Fcv:   names.F_FCV_AUTH | names.F_FCV_VALIDATE_CODE,
 		Level: 1,
 	}
 	return f
@@ -31,8 +32,8 @@ func GetUpdateEmailFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "更新邮箱",
 		En:    "UpdateEmail",
-		Func:  "c12dc98213e4",
-		Fcv:   names.F_FCV_AUTH | names.F_FCV_EMAIL,
+		Func:  fs_function_tags.GetUpdateEmailFuncTag(),
+		Fcv:   names.F_FCV_AUTH | names.F_FCV_VALIDATE_CODE,
 		Level: 1,
 	}
 	return f
@@ -48,7 +49,7 @@ func GetUpdateEnterpriseFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "更新企业号",
 		En:    "UpdateEnterprise",
-		Func:  "680c27ca53cd",
+		Func:  fs_function_tags.GetUpdateEnterpriseFuncTag(),
 		Fcv:   names.F_FCV_AUTH,
 		Level: 5,
 	}
@@ -65,8 +66,8 @@ func GetUpdatePasswordFunc() *fs_pkg_model.APIFunction {
 		Api:   f.Prefix + f.Infix,
 		Zh:    "更新密码",
 		En:    "UpdatePassword",
-		Func:  "dc4dfc72acb3",
-		Fcv:   names.F_FCV_PHONE,
+		Func:  fs_function_tags.GetUpdatePasswordFuncTag(),
+		Fcv:   names.F_FCV_VALIDATE_CODE,
 		Level: 1,
 	}
 	return f
