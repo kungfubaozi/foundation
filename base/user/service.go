@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"github.com/go-kit/kit/log"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -38,6 +39,7 @@ type Service interface {
 type userService struct {
 	session  *mgo.Session
 	statecli state.Service
+	logger   log.Logger
 }
 
 func (svc *userService) findByKey(ctx context.Context, key, value string) (*fs_base_user.FindResponse, error) {
@@ -201,7 +203,8 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 		//查找相同的
 		err = repo.FindSame(in.Phone, in.Email, in.Enterprise)
 		if err != nil {
-			return errno.ErrResponse(errno.ErrRequest)
+			svc.logger.Log("match", "err", "info", err)
+			return errno.ErrResponse(errno.ErrUserAlreadyExists)
 		}
 	}
 	err = repo.Add(u)
@@ -221,10 +224,10 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	}, nil
 }
 
-func NewService(session *mgo.Session, statecli state.Service) Service {
+func NewService(session *mgo.Session, statecli state.Service, logger log.Logger) Service {
 	var svc Service
 	{
-		svc = &userService{session: session, statecli: statecli}
+		svc = &userService{session: session, statecli: statecli, logger: logger}
 	}
 	return svc
 }

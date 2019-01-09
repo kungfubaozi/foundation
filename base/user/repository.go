@@ -47,17 +47,17 @@ func (repo *userRepository) FindAdmin() int {
 }
 
 func (repo *userRepository) FindSame(phone, email, enterprise string) error {
-	i, err := repo.collection().Find(bson.M{"$or": []bson.M{
-		{
-			"email": email,
-		},
-		{
-			"enterprise": enterprise,
-		},
-		{
-			"phone": phone,
-		},
-	}}).Count()
+	var b []bson.M
+	if len(phone) > 0 {
+		b = append(b, bson.M{"phone": phone})
+	}
+	if len(email) > 0 {
+		b = append(b, bson.M{"email": email})
+	}
+	if len(enterprise) > 0 {
+		b = append(b, bson.M{"enterprise": enterprise})
+	}
+	i, err := repo.collection().Find(bson.M{"$or": b}).Count()
 	if err == mgo.ErrNotFound {
 		return nil
 	}

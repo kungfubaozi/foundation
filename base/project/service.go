@@ -116,6 +116,7 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 	meta := ctx.Value(fs_metadata_transport.MetadataTransportKey).(*fs_base.Metadata)
 	node := utils.NodeGenerate()
 	p := defProject(in, meta.UserId, bson.NewObjectId())
+	p.Session = node.Generate().Base64()
 	p.Platforms = []*platform{
 		{
 			ClientId: node.Generate().Base64(),

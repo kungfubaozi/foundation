@@ -81,34 +81,45 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 		return resp, nil
 	}
 
+	wg := sync.WaitGroup{}
+
 	//这里不需要检查在线数量
-	errc := make(chan error, 2)
+	errc := func(e error) {
+		if err == nil {
+			err = e
+		}
+		wg.Done()
+	}
 
 	//检查用户状态
+	wg.Add(1)
 	go func(r *fs_base_authenticate.CheckResponse) {
 		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{})
 		if e != nil {
-			errc <- e
+			errc(e)
+			return
 		}
 		if !a.State.Ok {
 			r.State = a.State
-			errc <- errno.ERROR
+			errc(errno.ERROR)
 			return
 		}
-		errc <- nil
+		wg.Done()
 	}(resp)
 
 	//检查是否存在用户
+	wg.Add(1)
 	go func(r *fs_base_authenticate.CheckResponse) {
 		a, e := svc.usercli.FindByUserId(context.Background(), &fs_base_user.FindRequest{
 			Value: auth.UserId,
 		})
 		if e != nil {
-			errc <- e
+			errc(e)
+			return
 		}
 		if !a.State.Ok {
 			r.State = a.State
-			errc <- errno.ERROR
+			errc(errno.ERROR)
 			return
 		}
 		//if !in.AllowOtherProjectUserToLogin && a.FromProjectId != auth.ProjectId {
@@ -116,10 +127,12 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 		//	errc <- errno.ERROR
 		//}
 		resp.Level = a.Level
-		errc <- err
+		wg.Done()
 	}(resp)
 
-	if e := <-errc; e != nil {
+	wg.Wait()
+
+	if err != nil {
 		return resp, nil
 	}
 	//检查是否过期

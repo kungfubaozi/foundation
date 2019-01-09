@@ -10,12 +10,27 @@ import (
 	"strconv"
 	"strings"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/pkg/errno"
 )
 
 var (
 	MetadataTransportKey = "meta"
+	StrategyTransportKey = "strategy"
+	ProjectTransportKey  = "project"
 )
+
+func ContextToStrategy(ctx context.Context) *fs_base.ProjectStrategy {
+	return ctx.Value(StrategyTransportKey).(*fs_base.ProjectStrategy)
+}
+
+func ContextToMeta(ctx context.Context) *fs_base.Metadata {
+	return ctx.Value(MetadataTransportKey).(*fs_base.Metadata)
+}
+
+func ContextToProject(ctx context.Context) *fs_base_project.ProjectInfo {
+	return ctx.Value(ProjectTransportKey).(*fs_base_project.ProjectInfo)
+}
 
 func GRPCToContext() grpc.ServerRequestFunc {
 	return func(ctx context.Context, mds metadata.MD) context.Context {

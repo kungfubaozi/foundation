@@ -40,7 +40,7 @@ func StartService() {
 	}
 	defer session.Close()
 
-	service := user.NewService(session, statecli.NewClient(zipkinTracer))
+	service := user.NewService(session, statecli.NewClient(zipkinTracer), logger)
 	endpoints := user.NewEndpoints(service, zipkinTracer, logger)
 	svc := user.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

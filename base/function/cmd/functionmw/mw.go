@@ -92,6 +92,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 					return
 				}
 				project = pr.Info
+				meta.ProjectId = pr.Strategy.ProjectId
 				strategy = pr.Strategy
 				wg.Done()
 			}()
@@ -260,8 +261,8 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 
 			logger.Log("middleware", "function", "check", "ok")
 
-			ctx = context.WithValue(ctx, "strategy", strategy)
-			ctx = context.WithValue(ctx, "project", project)
+			ctx = context.WithValue(ctx, fs_metadata_transport.StrategyTransportKey, strategy)
+			ctx = context.WithValue(ctx, fs_metadata_transport.ProjectTransportKey, project)
 
 			//check level
 			if meta.Level >= cf.Level {

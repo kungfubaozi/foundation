@@ -11,6 +11,7 @@ import (
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/entry/register/pb"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/match"
 	"zskparker.com/foundation/pkg/tags"
 	"zskparker.com/foundation/pkg/transport"
 )
@@ -85,10 +86,46 @@ func (svc *registerService) Admin(ctx context.Context, in *fs_entry_register.Adm
 }
 
 func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.FromAPRequest) (*fs_base.Response, error) {
-	if len(in.Phone) == 0 && len(in.Password) < 6 {
+	if len(in.Password) < 6 || len(in.Meta.Face) > 0 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
-	panic(errno.ERROR)
+	strategy := fs_metadata_transport.ContextToStrategy(ctx)
+	meta := fs_metadata_transport.ContextToMeta(ctx)
+	mode := strategy.Events.OnRegister.Mode
+	if mode == 1 { //phone
+		if len(in.Email) > 0 {
+			return errno.ErrResponse(errno.ErrSupport)
+		}
+		if !fs_regx_match.Phone(in.Phone) {
+			return errno.ErrResponse(errno.ErrPhoneNumber)
+		}
+	} else if mode == 2 { //email
+		if len(in.Phone) > 0 {
+			return errno.ErrResponse(errno.ErrSupport)
+		}
+		if !fs_regx_match.Email(in.Email) {
+			return errno.ErrResponse(errno.ErrEmail)
+		}
+	}
+	resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
+		Level:         1,
+		Password:      in.Password,
+		Phone:         in.Phone,
+		Email:         in.Email,
+		FromClientId:  meta.ClientId,
+		FromProjectId: meta.ProjectId,
+	})
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	if !resp.State.Ok {
+		return errno.ErrResponse(resp.State)
+	}
+
+	svc.reportercli.Write(fs_function_tags.GetFromAPFuncTag(), resp.Content, meta.Ip)
+
+	return errno.ErrResponse(errno.Ok)
 }
 
 //从第三方注册不需要验证码

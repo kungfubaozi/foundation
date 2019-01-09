@@ -24,6 +24,7 @@ type project struct {
 	CreateAt  int64         `bson:"create_at"`
 	Platforms []*platform   `bson:"platforms"`
 	Creator   string        `bson:"creator"`
+	Session   string        `bson:"session"` //用来服务器与sso通讯用
 }
 
 type platform struct {

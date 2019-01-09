@@ -7,12 +7,13 @@ import (
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/face"
 	"zskparker.com/foundation/base/face/pb"
-	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user"
 	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/entry/login/pb"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/tags"
+	"zskparker.com/foundation/pkg/transport"
 )
 
 type Service interface {
@@ -37,8 +38,7 @@ type loginService struct {
 }
 
 func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.EntryByFaceRequest) (*fs_entry_login.EntryResponse, error) {
-	meta := ctx.Value("meta").(*fs_base.Metadata)
-	//strategy := ctx.Value("strategy").(*fs_base.ProjectStrategy)
+	meta := fs_metadata_transport.ContextToMeta(ctx)
 	//查找人脸库
 	fr, _ := svc.facecli.Search(context.Background(), &fs_base_face.SearchRequest{
 		Base64Face: in.Meta.Face,
@@ -61,7 +61,9 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 	if !ar.State.Ok {
 		return &fs_entry_login.EntryResponse{State: ar.State}, nil
 	}
-	//svc.reportercli.Write(login, in.Authorize.UserId, in.Authorize.Ip)
+
+	svc.reportercli.Write(fs_function_tags.GetEntryByFaceFuncTag(), meta.UserId, meta.ProjectId)
+
 	return &fs_entry_login.EntryResponse{
 		State:        errno.Ok,
 		Session:      ar.Session,
@@ -71,7 +73,8 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 }
 
 func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_entry_login.EntryResponse, error) {
-	panic("implement me")
+	meta := fs_metadata_transport.ContextToMeta(ctx)
+
 }
 
 func (svc *loginService) EntryByOAuth(ctx context.Context, in *fs_entry_login.EntryByOAuthRequest) (*fs_entry_login.EntryResponse, error) {

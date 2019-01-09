@@ -50,7 +50,7 @@ func StartService() {
 	}
 	defer rc.Close()
 
-	service := verification.NewService(validatecli.NewClient(zipkinTracer), rc)
+	service := verification.NewService(validatecli.NewClient(zipkinTracer), rc, logger)
 	endpoints := verification.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
 	svc := verification.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
