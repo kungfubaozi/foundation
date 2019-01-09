@@ -2,7 +2,6 @@ package project
 
 import (
 	"context"
-	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -40,7 +39,7 @@ func (svc *projectService) EnablePlatform(ctx context.Context, in *fs_base_proje
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	meta := ctx.Value("meta").(*fs_base.Metadata)
+	meta := fs_metadata_transport.ContextToMeta(ctx)
 
 	err := repo.Enable(meta.ProjectId, in.Platform, in.Enable)
 	if err != nil {
@@ -53,54 +52,54 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	resp := &fs_base_project.GetResponse{
-		State: errno.ErrRequest,
+	resp := func(state *fs_base.State) (*fs_base_project.GetResponse, error) {
+		return &fs_base_project.GetResponse{State: state}, nil
 	}
 
 	p, err := repo.Get(in.ClientId)
 
 	if err != nil {
-		fmt.Println("e0", err)
-		return resp, nil
+		return resp(errno.ErrRequest)
 	}
 
 	gp := &fs_base_project.ProjectInfo{
-		Logo: p.Logo,
-		Desc: p.Desc,
-		En:   p.EN,
-		Zh:   p.ZH,
+		Logo:  p.Logo,
+		Desc:  p.Desc,
+		En:    p.EN,
+		Zh:    p.ZH,
+		Level: p.Level,
 	}
 
 	if len(p.Platforms) != 5 {
-		fmt.Println("e1")
-		return resp, nil
+		return resp(errno.ErrSystem)
 	}
 
 	for _, v := range p.Platforms {
-		if !v.Enabled { //未开启平台
-			resp.State = errno.ErrPlatform
-			return resp, nil
+		if v.ClientId == in.ClientId {
+			if !v.Enabled { //未开启平台
+				return resp(errno.ErrPlatform)
+			}
+			gp.Platform = &fs_base_project.Platform{
+				ClientId: v.ClientId,
+				Platform: v.Platform,
+			}
+			break
 		}
-		gp.Platforms = append(gp.Platforms, &fs_base_project.Platform{
-			ClientId: v.ClientId,
-			Enabled:  v.Enabled,
-			Platform: v.Platform,
-		})
+	}
+
+	if gp.Platform == nil {
+		return &fs_base_project.GetResponse{}, nil
 	}
 
 	r, err := svc.strategycli.Get(context.Background(), &fs_base_strategy.GetRequest{
 		ProjectId: p.Id.Hex(),
 	})
 	if err != nil {
-		fmt.Println("err", err)
-		return resp, nil
+		return resp(errno.ErrSystem)
 	}
 	if !r.State.Ok {
-		resp.State = r.State
-		return resp, nil
+		return resp(r.State)
 	}
-
-	resp.Info = gp
 
 	return &fs_base_project.GetResponse{
 		State:    errno.Ok,
@@ -117,6 +116,7 @@ func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewReque
 	node := utils.NodeGenerate()
 	p := defProject(in, meta.UserId, bson.NewObjectId())
 	p.Session = node.Generate().Base64()
+	p.Level = 3 //开发人员以上都可以进入
 	p.Platforms = []*platform{
 		{
 			ClientId: node.Generate().Base64(),
@@ -175,7 +175,7 @@ func InsertDef(session *mgo.Session) {
 	p := defProject(&fs_base_project.NewRequest{
 		Zh:   "Foundation",
 		En:   "Foundation",
-		Desc: "Root project",
+		Desc: "root",
 	}, "admin", bson.ObjectIdHex("5c345ba1133cf43acf167bd9"))
 	p.Platforms = []*platform{
 		{
@@ -204,6 +204,7 @@ func InsertDef(session *mgo.Session) {
 			Enabled:  true,
 		},
 	}
+	p.Level = 5 // 只有最高管理员可以操作
 	session.DB("foundation").C("project").Upsert(bson.M{"_id": p.Id}, p)
 }
 

@@ -44,4 +44,6 @@ var (
 	ErrAlreadyBind       = &fs_base.State{Ok: false, Message: "err already bind", Code: 10028}
 	ErrEmail             = &fs_base.State{Ok: false, Message: "err email", Code: 10029}
 	ErrUserAlreadyExists = &fs_base.State{Ok: false, Message: "err user already exists", Code: 10030}
+	ErrProjectPermission = &fs_base.State{Ok: false, Message: "err project permission", Code: 10031} //当前用户没有权限访问当前项目
+	ErrProject           = &fs_base.State{Ok: false, Message: "err project", Code: 10032}            //当前用户没有权限访问当前项目
 )

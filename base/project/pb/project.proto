@@ -47,11 +47,11 @@ message ProjectInfo {
     string desc = 2;
     string en = 3;
     string zh = 4;
-    repeated Platform platforms = 5;
+    Platform platform = 5;
+    int64 level = 6;
 }
 
 message Platform {
     string clientId = 1;
-    bool enabled = 2;
-    int64 platform = 3;
+    int64 platform = 2;
 }

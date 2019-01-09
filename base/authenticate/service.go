@@ -156,6 +156,12 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 }
 
 func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticate.NewRequest) (*fs_base_authenticate.NewResponse, error) {
+	resp := func(state *fs_base.State) (*fs_base_authenticate.NewResponse, error) {
+		return &fs_base_authenticate.NewResponse{State: state}, nil
+	}
+	if in.MaxOnlineCount == -1 {
+		return resp(errno.ErrProject)
+	}
 	node := utils.NodeGenerate()
 	in.Authorize.AccessTokenUUID = node.Generate().Base64()
 	in.Authorize.RefreshTokenUUID = node.Generate().Base64()
@@ -163,30 +169,48 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	in.Authorize.Relation = node.Generate().Base64()
 	var accessToken, refreshToken string
 	var err error
+	var cs *fs_base.State
+
 	wg := sync.WaitGroup{}
 	errc := func(e error) {
 		if err == nil {
 			err = e
 		}
+		wg.Done()
 	}
 	wg.Add(1)
 	go func() {
 		a, err := encodeAccessToken(in.Authorize)
 		accessToken = a
 		errc(err)
-		wg.Done()
 	}()
 	wg.Add(1)
 	go func() {
 		a, err := encodeRefreshToken(in.Authorize)
 		refreshToken = a
 		errc(err)
+	}()
+	wg.Add(1)
+	go func() {
+		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{})
+		if e != nil {
+			errc(e)
+			return
+		}
+		if !a.State.Ok {
+			cs = a.State
+			errc(errno.ERROR)
+			return
+		}
 		wg.Done()
 	}()
 	wg.Wait()
 	if err != nil {
 		fmt.Println("encode err", err)
-		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
+		return resp(errno.ErrSystem)
+	}
+	if cs != nil {
+		return resp(cs)
 	}
 	repo := svc.GetRepo()
 	defer repo.Close()
@@ -194,7 +218,7 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	v, err := repo.SizeOf(in.Authorize.UserId)
 	if err != nil {
 		fmt.Println("size of", err)
-		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
+		return resp(errno.ErrSystem)
 	}
 	fmt.Println("size ", len(v))
 	if v != nil && len(v) > 0 {
@@ -219,7 +243,7 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	err = repo.Add(in.Authorize)
 	if err != nil {
 		fmt.Println("add", err)
-		return &fs_base_authenticate.NewResponse{State: errno.ErrSystem}, nil
+		return resp(errno.ErrSystem)
 	}
 	return &fs_base_authenticate.NewResponse{
 		State:        errno.Ok,

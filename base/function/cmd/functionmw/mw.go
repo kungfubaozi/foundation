@@ -50,14 +50,19 @@ func NewFunctionMWClient(tracer *zipkin.Tracer) *MWServices {
 }
 
 func WithExpress(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
-	return middleware(logger, mwcli, function)
+	return middleware(logger, mwcli, function, true)
 }
 
 func WithMeta(logger log.Logger, mwcli *MWServices) endpoint.Middleware {
-	return middleware(logger, mwcli, "")
+	return middleware(logger, mwcli, "", true)
 }
 
-func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
+//忽略项目等级
+func WithIgnoreProjectLevel(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
+	return middleware(logger, mwcli, function, false)
+}
+
+func middleware(logger log.Logger, mwcli *MWServices, function string, ignoreProjectLevel bool) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			meta := ctx.Value(fs_metadata_transport.MetadataTransportKey).(*fs_base.Metadata)
@@ -66,7 +71,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 			ps := errno.Ok
 			var cf *fs_base_function.Func
 			var strategy *fs_base.ProjectStrategy
-			var project *fs_base_project.ProjectInfo
+			var p *fs_base_project.ProjectInfo
 			var wg sync.WaitGroup
 
 			errc := func(s *fs_base.State) {
@@ -91,7 +96,8 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 					logger.Log("middleware", "function", "state", "project", "value", pr)
 					return
 				}
-				project = pr.Info
+				p = pr.Info
+				meta.Platform = p.Platform.Platform
 				meta.ProjectId = pr.Strategy.ProjectId
 				strategy = pr.Strategy
 				wg.Done()
@@ -162,9 +168,14 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 				}
 			}
 
-			if strategy == nil || project == nil {
+			if strategy == nil || p == nil {
 				logger.Log("middleware", "check", "strategy|project", "invalid")
 				return errno.ErrSystem, errno.ERROR
+			}
+
+			//项目权限
+			if !ignoreProjectLevel && meta.Level >= p.Level {
+				return errno.ErrProjectPermission, errno.ERROR
 			}
 
 			metaCheck := func(face bool) bool {
@@ -262,7 +273,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 			logger.Log("middleware", "function", "check", "ok")
 
 			ctx = context.WithValue(ctx, fs_metadata_transport.StrategyTransportKey, strategy)
-			ctx = context.WithValue(ctx, fs_metadata_transport.ProjectTransportKey, project)
+			ctx = context.WithValue(ctx, fs_metadata_transport.ProjectTransportKey, p)
 
 			//check level
 			if meta.Level >= cf.Level {

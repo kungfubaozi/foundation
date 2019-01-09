@@ -108,7 +108,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		}
 	}
 	resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
-		Level:         1,
+		Level:         2,
 		Password:      in.Password,
 		Phone:         in.Phone,
 		Email:         in.Email,

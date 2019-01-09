@@ -69,4 +69,5 @@ message Authorize {
     string refreshTokenUUID = 10;
     string relation = 11;
     int64 level = 12;
+    string loginMode = 13;
 }

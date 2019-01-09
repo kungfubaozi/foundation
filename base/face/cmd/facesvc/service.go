@@ -10,6 +10,7 @@ import (
 	"zskparker.com/foundation/base/face"
 	"zskparker.com/foundation/base/face/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
+	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
@@ -45,7 +46,7 @@ func StartService() {
 	rch, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_FACE)
 	defer rch.Close()
 
-	service := face.NewService(session, rch, pool)
+	service := face.NewService(session, rch, pool, usercli.NewClient(zipkinTracer))
 	endpoints := face.NewEndpoints(service, zipkinTracer, logger)
 	svc := face.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

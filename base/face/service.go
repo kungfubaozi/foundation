@@ -9,6 +9,8 @@ import (
 	"zskparker.com/foundation/base/face/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
+	"zskparker.com/foundation/base/user"
+	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/osenv"
 )
@@ -28,6 +30,7 @@ type faceService struct {
 	session     *mgo.Session
 	reportercli reportercli.Channel
 	pool        *redis.Pool
+	usercli     user.Service
 }
 
 func (svc *faceService) Compare(ctx context.Context, in *fs_base_face.CompareRequest) (*fs_base.Response, error) {
@@ -63,29 +66,45 @@ func (svc *faceService) Search(ctx context.Context, in *fs_base_face.SearchReque
 	repo := svc.GetRepo()
 	defer repo.Close()
 	token, err := repo.GetToken()
+
+	resp := func(state *fs_base.State) (*fs_base_face.SearchResponse, error) {
+		return &fs_base_face.SearchResponse{State: state}, nil
+	}
+
 	if err != nil {
-		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
+		return resp(errno.ErrSystem)
 	}
 	values, err := faceSearch(in.Base64Face, "user", token)
 	if err != nil {
-		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
+		return resp(errno.ErrSystem)
 	}
 	if values["error_code"].(float64) != 0 {
-		return &fs_base_face.SearchResponse{State: errno.ErrSystem}, nil
+		return resp(errno.ErrSystem)
 	}
+
 	userList := values["result"].(map[string]interface{})["user_list"].([]interface{})
 	if len(userList) > 0 {
 		face := userList[0].(map[string]interface{})
 		if face["score"].(float64) > osenv.GetFaceCompareScore() {
 			userId := face["user_id"].(string)
-
+			//查找用户
+			ur, err := svc.usercli.FindByUserId(context.Background(), &fs_base_user.FindRequest{
+				Value: userId,
+			})
+			if err != nil {
+				return resp(errno.ErrSystem)
+			}
+			if !ur.State.Ok {
+				return resp(ur.State)
+			}
 			return &fs_base_face.SearchResponse{
 				State:  errno.Ok,
 				UserId: userId,
+				Level:  ur.Level,
 			}, nil
 		}
 	}
-	return &fs_base_face.SearchResponse{State: errno.ErrInvalidFace}, nil
+	return resp(errno.ErrInvalidFace)
 }
 
 func (svc *faceService) Upsert(ctx context.Context, in *fs_base_face.UpsertRequest) (*fs_base.Response, error) {
@@ -162,10 +181,10 @@ func (svc *faceService) GetRepo() repository {
 	return &faceRepository{session: svc.session.Clone(), conn: svc.pool.Get()}
 }
 
-func NewService(session *mgo.Session, reportercli reportercli.Channel, pool *redis.Pool) Service {
+func NewService(session *mgo.Session, reportercli reportercli.Channel, pool *redis.Pool, usercli user.Service) Service {
 	var svc Service
 	{
-		svc = &faceService{session: session, reportercli: reportercli, pool: pool}
+		svc = &faceService{session: session, reportercli: reportercli, pool: pool, usercli: usercli}
 	}
 	return svc
 }

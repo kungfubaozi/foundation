@@ -186,7 +186,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 		Password:      string(p),
 		UserId:        bson.NewObjectId(),
 		Email:         in.Email,
-		Level:         in.Level,
+		Level:         in.Level, //1:游客 2:普通用户 3:开发人员 4:项目管理员 5:最高管理员
 		Phone:         in.Phone,
 		FromClientId:  in.FromClientId,
 		FromProjectId: in.FromProjectId,
