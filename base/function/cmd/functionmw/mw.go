@@ -83,10 +83,12 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 				})
 				if pr == nil {
 					errc(errno.ErrSystem)
+					logger.Log("middleware", "function", "err", "find project nil")
 					return
 				}
 				if !pr.State.Ok {
 					errc(pr.State)
+					logger.Log("middleware", "function", "state", "project", "value", pr)
 					return
 				}
 				project = pr.Info
@@ -102,10 +104,12 @@ func middleware(logger log.Logger, mwcli *MWServices, function string) endpoint.
 				})
 				if fr == nil {
 					errc(errno.ErrSystem)
+					logger.Log("middleware", "function", "err", "find function nil")
 					return
 				}
 				if !fr.State.Ok {
 					errc(fr.State)
+					logger.Log("middleware", "function", "state", "function", "value", fr)
 					return
 				}
 				cf = fr.Func

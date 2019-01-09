@@ -11,6 +11,8 @@ import (
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/entry/register/pb"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/tags"
+	"zskparker.com/foundation/pkg/transport"
 )
 
 type Service interface {
@@ -37,41 +39,53 @@ func (svc *registerService) Admin(ctx context.Context, in *fs_entry_register.Adm
 	if len(in.Meta.Face) == 0 {
 		return errno.ErrResponse(errno.ErrInvalidFace)
 	}
-	if len(in.Phone) == 0 && len(in.Email) == 0 && len(in.Password) == 0 {
+	if len(in.Phone) == 0 && len(in.Email) == 0 && len(in.Password) < 6 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
-
+	if ctx.Value(fs_metadata_transport.MetadataTransportKey) == nil {
+		return errno.ErrResponse(errno.ErrTransfer)
+	}
 	//project := ctx.Value("project").(*fs_base_project.ProjectInfo)
 	//strategy := ctx.Value("strategy").(*fs_base.ProjectStrategy)
 	//to := ctx.Value("validate_to").(string)
 	meta := ctx.Value("meta").(*fs_base.Metadata)
-	resp, _ := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
-		Level:    5,
-		Password: in.Password,
-		Phone:    in.Phone,
-		Email:    in.Email,
+	resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
+		Level:         5,
+		Password:      in.Password,
+		Phone:         in.Phone,
+		Email:         in.Email,
+		FromProjectId: meta.ProjectId,
+		FromClientId:  meta.ClientId,
 	})
+
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
 
 	if !resp.State.Ok {
 		return errno.ErrResponse(resp.State)
 	}
 
-	r, _ := svc.facecli.Upsert(context.Background(), &fs_base_face.UpsertRequest{
+	r, err := svc.facecli.Upsert(context.Background(), &fs_base_face.UpsertRequest{
 		Base64Face: in.Meta.Face,
 		UserId:     resp.Content,
 	})
+
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
 
 	if !r.State.Ok {
 		return errno.ErrResponse(r.State)
 	}
 
-	svc.reportercli.Write(GetAdminFunc().Function.Func, meta.Device, meta.Ip)
+	svc.reportercli.Write(fs_function_tags.GetAdminFuncTag(), resp.Content, meta.Ip)
 
 	return errno.ErrResponse(errno.Ok)
 }
 
 func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.FromAPRequest) (*fs_base.Response, error) {
-	if len(in.Phone) == 0 && len(in.Email) == 0 && len(in.Password) == 0 {
+	if len(in.Phone) == 0 && len(in.Password) < 6 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
 	panic(errno.ERROR)

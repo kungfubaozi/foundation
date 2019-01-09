@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/eclipse/paho.mqtt.golang"
+	"github.com/go-kit/kit/log"
 	"net/http"
 	"net/url"
 	"time"
@@ -26,13 +27,16 @@ type Service interface {
 
 type mqttService struct {
 	client mqtt.Client
+	logger log.Logger
 }
 
 func (svc *mqttService) SendSMS(ctx context.Context, in *fs_base.DirectMessage) (*fs_base.Response, error) {
 	e := sms(in.To, in.Content)
 	if e != nil {
+		svc.logger.Log("send sms", "failed")
 		return errno.ErrResponse(errno.ErrSystem)
 	}
+	svc.logger.Log("send sms", "ok")
 	return errno.ErrResponse(errno.Ok)
 }
 
@@ -76,11 +80,12 @@ func (svc *mqttService) SendMessage(ctx context.Context, in *fs_base.DirectMessa
 	return errno.ErrResponse(errno.Ok)
 }
 
-func NewService(client mqtt.Client) Service {
+func NewService(client mqtt.Client, logger log.Logger) Service {
 	var svc Service
 	{
 		svc = &mqttService{
 			client: client,
+			logger: logger,
 		}
 	}
 	return svc

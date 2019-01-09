@@ -21,7 +21,7 @@ import (
 func NewEndpoints(tracer *zipkin.Tracer) user.Endpoints {
 	var (
 		retryMax     = 3
-		retryTimeout = 500 * time.Millisecond
+		retryTimeout = 30 * time.Second
 	)
 
 	var logger log.Logger
@@ -80,6 +80,41 @@ func NewEndpoints(tracer *zipkin.Tracer) user.Endpoints {
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
 		endpoints.UpdatePhoneEndpoint = retry
+	}
+	{
+		factory := Factory(user.MakeAddEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.AddEndpoint = retry
+	}
+	{
+		factory := Factory(user.MakeFindByPhoneEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.FindByPhoneEndpoint = retry
+	}
+	{
+		factory := Factory(user.MakeFindByEmailEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.FindByEmailEndpoint = retry
+	}
+	{
+		factory := Factory(user.MakeFindByEnterpriseEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.FindByEnterpriseEndpoint = retry
+	}
+	{
+		factory := Factory(user.MakeFindByUserIdEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.FindByUserIdEndpoint = retry
 	}
 
 	return endpoints

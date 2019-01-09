@@ -118,14 +118,16 @@ func (svc *faceService) Upsert(ctx context.Context, in *fs_base_face.UpsertReque
 		if code != 0 {
 			return errno.ErrResponse(errno.ErrSystem)
 		}
+	}
+
+	if code != 0 {
+		return errno.ErrResponse(errno.ErrRequest)
+	} else {
 		fs.FaceToken = values["result"].(map[string]interface{})["face_token"].(string)
 		err = repo.Upsert(fs)
 		if err != nil {
 			return errno.ErrResponse(errno.ErrRequest)
 		}
-	}
-	if code != 0 {
-		return errno.ErrResponse(errno.ErrRequest)
 	}
 
 	return errno.ErrResponse(errno.Ok)

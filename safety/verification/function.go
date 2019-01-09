@@ -18,7 +18,7 @@ func GetRegisterFunc() *fs_pkg_model.APIFunction {
 		En:    "NewRegisterVerification",
 		Func:  fs_function_tags.GetVerificationRegisterFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
-		Level: 0,
+		Level: 1,
 	}
 	return f
 }
@@ -34,7 +34,7 @@ func GetAdminRegisterFunc() *fs_pkg_model.APIFunction {
 		En:    "NewInitVerification",
 		Func:  fs_function_tags.GetVerificationAdminInitFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
-		Level: 0,
+		Level: 1,
 	}
 	return f
 }
@@ -50,7 +50,7 @@ func GetLoginFunc() *fs_pkg_model.APIFunction {
 		En:    "NewLoginVerification",
 		Func:  fs_function_tags.GetVerificationLoginFuncTag(),
 		Type:  names.F_FUNC_TYPE_HIDE,
-		Level: 0,
+		Level: 1,
 	}
 	return f
 }

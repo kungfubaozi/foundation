@@ -58,16 +58,17 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 	}
 
 	p, err := repo.Get(in.ClientId)
+
+	if err != nil {
+		fmt.Println("e0", err)
+		return resp, nil
+	}
+
 	gp := &fs_base_project.ProjectInfo{
 		Logo: p.Logo,
 		Desc: p.Desc,
 		En:   p.EN,
 		Zh:   p.ZH,
-	}
-
-	if err != nil {
-		fmt.Println("e0", err)
-		return resp, nil
 	}
 
 	if len(p.Platforms) != 5 {
@@ -87,18 +88,19 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 		})
 	}
 
-	resp.Info = gp
-
 	r, err := svc.strategycli.Get(context.Background(), &fs_base_strategy.GetRequest{
 		ProjectId: p.Id.Hex(),
 	})
 	if err != nil {
+		fmt.Println("err", err)
 		return resp, nil
 	}
 	if !r.State.Ok {
 		resp.State = r.State
 		return resp, nil
 	}
+
+	resp.Info = gp
 
 	return &fs_base_project.GetResponse{
 		State:    errno.Ok,

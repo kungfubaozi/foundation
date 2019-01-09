@@ -143,8 +143,14 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 		return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 	}
 
+	b := time.Now().UnixNano()-vl.CreateAt <= in.OnVerification.EffectiveTime*60*1e9
+
+	fmt.Println("effective", in.OnVerification.EffectiveTime)
+	fmt.Println("create", vl.CreateAt)
+	fmt.Println("eff", b)
+
 	//检查时间和操作
-	if time.Now().UnixNano()-vl.CreateAt <= in.OnVerification.EffectiveTime*60*1e9 {
+	if b {
 		voucher := in.Metadata.Ip + ";" + in.Func
 		if len(in.Metadata.UserId) > 16 {
 			voucher = in.Metadata.UserId + ";" + in.Func

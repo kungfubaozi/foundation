@@ -48,7 +48,7 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	service := message.NewService(c)
+	service := message.NewService(c, logger)
 	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_MESSAGE, osenv.GetMicroPortString())
 	defer reporter.Close()
 	endpoints := message.NewEndpoints(service, zipkinTracer, logger)

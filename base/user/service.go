@@ -53,7 +53,7 @@ func (svc *userService) findByKey(ctx context.Context, key, value string) (*fs_b
 		State:         errno.Ok,
 		UserId:        user.UserId.Hex(),
 		FromProjectId: user.FromProjectId,
-		FromAppId:     user.FromAppId,
+		FromClientId:  user.FromClientId,
 		Level:         user.Level,
 		Phone:         user.Phone,
 		Email:         user.Email,
@@ -92,12 +92,12 @@ func (svc *userService) UpdatePhone(ctx context.Context, in *fs_base_user.Update
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	p, err := bcrypt.GenerateFromPassword([]byte(in.Value), bcrypt.DefaultCost)
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
+	resp, _ := svc.findByKey(ctx, "phone", in.Value)
+	if len(resp.UserId) > 0 {
+		return errno.ErrResponse(errno.ErrAlreadyBind)
 	}
 
-	err = repo.UpdatePhone(meta.UserId, string(p))
+	err := repo.UpdatePhone(meta.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -114,6 +114,11 @@ func (svc *userService) UpdateEmail(ctx context.Context, in *fs_base_user.Update
 	//update
 	repo := svc.GetRepo()
 	defer repo.Close()
+
+	resp, _ := svc.findByKey(ctx, "email", in.Value)
+	if len(resp.UserId) > 0 {
+		return errno.ErrResponse(errno.ErrAlreadyBind)
+	}
 
 	err := repo.UpdateEmail(meta.UserId, in.Value)
 	if err != nil {
@@ -133,6 +138,11 @@ func (svc *userService) UpdateEnterprise(ctx context.Context, in *fs_base_user.U
 	repo := svc.GetRepo()
 	defer repo.Close()
 
+	resp, _ := svc.findByKey(ctx, "enterprise", in.Value)
+	if len(resp.UserId) > 0 {
+		return errno.ErrResponse(errno.ErrAlreadyBind)
+	}
+
 	err := repo.UpdateEnterprise(meta.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
@@ -142,7 +152,7 @@ func (svc *userService) UpdateEnterprise(ctx context.Context, in *fs_base_user.U
 }
 
 func (svc *userService) UpdatePassword(ctx context.Context, in *fs_base_user.UpdateRequest) (*fs_base.Response, error) {
-	if len(in.Value) == 0 {
+	if len(in.Value) < 6 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
 	meta := ctx.Value("meta").(*fs_base.Metadata)
@@ -151,7 +161,12 @@ func (svc *userService) UpdatePassword(ctx context.Context, in *fs_base_user.Upd
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	err := repo.UpdatePassword(meta.UserId, in.Value)
+	p, err := bcrypt.GenerateFromPassword([]byte(in.Value), bcrypt.DefaultCost)
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	err = repo.UpdatePassword(meta.UserId, string(p))
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -171,7 +186,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 		Email:         in.Email,
 		Level:         in.Level,
 		Phone:         in.Phone,
-		FromAppId:     in.FromAppId,
+		FromClientId:  in.FromClientId,
 		FromProjectId: in.FromProjectId,
 	}
 	repo := svc.GetRepo()
@@ -180,6 +195,12 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	if in.Level == 5 {
 		i := repo.FindAdmin()
 		if i != 0 {
+			return errno.ErrResponse(errno.ErrRequest)
+		}
+	} else {
+		//查找相同的
+		err = repo.FindSame(in.Phone, in.Email, in.Enterprise)
+		if err != nil {
 			return errno.ErrResponse(errno.ErrRequest)
 		}
 	}

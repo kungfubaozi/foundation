@@ -3,6 +3,7 @@ package user
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"zskparker.com/foundation/pkg/errno"
 )
 
 type repository interface {
@@ -21,6 +22,8 @@ type repository interface {
 	UpdateEmail(userId, email string) error
 
 	FindAdmin() int
+
+	FindSame(phone, email, enterprise string) error
 }
 
 type userRepository struct {
@@ -41,6 +44,30 @@ func (repo *userRepository) FindAdmin() int {
 		return -1
 	}
 	return i
+}
+
+func (repo *userRepository) FindSame(phone, email, enterprise string) error {
+	i, err := repo.collection().Find(bson.M{"$or": []bson.M{
+		{
+			"email": email,
+		},
+		{
+			"enterprise": enterprise,
+		},
+		{
+			"phone": phone,
+		},
+	}}).Count()
+	if err == mgo.ErrNotFound {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if i > 0 {
+		return errno.ERROR
+	}
+	return nil
 }
 
 func (repo *userRepository) Add(user *User) error {
@@ -87,5 +114,5 @@ type User struct {
 	Email         string        `bson:"email"`
 	Level         int64         `bson:"level"`
 	FromProjectId string        `bson:"from_project_id"`
-	FromAppId     string        `bson:"from_app_id"`
+	FromClientId  string        `bson:"from_client_id"`
 }

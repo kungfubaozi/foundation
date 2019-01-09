@@ -2,6 +2,7 @@ package function
 
 import (
 	"context"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2"
 	"zskparker.com/foundation/base/function/pb"
@@ -86,6 +87,7 @@ func (svc *functionService) Get(ctx context.Context, in *fs_base_function.GetReq
 	if err == mgo.ErrNotFound && len(in.Func) == 0 { //不是通过func查找的返回未找到
 		return &fs_base_function.GetResponse{State: errno.ErrFunctionInvalid}, nil
 	}
+	fmt.Println("err", err)
 	if err != nil {
 		return &fs_base_function.GetResponse{State: errno.ErrSystem}, nil
 	}

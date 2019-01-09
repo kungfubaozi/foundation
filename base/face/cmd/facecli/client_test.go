@@ -1,7 +1,6 @@
 package facecli
 
 import (
-	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
@@ -10,19 +9,16 @@ import (
 	"net/http"
 	"testing"
 	"zskparker.com/foundation/base/face"
-	"zskparker.com/foundation/base/face/pb"
-	"zskparker.com/foundation/pkg/names"
-	"zskparker.com/foundation/pkg/serv"
 )
 
 func TestNewClient(t *testing.T) {
 
-	zipkinTracer, reporter := serv.NewZipkin("http://192.168.2.60:9411/api/v2/spans", names.F_SVC_FACE, "58085")
-	defer reporter.Close()
+	//zipkinTracer, reporter := serv.NewZipkin("http://192.168.2.60:9411/api/v2/spans", names.F_SVC_FACE, "58085")
+	//defer reporter.Close()
+	//
+	//c := NewClient(zipkinTracer)
 
-	c := NewClient(zipkinTracer)
-
-	b, err := ioutil.ReadFile("test_base64.jpeg")
+	b, err := ioutil.ReadFile("system_admin.jpg")
 	if err != nil {
 		panic(err)
 	}
@@ -40,16 +36,16 @@ func TestNewClient(t *testing.T) {
 	//	Base64Face: str,
 	//})
 
-	resp, err := c.Search(context.Background(), &fs_base_face.SearchRequest{
-		Base64Face: str,
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(resp.State)
-	fmt.Println(resp.UserId)
+	//resp, err := c.Search(context.Background(), &fs_base_face.SearchRequest{
+	//	Base64Face: str,
+	//})
+	//
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//fmt.Println(resp.State)
+	//fmt.Println(resp.UserId)
 
 	//str, err := resetAccessToken()
 	//if err != nil {

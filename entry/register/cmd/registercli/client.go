@@ -25,7 +25,7 @@ func NewClient(tracer *zipkin.Tracer) register.Service {
 func NewEndpoints(tracer *zipkin.Tracer) register.Endpoints {
 	var (
 		retryMax     = 3
-		retryTimeout = 500 * time.Millisecond
+		retryTimeout = 30 * time.Second
 	)
 
 	var logger log.Logger
