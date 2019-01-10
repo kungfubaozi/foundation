@@ -13,6 +13,19 @@ service Authenticate {
     rpc Refresh (RefreshRequest) returns (RefreshResponse);
 
     rpc OfflineUser (OfflineUserRequest) returns (fs.base.Response);
+
+}
+
+message RouteRequest {
+    fs.base.Meta meta = 1;
+    string refreshToken = 2;
+}
+
+//跳转不用返回refreshToken
+message RouteResponse {
+    fs.base.State state = 1;
+    string accessToken = 2;
+    string session = 3;
 }
 
 message OfflineUserRequest {

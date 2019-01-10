@@ -15,6 +15,8 @@ import (
 	"zskparker.com/foundation/base/user"
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 )
 
@@ -53,11 +55,120 @@ func (svc *authenticateService) GetRepo() repository {
 	return &authenticateRepository{conn: svc.pool.Get()}
 }
 
+//获取新的AccessToken
 func (svc *authenticateService) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
-	panic("implement me")
-}
+	resp := func(state *fs_base.State) (*fs_base_authenticate.RefreshResponse, error) {
+		return &fs_base_authenticate.RefreshResponse{State: state}, nil
+	}
+	refreshTokenClaims, err := DecodeToken(in.RefreshToken)
+	if err != nil {
+		return resp(errno.ErrToken)
+	}
+	token := refreshTokenClaims.Token
+	if token.Access {
+		return resp(errno.ErrToken)
+	}
+	repo := svc.GetRepo()
+	defer repo.Close()
 
-func (svc *authenticateService) sizeCheck() {
+	meta := fs_metadata_transport.ContextToMeta(ctx)
+
+	auth, err := repo.Get(token.UserId, token.ClientId, token.UUID)
+	if err != nil {
+		return resp(errno.ErrTokenExpired)
+	}
+	node := utils.NodeGenerate()
+	auth.AccessTokenUUID = node.Generate().Base64()
+	var accessToken string
+	var wr *fs_base.State
+	//process
+
+	wg := sync.WaitGroup{}
+
+	errc := func(e error) {
+		if err == nil {
+			err = e
+		}
+		wg.Done()
+	}
+
+	//检查用户状态
+	wg.Add(1)
+	go func() {
+		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{})
+		if e != nil {
+			errc(e)
+			return
+		}
+		if !a.State.Ok {
+			wr = a.State
+			errc(errno.ERROR)
+			return
+		}
+		wg.Done()
+	}()
+
+	//检查是否存在用户
+	wg.Add(1)
+	go func() {
+		a, e := svc.usercli.FindByUserId(context.Background(), &fs_base_user.FindRequest{
+			Value: auth.UserId,
+		})
+		if e != nil {
+			errc(e)
+			return
+		}
+		if !a.State.Ok {
+			wr = a.State
+			errc(errno.ERROR)
+			return
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	if err != nil {
+		return resp(errno.ErrSystem)
+	}
+
+	if wr != nil {
+		return resp(wr)
+	}
+
+	//可能是跳转的token
+	if auth.ClientId != meta.ClientId {
+		//需要通过web端才可跨项目访问
+		if auth.Platform == names.F_PLATFORM_WEB && meta.Platform == names.F_PLATFORM_WEB {
+			accessToken, err = encodeAccessToken(&fs_base_authenticate.Authorize{
+				ClientId:        meta.ClientId,
+				UserId:          auth.UserId,
+				AccessTokenUUID: auth.AccessTokenUUID,
+				Relation:        auth.Relation,
+			})
+			if err != nil {
+				return resp(errno.ErrSystem)
+			}
+		} else {
+			return resp(errno.ErrSupport)
+		}
+	} else {
+		accessToken, err = encodeAccessToken(auth)
+		if err != nil {
+			return resp(errno.ErrSystem)
+		}
+	}
+
+	//覆盖原有的token
+	err = repo.Add(auth)
+	if err != nil {
+		return resp(errno.ErrSystem)
+	}
+
+	return &fs_base_authenticate.RefreshResponse{
+		State:       errno.Ok,
+		AccessToken: accessToken,
+	}, nil
 
 }
 
@@ -75,7 +186,7 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 	}
 	repo := svc.GetRepo()
 	defer repo.Close()
-	auth, err := repo.Get(token.UserId, token.ClientId, token.UUID)
+	auth, err := repo.Get(token.UserId, token.ClientId, token.Relation)
 	if err != nil {
 		resp.State = errno.ErrTokenExpired
 		return resp, nil
@@ -122,10 +233,6 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 			errc(errno.ERROR)
 			return
 		}
-		//if !in.AllowOtherProjectUserToLogin && a.FromProjectId != auth.ProjectId {
-		//	r.State = errno.ErrProjectAccess
-		//	errc <- errno.ERROR
-		//}
 		resp.Level = a.Level
 		wg.Done()
 	}(resp)
@@ -139,7 +246,16 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 	if accessTokenClaims.VerifyExpiresAt(time.Now().UnixNano(), true) {
 		if in.Metadata.UserAgent == auth.UserAgent && in.Metadata.Platform == auth.Platform &&
 			in.Metadata.Device == auth.Device && token.Relation == auth.Relation &&
-			token.UUID == auth.AccessTokenUUID && token.ClientId == auth.ClientId {
+			token.UUID == auth.AccessTokenUUID && token.ClientId == in.Metadata.ClientId { //token的ClientId必须和Meta ClientId一致
+
+			//只有web端可以跨项目跳转
+			if auth.Platform != names.F_PLATFORM_WEB {
+				if auth.ClientId != in.Metadata.ClientId {
+					resp.State = errno.ErrToken
+					return resp, nil
+				}
+			}
+
 			resp.State = errno.Ok
 
 			resp.UserId = auth.UserId

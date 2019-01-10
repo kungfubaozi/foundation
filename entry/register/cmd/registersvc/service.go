@@ -13,10 +13,12 @@ import (
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/entry/register"
 	"zskparker.com/foundation/entry/register/pb"
+	"zskparker.com/foundation/pkg/db"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
+	"zskparker.com/foundation/pkg/sync"
 )
 
 func StartService() {
@@ -41,7 +43,10 @@ func StartService() {
 	}
 	defer rs.Close()
 
-	service := register.NewService(usercli.NewClient(zipkinTracer), rs, facecli.NewClient(zipkinTracer))
+	pool := db.CreatePool(osenv.GetRedisAddr())
+	defer pool.Close()
+
+	service := register.NewService(usercli.NewClient(zipkinTracer), rs, facecli.NewClient(zipkinTracer), fs_redisync.Create(pool))
 	endpoints := register.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
 	svc := register.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

@@ -12,6 +12,7 @@ import (
 	"zskparker.com/foundation/entry/register/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/match"
+	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tags"
 	"zskparker.com/foundation/pkg/transport"
 )
@@ -29,6 +30,7 @@ type registerService struct {
 	facecli     face.Service
 	reportercli reportercli.Channel
 	session     *mgo.Session
+	redisync    *fs_redisync.Redisync
 }
 
 func (svc *registerService) GetRepo() repository {
@@ -46,10 +48,7 @@ func (svc *registerService) Admin(ctx context.Context, in *fs_entry_register.Adm
 	if ctx.Value(fs_metadata_transport.MetadataTransportKey) == nil {
 		return errno.ErrResponse(errno.ErrTransfer)
 	}
-	//project := ctx.Value("project").(*fs_base_project.ProjectInfo)
-	//strategy := ctx.Value("strategy").(*fs_base.ProjectStrategy)
-	//to := ctx.Value("validate_to").(string)
-	meta := ctx.Value("meta").(*fs_base.Metadata)
+	meta := fs_metadata_transport.ContextToMeta(ctx)
 	resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
 		Level:         5,
 		Password:      in.Password,
@@ -92,6 +91,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 	strategy := fs_metadata_transport.ContextToStrategy(ctx)
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 	mode := strategy.Events.OnRegister.Mode
+	var v string
 	if mode == 1 { //phone
 		if len(in.Email) > 0 {
 			return errno.ErrResponse(errno.ErrSupport)
@@ -99,6 +99,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		if !fs_regx_match.Phone(in.Phone) {
 			return errno.ErrResponse(errno.ErrPhoneNumber)
 		}
+		v = in.Phone
 	} else if mode == 2 { //email
 		if len(in.Phone) > 0 {
 			return errno.ErrResponse(errno.ErrSupport)
@@ -106,7 +107,16 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		if !fs_regx_match.Email(in.Email) {
 			return errno.ErrResponse(errno.ErrEmail)
 		}
+		v = in.Email
+	} else { //不支持的操作
+		return errno.ErrResponse(errno.ErrSupport)
 	}
+
+	//锁住当前操作的注册值
+	if s := svc.redisync.Lock(fs_function_tags.GetFromAPFuncTag(), v, 3); s != nil {
+		return errno.ErrResponse(s)
+	}
+
 	resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
 		Level:         2,
 		Password:      in.Password,
@@ -133,10 +143,12 @@ func (svc *registerService) FromOAuth(ctx context.Context, in *fs_entry_register
 	panic(errno.ERROR)
 }
 
-func NewService(usercli user.Service, repotercli reportercli.Channel, facecli face.Service) Service {
+func NewService(usercli user.Service, repotercli reportercli.Channel, facecli face.Service,
+	redisync *fs_redisync.Redisync) Service {
 	var svc Service
 	{
-		svc = &registerService{usercli: usercli, reportercli: repotercli, facecli: facecli}
+		svc = &registerService{usercli: usercli, reportercli: repotercli, facecli: facecli,
+			redisync: redisync}
 	}
 	return svc
 }

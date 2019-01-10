@@ -2,12 +2,13 @@ package authenticate
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pborman/uuid"
 	"time"
 	"zskparker.com/foundation/base/authenticate/pb"
+	"zskparker.com/foundation/pkg/osenv"
+	"zskparker.com/foundation/pkg/utils"
 )
 
-var TOKEN_KEY = []byte("e48df34a-0f32-11e9-ab14-d663bd873d93")
+var TOKEN_KEY = []byte(osenv.GetTokenKey())
 
 type UserClaims struct {
 	Token *SimpleAuthorize
@@ -29,7 +30,7 @@ func DecodeToken(token string) (*UserClaims, error) {
 func encodeAccessToken(authorize *fs_base_authenticate.Authorize) (string, error) {
 	sa := &SimpleAuthorize{
 		UserId:   authorize.UserId,
-		ClientId: authorize.UserId,
+		ClientId: authorize.ClientId,
 		UUID:     authorize.AccessTokenUUID,
 		Access:   true,
 		Relation: authorize.Relation,
@@ -40,7 +41,7 @@ func encodeAccessToken(authorize *fs_base_authenticate.Authorize) (string, error
 func encodeRefreshToken(authorize *fs_base_authenticate.Authorize) (string, error) {
 	sa := &SimpleAuthorize{
 		UserId:   authorize.UserId,
-		ClientId: authorize.UserId,
+		ClientId: authorize.ClientId,
 		UUID:     authorize.RefreshTokenUUID,
 		Access:   false,
 		Relation: authorize.Relation,
@@ -52,10 +53,12 @@ func encodeRefreshToken(authorize *fs_base_authenticate.Authorize) (string, erro
 func encodeToken(et time.Duration, authorize *SimpleAuthorize) (string, error) {
 	expireTime := time.Now().Add(et).Unix()
 
+	node := utils.NodeGenerate()
+
 	c := jwt.StandardClaims{
 		Issuer:    "foundation.authenticate", // 签发者
 		ExpiresAt: expireTime,
-		Id:        uuid.New(),
+		Id:        node.Generate().Base64(),
 	}
 
 	claims := UserClaims{

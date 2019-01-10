@@ -35,7 +35,6 @@ func (svc *validateService) GetRepo() repository {
 	return &validateRepository{session: svc.session.Clone()}
 }
 
-//TODO 未加入频繁操作限制
 func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.CreateRequest) (*fs_base_validate.CreateResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
@@ -53,80 +52,62 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		voucher = in.Metadata.UserId + ";" + in.Func
 	}
 	voucher = utils.Md5(voucher)
-	//查找最后一次同个操作的时间
-	vl, err := repo.FindLast(voucher)
-	if err == mgo.ErrNotFound {
-		vl = &verification{
-			CreateAt: time.Now().UnixNano() - 61*1e9,
-			Func:     in.Func,
-			Voucher:  voucher,
-		}
-		err = nil
-	}
 
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var code string
+	if in.OnVerification.CombinationMode == 1 {
+		code = fmt.Sprintf("%06v", rnd.Int31n(1000000))
+	} else {
+		code = strings.ToUpper(utils.GetRandomString())[0:8]
+	}
+	b, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
 	if err != nil {
 		return &fs_base_validate.CreateResponse{
 			State: errno.ErrSystem,
 		}, nil
 	}
 
-	//限制发送间隔时间
-	if time.Now().UnixNano()-vl.CreateAt >= in.OnVerification.VoucherDuration*1e9 {
-		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-		var code string
-		if in.OnVerification.CombinationMode == 1 {
-			code = fmt.Sprintf("%06v", rnd.Int31n(1000000))
-		} else {
-			code = strings.ToUpper(utils.GetRandomString())[0:8]
-		}
-		b, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
-		if err != nil {
-			return &fs_base_validate.CreateResponse{
-				State: errno.ErrSystem,
-			}, nil
-		}
+	vl := &verification{
+		VerId:    bson.NewObjectId(),
+		Func:     in.Func,
+		Voucher:  voucher,
+		CreateAt: time.Now().UnixNano(),
+		Code:     string(b),
+		State:    states.F_STATE_WAITING,
+	}
 
-		vl.VerId = bson.NewObjectId()
-		vl.CreateAt = time.Now().UnixNano()
-		vl.Code = string(b)
-		vl.State = states.F_STATE_WAITING
+	err = repo.Create(vl)
+	if err != nil {
+		return &fs_base_validate.CreateResponse{State: errno.ErrSystem}, nil
+	}
 
-		err = repo.Create(vl)
-		if err != nil {
-			return &fs_base_validate.CreateResponse{State: errno.ErrSystem}, nil
-		}
-
-		//send code
-		switch in.Mode {
-		case 1: //phone
-			svc.messagecli.SendSMS(&fs_base.DirectMessage{
-				To:      in.To,
-				Content: fmt.Sprintf(osenv.GetValidateTemplate(), code, in.OnVerification.EffectiveTime),
-			})
-			break
-		case 2: //email
-			svc.messagecli.SendEmail(&fs_base.DirectMessage{
-				To:      in.To,
-				Content: fmt.Sprintf(osenv.GetValidateTemplate(), code, in.OnVerification.EffectiveTime),
-			})
-			break
-		case 3: //face 这里不做操作
-			break
-		default:
-			return &fs_base_validate.CreateResponse{
-				State: errno.ErrSupport,
-			}, nil
-		}
-
+	//send code
+	switch in.Mode {
+	case 1: //phone
+		svc.messagecli.SendSMS(&fs_base.DirectMessage{
+			To:      in.To,
+			Content: fmt.Sprintf(osenv.GetValidateTemplate(), code, in.OnVerification.EffectiveTime),
+		})
+		break
+	case 2: //email
+		svc.messagecli.SendEmail(&fs_base.DirectMessage{
+			To:      in.To,
+			Content: fmt.Sprintf(osenv.GetValidateTemplate(), code, in.OnVerification.EffectiveTime),
+		})
+		break
+	case 3: //face 这里不做操作
+		break
+	default:
 		return &fs_base_validate.CreateResponse{
-			VerId: vl.VerId.Hex(),
-			State: errno.Ok,
+			State: errno.ErrSupport,
 		}, nil
 	}
 
 	return &fs_base_validate.CreateResponse{
-		State: errno.ErrBusy,
+		VerId: vl.VerId.Hex(),
+		State: errno.Ok,
 	}, nil
+
 }
 
 func (svc *validateService) Verification(ctx context.Context, in *fs_base_validate.VerificationRequest) (*fs_base_validate.VerificationResponse, error) {
@@ -144,10 +125,6 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 	}
 
 	b := time.Now().UnixNano()-vl.CreateAt <= in.OnVerification.EffectiveTime*60*1e9
-
-	fmt.Println("effective", in.OnVerification.EffectiveTime)
-	fmt.Println("create", vl.CreateAt)
-	fmt.Println("eff", b)
 
 	//检查时间和操作
 	if b {
@@ -175,8 +152,6 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 			}
 		}
 	}
-
-	fmt.Println("err3")
 
 	return &fs_base_validate.VerificationResponse{State: errno.ErrExpired}, nil
 }

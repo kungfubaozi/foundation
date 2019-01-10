@@ -15,6 +15,7 @@ import (
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
+	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/safety/verification"
 	"zskparker.com/foundation/safety/verification/pb"
 )
@@ -50,7 +51,7 @@ func StartService() {
 	}
 	defer rc.Close()
 
-	service := verification.NewService(validatecli.NewClient(zipkinTracer), rc, logger)
+	service := verification.NewService(validatecli.NewClient(zipkinTracer), rc, logger, fs_redisync.Create(pool))
 	endpoints := verification.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
 	svc := verification.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

@@ -5,6 +5,14 @@ import (
 	"strconv"
 )
 
+func GetTokenKey() string {
+	token := os.Getenv("TOKEN_KEY")
+	if len(token) <= 16 {
+		return "e48df34a-0f32-11e9-ab14-d663bd873d93"
+	}
+	return token
+}
+
 func GetValidateTemplate() string {
 	return os.Getenv("VALIDATE_TEMPLATE")
 }
