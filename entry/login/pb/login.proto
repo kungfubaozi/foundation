@@ -18,7 +18,6 @@ service Login {
     //使用二维码登录(有平台限制)
     rpc EntryByQRCode (EntryByQRCodeRequest) returns (EntryResponse);
 
-
     //刷脸登录
     rpc EntryByFace (EntryByFaceRequest) returns (EntryResponse);
 }

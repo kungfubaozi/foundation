@@ -126,9 +126,6 @@ func insertDef(session *mgo.Session) {
 	upsert(c, function.GetRemoveFunc())
 	upsert(c, function.GetUpdateFunc())
 
-	//authorization token refresh functions
-	upsert(c, refresh.GetRefreshFunc())
-
 	//project functions
 	upsert(c, project.GetCreateProject())
 	upsert(c, project.GetRemoveProject())

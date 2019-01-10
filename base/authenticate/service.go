@@ -81,7 +81,6 @@ func (svc *authenticateService) Refresh(ctx context.Context, in *fs_base_authent
 	auth.AccessTokenUUID = node.Generate().Base64()
 	var accessToken string
 	var wr *fs_base.State
-	//process
 
 	wg := sync.WaitGroup{}
 
@@ -95,7 +94,9 @@ func (svc *authenticateService) Refresh(ctx context.Context, in *fs_base_authent
 	//检查用户状态
 	wg.Add(1)
 	go func() {
-		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{})
+		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{
+			Key: auth.UserId,
+		})
 		if e != nil {
 			errc(e)
 			return
@@ -308,7 +309,9 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	}()
 	wg.Add(1)
 	go func() {
-		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{})
+		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{
+			Key: in.Authorize.UserId,
+		})
 		if e != nil {
 			errc(e)
 			return

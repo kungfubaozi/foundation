@@ -42,7 +42,7 @@ func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 func GetEntryByOAuthFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/fds/api/fds/env/entry",
-		Infix:  "/oatuh",
+		Infix:  "/oauth",
 	}
 	f.Function = &fs_base_function.Func{
 		Api:   f.Prefix + f.Infix,

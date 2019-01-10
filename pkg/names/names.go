@@ -14,6 +14,7 @@ const (
 	F_SVC_STRATEGY            = "foundation.svc.strategy"
 	F_SVC_PROJECT             = "foundation.svc.project"
 	F_SVC_ENTRY_REGISTER      = "foundation.svc.entry.register"
+	F_SVC_ENTRY_LOGIN         = "foundation.svc.entry.login"
 )
 
 const (

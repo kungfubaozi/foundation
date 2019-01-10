@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	zipkinTracer, reporter := serv.NewZipkin("http://192.168.2.60:9411/api/v2/spans", names.F_SVC_SAFETY_AUTHENTICATE, "58082")
+	zipkinTracer, reporter := serv.NewZipkin("http://192.168.2.60:9411/api/v2/spans", names.F_SVC_AUTHENTICATE, "58082")
 	defer reporter.Close()
 
 	c := NewClient(zipkinTracer)
@@ -23,7 +23,7 @@ func TestNewClient(t *testing.T) {
 			Device:    "test",
 			Platform:  names.F_PLATFORM_ANDROID,
 			UserAgent: "this is useragent",
-			Ip:        "192.168.80.60",
+			Ip:        "192.168.80.67",
 		},
 	})
 	if err != nil {
