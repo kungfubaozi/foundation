@@ -5,31 +5,16 @@ import (
 	"github.com/go-kit/kit/log"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"net"
 	"os"
 	"zskparker.com/foundation/base/function"
 	"zskparker.com/foundation/base/function/pb"
-	"zskparker.com/foundation/base/invite"
-	"zskparker.com/foundation/base/project"
-	"zskparker.com/foundation/base/refresh"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
-	"zskparker.com/foundation/base/strategy"
-	"zskparker.com/foundation/base/usersync"
-	"zskparker.com/foundation/entry/login"
-	"zskparker.com/foundation/entry/register"
 	"zskparker.com/foundation/pkg/db"
-	"zskparker.com/foundation/pkg/model"
 	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
-	"zskparker.com/foundation/safety/blacklist"
-	"zskparker.com/foundation/safety/froze"
-	"zskparker.com/foundation/safety/unblock"
-	"zskparker.com/foundation/safety/update"
-	"zskparker.com/foundation/safety/verification"
 )
 
 func StartService() {
@@ -53,9 +38,6 @@ func StartService() {
 		panic(err)
 	}
 	defer session.Close()
-
-	//插入默认功能
-	insertDef(session)
 
 	rs, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_FUNCTION)
 	if err != nil {
@@ -84,78 +66,4 @@ func StartService() {
 	}()
 
 	logger.Log("exit", <-errc)
-}
-
-func insertDef(session *mgo.Session) {
-	c := session.DB("foundation").C("functions")
-
-	//login functions
-	upsert(c, login.GetEntryByFaceFunc())
-	upsert(c, login.GetEntryByValidateCodeFunc())
-	upsert(c, login.GetEntryByAPFunc())
-	upsert(c, login.GetEntryByOAuthFunc())
-	upsert(c, login.GetEntryByQRCodeFunc())
-
-	//safety verification functions
-	upsert(c, verification.GetRegisterFunc())
-	upsert(c, verification.GetLoginFunc())
-	upsert(c, verification.GetAdminRegisterFunc())
-
-	//register functions
-	upsert(c, register.GetFromAPFunc())
-	upsert(c, register.GetFromOAuthFunc())
-	upsert(c, register.GetAdminFunc())
-
-	//safety update functions
-	upsert(c, update.GetUpdateEmailFunc())
-	upsert(c, update.GetUpdateEnterpriseFunc())
-	upsert(c, update.GetUpdatePasswordFunc())
-	upsert(c, update.GetUpdatePhoneFunc())
-
-	//unblock
-	upsert(c, unblock.GetUnlockFunc())
-
-	//blacklist
-	upsert(c, blacklist.GetAddBlacklistFunc())
-	upsert(c, blacklist.GetRemoveBlacklistFunc())
-
-	//function
-	upsert(c, function.GetAddFunc())
-	upsert(c, function.GetAllFunc())
-	upsert(c, function.GetFindFunc())
-	upsert(c, function.GetRemoveFunc())
-	upsert(c, function.GetUpdateFunc())
-
-	//project functions
-	upsert(c, project.GetCreateProject())
-	upsert(c, project.GetRemoveProject())
-	upsert(c, project.GetUpdateProject())
-
-	//usersync functions
-	upsert(c, usersync.GetAddUserSyncHookFunc())
-	upsert(c, usersync.GetRemoveUserSyncHookFunc())
-	upsert(c, usersync.GetUpdateUserSyncHookFunc())
-
-	//strategy functions
-	upsert(c, strategy.GetUpdateProjectStrategyFunc())
-
-	//review functions
-
-	//invite functions
-	upsert(c, invite.GetInviteUserFunc())
-
-	//froze
-	upsert(c, froze.GetRequestFrozeFunc())
-
-}
-
-func upsert(c *mgo.Collection, f *fs_pkg_model.APIFunction) {
-	c.Upsert(bson.M{"api": f.Function.Api}, &function.FunctionModel{
-		Func:  f.Function.Func,
-		ZH:    f.Function.Zh,
-		Level: f.Function.Level,
-		Fcv:   f.Function.Fcv,
-		EN:    f.Function.En,
-		API:   f.Prefix + f.Infix,
-	})
 }

@@ -16,6 +16,7 @@ import (
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/states"
+	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/utils"
 )
 
@@ -29,6 +30,7 @@ type validateService struct {
 	session    *mgo.Session
 	messagecli messagecli.Channel
 	state      state.Service
+	redisync   *fs_redisync.Redisync
 }
 
 func (svc *validateService) GetRepo() repository {
@@ -45,6 +47,10 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		}, nil
 	}
 
+	resp := func(s *fs_base.State) (*fs_base_validate.CreateResponse, error) {
+		return &fs_base_validate.CreateResponse{State: s}, nil
+	}
+
 	//验证凭证(通过操作有时间等限制)
 	voucher := in.Metadata.Ip + ";" + in.Func
 	//有用户ID设置为凭证
@@ -52,6 +58,11 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		voucher = in.Metadata.UserId + ";" + in.Func
 	}
 	voucher = utils.Md5(voucher)
+
+	//锁一会(默认60秒)
+	if s := svc.redisync.Lock(in.Func, voucher, in.OnVerification.VoucherDuration); s != nil {
+		return resp(s)
+	}
 
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var code string
@@ -62,9 +73,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	}
 	b, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
 	if err != nil {
-		return &fs_base_validate.CreateResponse{
-			State: errno.ErrSystem,
-		}, nil
+		return resp(errno.ErrSystem)
 	}
 
 	vl := &verification{
@@ -78,7 +87,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 
 	err = repo.Create(vl)
 	if err != nil {
-		return &fs_base_validate.CreateResponse{State: errno.ErrSystem}, nil
+		return resp(errno.ErrSystem)
 	}
 
 	//send code
@@ -98,9 +107,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	case 3: //face 这里不做操作
 		break
 	default:
-		return &fs_base_validate.CreateResponse{
-			State: errno.ErrSupport,
-		}, nil
+		return resp(errno.ErrSupport)
 	}
 
 	return &fs_base_validate.CreateResponse{
@@ -156,10 +163,10 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 	return &fs_base_validate.VerificationResponse{State: errno.ErrExpired}, nil
 }
 
-func NewService(session *mgo.Session, messagecli messagecli.Channel, state state.Service) Service {
+func NewService(session *mgo.Session, messagecli messagecli.Channel, state state.Service, redisync *fs_redisync.Redisync) Service {
 	var svc Service
 	{
-		svc = &validateService{session: session, messagecli: messagecli, state: state}
+		svc = &validateService{session: session, messagecli: messagecli, state: state, redisync: redisync}
 	}
 	return svc
 }

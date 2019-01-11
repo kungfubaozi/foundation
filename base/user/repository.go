@@ -76,7 +76,13 @@ func (repo *userRepository) Add(user *User) error {
 
 func (repo *userRepository) Get(value, key string) (*User, error) {
 	user := &User{}
-	err := repo.collection().Find(bson.M{key: value}).One(user)
+	var err error
+	if key == "_id" {
+		err = repo.collection().Find(bson.M{key: bson.ObjectIdHex(value)}).One(user)
+	} else {
+		err = repo.collection().Find(bson.M{key: value}).One(user)
+	}
+
 	return user, err
 }
 

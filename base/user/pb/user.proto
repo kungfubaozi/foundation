@@ -29,6 +29,7 @@ message UpdateRequest {
 
 message FindRequest {
     string value = 1;
+    string password = 2;
 }
 
 message FindResponse {
@@ -50,4 +51,5 @@ message AddRequest {
     string email = 5;
     string fromProjectId = 6;
     string fromClientId = 7;
+    string userId = 8;
 }

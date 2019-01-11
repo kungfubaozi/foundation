@@ -284,7 +284,7 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	in.Authorize.RefreshTokenUUID = node.Generate().Base64()
 	//关联id，用于关联两个token(accessToken.refreshToken)
 	in.Authorize.Relation = node.Generate().Base64()
-	var accessToken, refreshToken string
+	auth := &auth{}
 	var err error
 	var cs *fs_base.State
 
@@ -298,13 +298,13 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	wg.Add(1)
 	go func() {
 		a, err := encodeAccessToken(in.Authorize)
-		accessToken = a
+		auth.Access = a
 		errc(err)
 	}()
 	wg.Add(1)
 	go func() {
 		a, err := encodeRefreshToken(in.Authorize)
-		refreshToken = a
+		auth.Refresh = a
 		errc(err)
 	}()
 	wg.Add(1)
@@ -324,6 +324,7 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 		wg.Done()
 	}()
 	wg.Wait()
+
 	if err != nil {
 		fmt.Println("encode err", err)
 		return resp(errno.ErrSystem)
@@ -340,10 +341,10 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 		return resp(errno.ErrSystem)
 	}
 	fmt.Println("size ", len(v))
-	if v != nil && len(v) > 0 {
+	if len(v) > 0 {
 		//offline
 		c := 0
-		i := len(in.Authorize.UserId)
+		i := len(in.Authorize.ClientId)
 		for _, k := range v {
 			key := b2s(k.([]uint8))
 			if key[0:i] == in.Authorize.ClientId {
@@ -366,10 +367,15 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	}
 	return &fs_base_authenticate.NewResponse{
 		State:        errno.Ok,
-		RefreshToken: refreshToken,
-		AccessToken:  accessToken,
+		RefreshToken: auth.Refresh,
+		AccessToken:  auth.Access,
 		Session:      in.Authorize.Relation,
 	}, nil
+}
+
+type auth struct {
+	Refresh string
+	Access  string
 }
 
 func b2s(bs []uint8) string {

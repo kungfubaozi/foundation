@@ -3,9 +3,9 @@ package interceptor
 import (
 	"context"
 	"zskparker.com/foundation/base/interceptor/pb"
-	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/validate"
+	"zskparker.com/foundation/pkg/transport"
 )
 
 type Service interface {
@@ -19,7 +19,7 @@ type interceptorService struct {
 }
 
 func (svc *interceptorService) Auth(ctx context.Context, in *fs_base_interceptor.AuthRequest) (*fs_base_interceptor.AuthResponse, error) {
-	meta := ctx.Value("meta").(*fs_base.Metadata)
+	meta := fs_metadata_transport.ContextToMeta(ctx)
 }
 
 func NewService(validatecli validate.Service, reportercli reportercli.Channel) Service {

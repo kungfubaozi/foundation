@@ -20,6 +20,7 @@ import (
 	"time"
 	"zskparker.com/foundation/entry/login/pb"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/transport"
 )
 
@@ -81,35 +82,35 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	}
 
 	m := http.NewServeMux()
-	m.Handle(GetEntryByAPFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetEntryByAPFunc().Infix, httptransport.NewServer(
 		endpoints.EntryByAPEndpoint,
 		decodeEntryByAP,
 		format.EncodeHTTPGenericResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "EntryByAP", logger)))...,
 	))
 
-	m.Handle(GetEntryByQRCodeFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetEntryByQRCodeFunc().Infix, httptransport.NewServer(
 		endpoints.EntryByQRCodeEndpoint,
 		decodeEntryByQRCode,
 		format.EncodeHTTPGenericResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "EntryByQRCode", logger)))...,
 	))
 
-	m.Handle(GetEntryByOAuthFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetEntryByOAuthFunc().Infix, httptransport.NewServer(
 		endpoints.EntryByOAuthEndpoint,
 		decodeEntryByOAuth,
 		format.EncodeHTTPGenericResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "EntryByOAuth", logger)))...,
 	))
 
-	m.Handle(GetEntryByFaceFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetEntryByFaceFunc().Infix, httptransport.NewServer(
 		endpoints.EntryByFaceEndpoint,
 		decodeEntryByFace,
 		format.EncodeHTTPGenericResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "EntryByFace", logger)))...,
 	))
 
-	m.Handle(GetEntryByValidateCodeFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetEntryByValidateCodeFunc().Infix, httptransport.NewServer(
 		endpoints.EntryByValidateCodeEndpoint,
 		decodeEntryByValidateCode,
 		format.EncodeHTTPGenericResponse,

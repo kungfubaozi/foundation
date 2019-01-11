@@ -3,6 +3,7 @@ package project
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"zskparker.com/foundation/pkg/errno"
 )
 
 type repository interface {
@@ -13,6 +14,10 @@ type repository interface {
 	Enable(projectId string, platform int64, open bool) error
 
 	Close()
+
+	Exists(name string) error
+
+	Size() int
 }
 
 type project struct {
@@ -40,6 +45,24 @@ type projectRepository struct {
 
 func (repo *projectRepository) Close() {
 	repo.session.Close()
+}
+
+func (repo *projectRepository) Size() int {
+	i, _ := repo.collection().Count()
+	return i
+}
+
+func (repo *projectRepository) Exists(en string) error {
+	i, err := repo.collection().Find(bson.M{"en": en}).Count()
+	if err != nil && err == mgo.ErrNotFound {
+		return nil
+	} else {
+		return err
+	}
+	if i > 0 {
+		return errno.ERROR
+	}
+	return nil
 }
 
 func (repo *projectRepository) Enable(projectId string, platform int64, open bool) error {

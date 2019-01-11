@@ -16,6 +16,7 @@ import (
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
+	"zskparker.com/foundation/pkg/sync"
 )
 
 func StartService() {
@@ -46,7 +47,10 @@ func StartService() {
 		panic(err)
 	}
 
-	service := validate.NewService(session, message, statecli.NewClient(zipkinTracer))
+	pool := db.CreatePool(osenv.GetRedisAddr())
+	defer pool.Close()
+
+	service := validate.NewService(session, message, statecli.NewClient(zipkinTracer), fs_redisync.Create(pool))
 	endpoints := validate.NewEndpoints(service, zipkinTracer, logger)
 	svc := validate.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

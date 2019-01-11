@@ -16,6 +16,22 @@ service Project {
     //http provider
     rpc EnablePlatform (EnablePlatformRequest) returns (fs.base.Response);
 
+    //init
+    rpc Init (InitRequest) returns (InitResponse);
+}
+
+message InitRequest  {
+    string userId = 1;
+    string logo = 2;
+    string desc = 3;
+    string en = 4;
+    string zh = 5;
+}
+
+message InitResponse {
+    fs.base.State state = 1;
+    string session = 2;
+    string projectId = 3;
 }
 
 message EnablePlatformRequest {
@@ -49,6 +65,7 @@ message ProjectInfo {
     string zh = 4;
     Platform platform = 5;
     int64 level = 6;
+    string session = 7;
 }
 
 message Platform {

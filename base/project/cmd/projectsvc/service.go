@@ -47,7 +47,7 @@ func StartService() {
 	defer rs.Close()
 
 	//插入默认项目
-	project.InsertDef(session)
+	//project.InsertDef(session)
 
 	service := project.NewService(session, strategycli.NewClient(zipkinTracer), rs)
 

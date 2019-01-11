@@ -24,6 +24,7 @@ type GRPCServer struct {
 	new            grpctransport.Handler
 	get            grpctransport.Handler
 	enablePlatform grpctransport.Handler
+	init           grpctransport.Handler
 }
 
 func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer *stdzipkin.Tracer, logger log.Logger) fs_base_project.ProjectServer {
@@ -50,6 +51,11 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "EnablePlatform", logger)))...),
+		init: grpctransport.NewServer(
+			endpoints.InitEndpoint,
+			format.GrpcMessage,
+			format.GrpcMessage,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Init", logger)))...),
 	}
 }
 
@@ -112,11 +118,37 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(enablePlatformEndpoint)
 	}
 
+	var initEndpoint endpoint.Endpoint
+	{
+		initEndpoint = grpctransport.NewClient(conn,
+			"fs.base.project.Project",
+			"Init",
+			format.GrpcMessage,
+			format.GrpcMessage,
+			fs_base_project.InitResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
+		initEndpoint = limiter(initEndpoint)
+		initEndpoint = opentracing.TraceClient(otTracer, "Init")(initEndpoint)
+		initEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Init",
+			Timeout: 5 * time.Second,
+		}))(initEndpoint)
+	}
+
 	return Endpoints{
 		GetEndpoint:            getEndpoint,
 		NewEndpoint:            newEndpoint,
 		EnablePlatformEndpoint: enablePlatformEndpoint,
+		InitEndpoint:           initEndpoint,
 	}
+}
+
+func (g *GRPCServer) Init(ctx context.Context, in *fs_base_project.InitRequest) (*fs_base_project.InitResponse, error) {
+	_, resp, err := g.init.ServeGRPC(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base_project.InitResponse), nil
 }
 
 func (g *GRPCServer) New(ctx context.Context, in *fs_base_project.NewRequest) (*fs_base.Response, error) {

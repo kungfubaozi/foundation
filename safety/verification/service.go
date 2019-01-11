@@ -9,7 +9,6 @@ import (
 	"zskparker.com/foundation/base/validate/pb"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/match"
-	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tags"
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/safety/verification/pb"
@@ -23,7 +22,6 @@ type verificationService struct {
 	validatecli validate.Service
 	reportercli reportercli.Channel
 	logger      log.Logger
-	redisync    *fs_redisync.Redisync
 }
 
 func (svc *verificationService) New(ctx context.Context, in *fs_safety_verification.NewRequest) (*fs_safety_verification.NewResponse, error) {
@@ -72,15 +70,12 @@ func (svc *verificationService) New(ctx context.Context, in *fs_safety_verificat
 	req.To = in.To
 	req.Func = in.Func
 	req.Metadata = meta
+	req.OnVerification = strategy.Events.OnVerification
+
 	vr, err := svc.validatecli.Create(context.Background(), req)
 	if err != nil {
 		svc.logger.Log("validate create", "err", "info", err)
 		return resp(errno.ErrSystem)
-	}
-
-	//锁一会(默认60秒)
-	if s := svc.redisync.Lock("173e2bb3f601", meta.Ip, strategy.Events.OnVerification.VoucherDuration); s != nil {
-		return resp(s)
 	}
 
 	svc.logger.Log("validate create", "ok", "info", resp)
@@ -90,10 +85,10 @@ func (svc *verificationService) New(ctx context.Context, in *fs_safety_verificat
 	}, nil
 }
 
-func NewService(validatecli validate.Service, reportercli reportercli.Channel, logger log.Logger, redisync *fs_redisync.Redisync) Service {
+func NewService(validatecli validate.Service, reportercli reportercli.Channel, logger log.Logger) Service {
 	var svc Service
 	{
-		svc = &verificationService{validatecli: validatecli, reportercli: reportercli, logger: logger, redisync: redisync}
+		svc = &verificationService{validatecli: validatecli, reportercli: reportercli, logger: logger}
 	}
 	return svc
 }

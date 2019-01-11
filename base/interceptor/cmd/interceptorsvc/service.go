@@ -1,0 +1,5 @@
+package interceptorsvc
+
+func StartService() {
+
+}

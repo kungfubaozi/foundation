@@ -1,5 +1,9 @@
 package fs_function_tags
 
+func GetInterceptFuncTag() string {
+	return "8d41cd22c9ea"
+}
+
 func GetFromOAuthFuncTag() string {
 	return "a1999c10319f"
 }

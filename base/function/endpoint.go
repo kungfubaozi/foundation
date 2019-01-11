@@ -9,10 +9,12 @@ import (
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"zskparker.com/foundation/base/function/pb"
+	"zskparker.com/foundation/base/pb"
 )
 
 type Endpoints struct {
-	GetEndpoint endpoint.Endpoint
+	GetEndpoint  endpoint.Endpoint
+	InitEndpoint endpoint.Endpoint
 }
 
 func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
@@ -24,10 +26,26 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		getEndpoint = zipkin.TraceEndpoint(trace, "Get")(getEndpoint)
 	}
 
-	return Endpoints{
-		GetEndpoint: getEndpoint,
+	var initEndpoint endpoint.Endpoint
+	{
+		initEndpoint = MakeInitEndpoint(svc)
+		initEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(initEndpoint)
+		initEndpoint = zipkin.TraceEndpoint(trace, "Init")(initEndpoint)
 	}
 
+	return Endpoints{
+		GetEndpoint:  getEndpoint,
+		InitEndpoint: initEndpoint,
+	}
+
+}
+
+func (g Endpoints) Init(ctx context.Context, in *fs_base_function.InitRequest) (*fs_base.Response, error) {
+	resp, err := g.InitEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base.Response), nil
 }
 
 func (g Endpoints) Get(ctx context.Context, in *fs_base_function.GetRequest) (*fs_base_function.GetResponse, error) {
@@ -41,5 +59,11 @@ func (g Endpoints) Get(ctx context.Context, in *fs_base_function.GetRequest) (*f
 func MakeGetEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return svc.Get(ctx, request.(*fs_base_function.GetRequest))
+	}
+}
+
+func MakeInitEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.Init(ctx, request.(*fs_base_function.InitRequest))
 	}
 }

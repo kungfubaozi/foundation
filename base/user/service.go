@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
@@ -42,14 +43,21 @@ type userService struct {
 	logger   log.Logger
 }
 
-func (svc *userService) findByKey(ctx context.Context, key, value string) (*fs_base_user.FindResponse, error) {
+func (svc *userService) findByKey(ctx context.Context, key, value, password string) (*fs_base_user.FindResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
 	user, err := repo.Get(value, key)
 	if err != nil {
+		fmt.Println("err", err)
 		return &fs_base_user.FindResponse{
 			State: errno.ErrInvalid,
 		}, nil
+	}
+	if len(password) > 0 {
+		err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+		if err != nil {
+			return &fs_base_user.FindResponse{State: errno.ErrInvalidOrAccount}, nil
+		}
 	}
 	return &fs_base_user.FindResponse{
 		State:         errno.Ok,
@@ -64,19 +72,20 @@ func (svc *userService) findByKey(ctx context.Context, key, value string) (*fs_b
 }
 
 func (svc *userService) FindByUserId(ctx context.Context, in *fs_base_user.FindRequest) (*fs_base_user.FindResponse, error) {
-	return svc.findByKey(ctx, "_id", in.Value)
+	fmt.Println("findByUserId", in.Value)
+	return svc.findByKey(ctx, "_id", in.Value, in.Password)
 }
 
 func (svc *userService) FindByPhone(ctx context.Context, in *fs_base_user.FindRequest) (*fs_base_user.FindResponse, error) {
-	return svc.findByKey(ctx, "phone", in.Value)
+	return svc.findByKey(ctx, "phone", in.Value, in.Password)
 }
 
 func (svc *userService) FindByEnterprise(ctx context.Context, in *fs_base_user.FindRequest) (*fs_base_user.FindResponse, error) {
-	return svc.findByKey(ctx, "enterprise", in.Value)
+	return svc.findByKey(ctx, "enterprise", in.Value, in.Password)
 }
 
 func (svc *userService) FindByEmail(ctx context.Context, in *fs_base_user.FindRequest) (*fs_base_user.FindResponse, error) {
-	return svc.findByKey(ctx, "email", in.Value)
+	return svc.findByKey(ctx, "email", in.Value, in.Password)
 }
 
 func (svc *userService) GetRepo() repository {
@@ -94,7 +103,7 @@ func (svc *userService) UpdatePhone(ctx context.Context, in *fs_base_user.Update
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	resp, _ := svc.findByKey(ctx, "phone", in.Value)
+	resp, _ := svc.findByKey(ctx, "phone", in.Value, "")
 	if len(resp.UserId) > 0 {
 		return errno.ErrResponse(errno.ErrAlreadyBind)
 	}
@@ -117,7 +126,7 @@ func (svc *userService) UpdateEmail(ctx context.Context, in *fs_base_user.Update
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	resp, _ := svc.findByKey(ctx, "email", in.Value)
+	resp, _ := svc.findByKey(ctx, "email", in.Value, "")
 	if len(resp.UserId) > 0 {
 		return errno.ErrResponse(errno.ErrAlreadyBind)
 	}
@@ -140,7 +149,7 @@ func (svc *userService) UpdateEnterprise(ctx context.Context, in *fs_base_user.U
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	resp, _ := svc.findByKey(ctx, "enterprise", in.Value)
+	resp, _ := svc.findByKey(ctx, "enterprise", in.Value, "")
 	if len(resp.UserId) > 0 {
 		return errno.ErrResponse(errno.ErrAlreadyBind)
 	}
@@ -181,10 +190,16 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
+
+	userId := bson.NewObjectId()
+	if len(in.UserId) > 0 {
+		userId = bson.ObjectIdHex(in.UserId)
+	}
+
 	u := &User{
 		CreateAt:      time.Now().UnixNano(),
 		Password:      string(p),
-		UserId:        bson.NewObjectId(),
+		UserId:        userId,
 		Email:         in.Email,
 		Level:         in.Level, //1:游客 2:普通用户 3:开发人员 4:项目管理员 5:最高管理员
 		Phone:         in.Phone,

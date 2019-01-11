@@ -62,6 +62,14 @@ func NewEndpoints(tracer *zipkin.Tracer) function.Endpoints {
 		endpoints.GetEndpoint = retry
 	}
 
+	{
+		factory := Factory(function.MakeInitEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.InitEndpoint = retry
+	}
+
 	return endpoints
 
 }

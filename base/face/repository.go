@@ -59,7 +59,7 @@ func resetAccessToken() (string, error) {
 	}
 	client := &http.Client{Transport: tr}
 	resp, err := client.Get("https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials" +
-		"&client_id=dsU7P5P3lRT9wR8pQDLlOyBX&client_secret=wXOnBUX87GDh14rPMdWZe31WrhxhX1ZM")
+		"&client_id=5QQkC038Xnrp3m3A5rPg0TjV&client_secret=34IgrK7WUIMpZgXRCLCusC3xQ5Nt2gBb")
 	if err != nil {
 		return "", err
 	}

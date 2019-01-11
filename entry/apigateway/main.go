@@ -7,8 +7,11 @@ import (
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"net/http"
 	"os"
+	"zskparker.com/foundation/entry/login"
+	"zskparker.com/foundation/entry/login/cmd/logincli"
 	"zskparker.com/foundation/entry/register"
 	"zskparker.com/foundation/entry/register/cmd/registercli"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
@@ -29,8 +32,14 @@ func main() {
 	{
 		//register
 		endpoints := registercli.NewEndpoints(zipkinTracer)
-		r.PathPrefix(register.GetAdminFunc().Prefix).Handler(http.StripPrefix(register.GetAdminFunc().Prefix,
+		r.PathPrefix(fs_functions.GetAdminFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetAdminFunc().Prefix,
 			register.MakeHTTPHandler(endpoints, tracer, zipkinTracer, logger)))
+	}
+
+	{
+		endpoints := logincli.NewEndpoints(zipkinTracer)
+		r.PathPrefix(fs_functions.GetEntryByAPFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetEntryByAPFunc().Prefix,
+			login.MakeHTTPHandler(endpoints, tracer, zipkinTracer, logger)))
 	}
 
 	errc := make(chan error)

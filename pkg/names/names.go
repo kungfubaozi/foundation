@@ -15,6 +15,7 @@ const (
 	F_SVC_PROJECT             = "foundation.svc.project"
 	F_SVC_ENTRY_REGISTER      = "foundation.svc.entry.register"
 	F_SVC_ENTRY_LOGIN         = "foundation.svc.entry.login"
+	F_INIT                    = "foundation.init"
 )
 
 const (
@@ -47,4 +48,5 @@ const (
 	F_FCV_VALIDATE_CODE = 6 << 7
 	F_FCV_AUTH          = 6 << 9
 	F_FCV_NONE          = 6 << 10
+	F_FCV_SESSION       = 6 << 12 //服务器
 )

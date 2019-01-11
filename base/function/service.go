@@ -5,14 +5,20 @@ import (
 	"fmt"
 	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/functions"
+	"zskparker.com/foundation/pkg/model"
+	"zskparker.com/foundation/pkg/transport"
 )
 
 type Service interface {
 	Get(ctx context.Context, in *fs_base_function.GetRequest) (*fs_base_function.GetResponse, error)
+
+	Init(ctx context.Context, in *fs_base_function.InitRequest) (*fs_base.Response, error)
 }
 
 type functionService struct {
@@ -20,9 +26,95 @@ type functionService struct {
 	reportercli reportercli.Channel
 }
 
+func upsert(c *mgo.Collection, session string, f *fs_pkg_model.APIFunction) {
+	c.Upsert(bson.M{"api": f.Function.Api}, &FunctionModel{
+		Func:        f.Function.Func,
+		ZH:          f.Function.Zh,
+		Level:       f.Function.Level,
+		Fcv:         f.Function.Fcv,
+		EN:          f.Function.En,
+		API:         f.Prefix + f.Infix,
+		FromSession: session,
+	})
+}
+
+func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitRequest) (*fs_base.Response, error) {
+	c := svc.session.Clone().DB("foundation").C("functions")
+	i, _ := c.Count()
+	if i > 0 {
+		return errno.ErrResponse(errno.ErrRequest)
+	}
+
+	//login functions
+	upsert(c, in.Session, fs_functions.GetEntryByFaceFunc())
+	upsert(c, in.Session, fs_functions.GetEntryByValidateCodeFunc())
+	upsert(c, in.Session, fs_functions.GetEntryByAPFunc())
+	upsert(c, in.Session, fs_functions.GetEntryByOAuthFunc())
+	upsert(c, in.Session, fs_functions.GetEntryByQRCodeFunc())
+
+	//safety verification functions
+	upsert(c, in.Session, fs_functions.GetRegisterFunc())
+	upsert(c, in.Session, fs_functions.GetLoginFunc())
+	upsert(c, in.Session, fs_functions.GetAdminRegisterFunc())
+
+	//register functions
+	upsert(c, in.Session, fs_functions.GetFromAPFunc())
+	upsert(c, in.Session, fs_functions.GetFromOAuthFunc())
+	upsert(c, in.Session, fs_functions.GetAdminFunc())
+
+	//safety update functions
+	upsert(c, in.Session, fs_functions.GetUpdateEmailFunc())
+	upsert(c, in.Session, fs_functions.GetUpdateEnterpriseFunc())
+	upsert(c, in.Session, fs_functions.GetUpdatePasswordFunc())
+	upsert(c, in.Session, fs_functions.GetUpdatePhoneFunc())
+
+	//unblock
+	upsert(c, in.Session, fs_functions.GetUnlockFunc())
+
+	//blacklist
+	upsert(c, in.Session, fs_functions.GetAddBlacklistFunc())
+	upsert(c, in.Session, fs_functions.GetRemoveBlacklistFunc())
+
+	//function
+	upsert(c, in.Session, fs_functions.GetAddFunc())
+	upsert(c, in.Session, fs_functions.GetAllFunc())
+	upsert(c, in.Session, fs_functions.GetFindFunc())
+	upsert(c, in.Session, fs_functions.GetRemoveFunc())
+	upsert(c, in.Session, fs_functions.GetUpdateFunc())
+
+	//project functions
+	upsert(c, in.Session, fs_functions.GetCreateProject())
+	upsert(c, in.Session, fs_functions.GetRemoveProject())
+	upsert(c, in.Session, fs_functions.GetUpdateProject())
+
+	//usersync functions
+	upsert(c, in.Session, fs_functions.GetAddUserSyncHookFunc())
+	upsert(c, in.Session, fs_functions.GetRemoveUserSyncHookFunc())
+	upsert(c, in.Session, fs_functions.GetUpdateUserSyncHookFunc())
+
+	//strategy functions
+	upsert(c, in.Session, fs_functions.GetUpdateProjectStrategyFunc())
+
+	//review functions
+
+	//invite functions
+	upsert(c, in.Session, fs_functions.GetInviteUserFunc())
+
+	//froze
+	upsert(c, in.Session, fs_functions.GetRequestFrozeFunc())
+
+	//interceptor
+	upsert(c, in.Session, fs_functions.GetInterceptFunc())
+
+	return &fs_base.Response{State: errno.Ok}, nil
+}
+
 func (svc *functionService) Add(ctx context.Context, in *fs_base_function.UpsertRequest) (*fs_base_function.UpsertResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
+
+	meta := fs_metadata_transport.ContextToProject(ctx)
+
 	f, err := repo.Get(in.Api)
 	if err == mgo.ErrNotFound {
 		err = nil
@@ -39,12 +131,13 @@ func (svc *functionService) Add(ctx context.Context, in *fs_base_function.Upsert
 	}
 	uid, _ := uuid.NewV1()
 	f = &FunctionModel{
-		Func:  uuid.NewV5(uid, in.Api).String()[24:],
-		ZH:    in.Zh,
-		API:   in.Api,
-		Level: in.Level,
-		EN:    in.En,
-		Fcv:   in.Fcv,
+		Func:        uuid.NewV5(uid, in.Api).String()[24:],
+		ZH:          in.Zh,
+		API:         in.Api,
+		Level:       in.Level,
+		EN:          in.En,
+		Fcv:         in.Fcv,
+		FromSession: meta.Session,
 	}
 	err = repo.Add(f)
 	if err != nil {

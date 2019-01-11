@@ -49,7 +49,7 @@ func StartService() {
 	defer rs.Close()
 
 	//插入默认的
-	insertDef(session)
+	//insertDef(session)
 
 	service := strategy.NewService(session, rs)
 	endpoints := strategy.NewEndpoints(service, zipkinTracer, logger)

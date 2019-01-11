@@ -1,4 +1,4 @@
-package strategy
+package fs_functions
 
 import (
 	"zskparker.com/foundation/base/function/pb"
@@ -6,19 +6,18 @@ import (
 	"zskparker.com/foundation/pkg/names"
 )
 
-func GetUpdateProjectStrategyFunc() *fs_pkg_model.APIFunction {
+func GetInviteUserFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
-		Prefix: "/fds/api/env/strategy",
-		Infix:  "/update",
+		Prefix: "/api/fds/env/invite",
+		Infix:  "/add",
 	}
 	f.Function = &fs_base_function.Func{
 		Api:   f.Prefix + f.Infix,
-		Zh:    "更新策略",
-		En:    "UpdateStrategy",
-		Func:  "7551e6a14638",
+		Zh:    "邀请用户",
+		En:    "InviteUser",
+		Func:  "72777f71a26d",
 		Level: 5,
 		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
-		Type:  names.F_FUNC_TYPE_HIDE,
 	}
 	return f
 }

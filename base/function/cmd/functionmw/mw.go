@@ -50,16 +50,16 @@ func NewFunctionMWClient(tracer *zipkin.Tracer) *MWServices {
 }
 
 func WithExpress(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
-	return middleware(logger, mwcli, function, true)
+	return middleware(logger, mwcli, function, false)
 }
 
 func WithMeta(logger log.Logger, mwcli *MWServices) endpoint.Middleware {
-	return middleware(logger, mwcli, "", true)
+	return middleware(logger, mwcli, "", false)
 }
 
 //忽略项目等级
 func WithIgnoreProjectLevel(logger log.Logger, mwcli *MWServices, function string) endpoint.Middleware {
-	return middleware(logger, mwcli, function, false)
+	return middleware(logger, mwcli, function, true)
 }
 
 func middleware(logger log.Logger, mwcli *MWServices, function string, ignoreProjectLevel bool) endpoint.Middleware {
@@ -159,7 +159,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 				if ps == errno.ErrFunctionInvalid { //功能未找到
 					logger.Log("middleware", "function", "invalid", meta.Api)
 					cf = &fs_base_function.Func{
-						Fcv:   names.F_FCV_AUTH,
+						Fcv:   names.F_FCV_AUTH | names.F_FCV_SESSION, //没在这里注册功能基本都是外部服务访问的，需要加入session判断
 						Level: 1,
 					}
 				} else {
@@ -257,6 +257,25 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 						authCheck()
 						if !ps.Ok {
 							return errno.ErrResponse(ps)
+						}
+						validateCheck()
+					}
+				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_SESSION {
+					authCheck()
+					if !ps.Ok {
+						return errno.ErrResponse(ps)
+					}
+					if meta.Session != p.Session {
+						return errno.ErrResponse(errno.ErrRequestPermission)
+					}
+				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_SESSION|names.F_FCV_VALIDATE_CODE {
+					if metaCheck(false) {
+						authCheck()
+						if !ps.Ok {
+							return errno.ErrResponse(ps)
+						}
+						if meta.Session != p.Session {
+							return errno.ErrResponse(errno.ErrRequestPermission)
 						}
 						validateCheck()
 					}

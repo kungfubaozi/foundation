@@ -16,11 +16,13 @@ import (
 	"google.golang.org/grpc"
 	"time"
 	"zskparker.com/foundation/base/function/pb"
+	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/pkg/format"
 )
 
 type GRPCServer struct {
-	get grpctransport.Handler
+	get  grpctransport.Handler
+	init grpctransport.Handler
 }
 
 func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer *stdzipkin.Tracer, logger log.Logger) fs_base_function.FunctionServer {
@@ -37,6 +39,11 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Get", logger)))...),
+		init: grpctransport.NewServer(
+			endpoints.InitEndpoint,
+			format.GrpcMessage,
+			format.GrpcMessage,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Init", logger)))...),
 	}
 }
 
@@ -65,8 +72,26 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(getEndpoint)
 	}
 
+	var initEndpoint endpoint.Endpoint
+	{
+		initEndpoint = grpctransport.NewClient(conn,
+			"fs.base.function.Function",
+			"Init",
+			format.GrpcMessage,
+			format.GrpcMessage,
+			fs_base.Response{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
+		initEndpoint = limiter(initEndpoint)
+		initEndpoint = opentracing.TraceClient(otTracer, "Init")(initEndpoint)
+		initEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Init",
+			Timeout: 5 * time.Second,
+		}))(initEndpoint)
+	}
+
 	return Endpoints{
-		GetEndpoint: getEndpoint,
+		GetEndpoint:  getEndpoint,
+		InitEndpoint: initEndpoint,
 	}
 
 }
@@ -77,4 +102,12 @@ func (g *GRPCServer) Get(ctx context.Context, in *fs_base_function.GetRequest) (
 		return nil, err
 	}
 	return resp.(*fs_base_function.GetResponse), nil
+}
+
+func (g *GRPCServer) Init(ctx context.Context, in *fs_base_function.InitRequest) (*fs_base.Response, error) {
+	_, resp, err := g.init.ServeGRPC(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base.Response), nil
 }

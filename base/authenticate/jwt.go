@@ -5,7 +5,6 @@ import (
 	"time"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/pkg/osenv"
-	"zskparker.com/foundation/pkg/utils"
 )
 
 var TOKEN_KEY = []byte(osenv.GetTokenKey())
@@ -53,12 +52,9 @@ func encodeRefreshToken(authorize *fs_base_authenticate.Authorize) (string, erro
 func encodeToken(et time.Duration, authorize *SimpleAuthorize) (string, error) {
 	expireTime := time.Now().Add(et).Unix()
 
-	node := utils.NodeGenerate()
-
 	c := jwt.StandardClaims{
 		Issuer:    "foundation.authenticate", // 签发者
 		ExpiresAt: expireTime,
-		Id:        node.Generate().Base64(),
 	}
 
 	claims := UserClaims{

@@ -98,7 +98,7 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 		return resp(errno.ErrProjectPermission)
 	}
 
-	if s := svc.redisync.Lock(fs_function_tags.GetEntryByAPFuncTag(), meta.UserId, 3); s != nil {
+	if s := svc.redisync.Lock(fs_function_tags.GetEntryByFaceFuncTag(), meta.UserId, 3); s != nil {
 		return resp(s)
 	}
 
@@ -112,10 +112,6 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 
 	svc.reportercli.Write(fs_function_tags.GetEntryByFaceFuncTag(), meta.UserId, meta.ProjectId)
 
-	defer func() {
-		svc.redisync.Unlock(fs_function_tags.GetEntryByAPFuncTag(), meta.UserId)
-	}()
-
 	return &fs_entry_login.EntryResponse{
 		State:        errno.Ok,
 		Session:      ar.Session,
@@ -125,7 +121,7 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 }
 
 func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_entry_login.EntryResponse, error) {
-	if len(in.Account) <= 6 || len(in.Password) <= 6 {
+	if len(in.Account) <= 6 || len(in.Password) < 6 {
 		return &fs_entry_login.EntryResponse{State: errno.ErrRequest}, nil
 	}
 
@@ -139,7 +135,8 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 	var u *fs_base_user.FindResponse
 	var err error
 	req := &fs_base_user.FindRequest{
-		Value: in.Account,
+		Value:    in.Account,
+		Password: in.Password,
 	}
 	if fs_regx_match.Phone(in.Account) {
 		u, err = svc.usercli.FindByPhone(context.Background(), req)
@@ -179,7 +176,7 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 
 	return &fs_entry_login.EntryResponse{
 		State:        errno.Ok,
-		RefreshToken: a.AccessToken,
+		RefreshToken: a.RefreshToken,
 		Session:      a.Session,
 		AccessToken:  a.AccessToken,
 	}, nil

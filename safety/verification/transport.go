@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/tags"
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/safety/verification/pb"
@@ -40,7 +41,7 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	m := http.NewServeMux()
 
 	//register
-	m.Handle(GetRegisterFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetRegisterFunc().Infix, httptransport.NewServer(
 		endpoints.NewEndpoint,
 		decodeHTTPNewRegister,
 		format.EncodeHTTPGenericResponse,
@@ -48,17 +49,8 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 			httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "NewRegister", logger)))...,
 	))
 
-	//register admin
-	m.Handle(GetAdminRegisterFunc().Infix, httptransport.NewServer(
-		endpoints.NewEndpoint,
-		decodeHTTPNewAdminRegister,
-		format.EncodeHTTPGenericResponse,
-		append(options,
-			httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "NewAdminRegister", logger)))...,
-	))
-
 	//login
-	m.Handle(GetLoginFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetLoginFunc().Infix, httptransport.NewServer(
 		endpoints.NewEndpoint,
 		decodeHTTPNewLogin,
 		format.EncodeHTTPGenericResponse,
@@ -67,16 +59,6 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	))
 
 	return m
-}
-
-//注册管理员验证码
-func decodeHTTPNewAdminRegister(_ context.Context, r *http.Request) (interface{}, error) {
-	var req *fs_safety_verification.NewRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if req != nil {
-		req.Func = fs_function_tags.GetAdminFuncTag()
-	}
-	return req, err
 }
 
 //使用密码账号注册验证码

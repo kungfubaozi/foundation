@@ -17,7 +17,6 @@ import (
 type Endpoints struct {
 	FromAPEndpoint    endpoint.Endpoint
 	FromOAuthEndpoint endpoint.Endpoint
-	AdminEndpoint     endpoint.Endpoint
 }
 
 func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client *functionmw.MWServices) Endpoints {
@@ -40,29 +39,11 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		fromOAuthEndpoint = functionmw.WithExpress(logger, client, fs_function_tags.GetFromOAuthFuncTag())(fromOAuthEndpoint)
 	}
 
-	var adminEndpoint endpoint.Endpoint
-	{
-		adminEndpoint = MakeAdminEndpoint(svc)
-		adminEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(adminEndpoint)
-		adminEndpoint = zipkin.TraceEndpoint(trace, "Admin")(adminEndpoint)
-
-		adminEndpoint = functionmw.WithExpress(logger, client, fs_function_tags.GetAdminFuncTag())(adminEndpoint)
-	}
-
 	return Endpoints{
 		FromAPEndpoint:    fromAPEndpoint,
 		FromOAuthEndpoint: fromOAuthEndpoint,
-		AdminEndpoint:     adminEndpoint,
 	}
 
-}
-
-func (g Endpoints) Admin(ctx context.Context, in *fs_entry_register.AdminRequest) (*fs_base.Response, error) {
-	resp, err := g.AdminEndpoint(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*fs_base.Response), nil
 }
 
 func (g Endpoints) FromAP(ctx context.Context, in *fs_entry_register.FromAPRequest) (*fs_base.Response, error) {
@@ -84,12 +65,6 @@ func (g Endpoints) FromOAuth(ctx context.Context, in *fs_entry_register.FromOAut
 func MakeFromAPEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return svc.FromAP(ctx, request.(*fs_entry_register.FromAPRequest))
-	}
-}
-
-func MakeAdminEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return svc.Admin(ctx, request.(*fs_entry_register.AdminRequest))
 	}
 }
 

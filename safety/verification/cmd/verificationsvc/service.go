@@ -15,7 +15,6 @@ import (
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
-	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/safety/verification"
 	"zskparker.com/foundation/safety/verification/pb"
 )
@@ -36,9 +35,6 @@ func StartService() {
 	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_SAFETY_VERIFICATION, osenv.GetMicroPortString())
 	defer reporter.Close()
 
-	pool := db.CreatePool(osenv.GetRedisAddr())
-	defer pool.Close()
-
 	session, err := db.CreateSession(osenv.GetMongoDBAddr())
 	if err != nil {
 		panic(err)
@@ -51,7 +47,7 @@ func StartService() {
 	}
 	defer rc.Close()
 
-	service := verification.NewService(validatecli.NewClient(zipkinTracer), rc, logger, fs_redisync.Create(pool))
+	service := verification.NewService(validatecli.NewClient(zipkinTracer), rc, logger)
 	endpoints := verification.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
 	svc := verification.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

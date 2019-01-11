@@ -21,14 +21,18 @@ type repository interface {
 }
 
 type FunctionModel struct {
-	Func      string `bson:"func"`
-	API       string `bson:"api"`
-	CreateAt  string `bson:"create_at"`
-	ZH        string `bson:"zh"`
-	EN        string `bson:"en"`
-	Fcv       int64  `bson:"fcv"` //首选验证模式
-	Level     int64  `bson:"level"`
-	ProjectId string `bson:"project_id"`
+	Func        string `bson:"func"`
+	API         string `bson:"api"`
+	CreateAt    string `bson:"create_at"`
+	ZH          string `bson:"zh"`
+	EN          string `bson:"en"`
+	Fcv         int64  `bson:"fcv"` //首选验证模式
+	Level       int64  `bson:"level"`
+	FromSession string `bson:"from_session"` //功能对应的项目会话
+	//项目集成时会带入session来请求API
+	//新加入的功能会加入session防止API一致
+	//如果没有注册功能，默认会对比session
+	//功能里的fcv检查条件如果没有session检查条件，则不检查session
 }
 
 type functionRepository struct {

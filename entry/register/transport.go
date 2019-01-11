@@ -21,6 +21,7 @@ import (
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/entry/register/pb"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/transport"
 )
 
@@ -46,14 +47,6 @@ func (g *GRPCServer) FromOAuth(ctx context.Context, in *fs_entry_register.FromOA
 	return resp.(*fs_base.Response), nil
 }
 
-func (g *GRPCServer) Admin(ctx context.Context, in *fs_entry_register.AdminRequest) (*fs_base.Response, error) {
-	_, resp, err := g.admin.ServeGRPC(ctx, in)
-	if err != nil {
-		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
-	}
-	return resp.(*fs_base.Response), nil
-}
-
 func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
 	zipkinServer := zipkin.HTTPServerTrace(zipkinTracer)
 
@@ -64,25 +57,18 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	}
 
 	m := http.NewServeMux()
-	m.Handle(GetFromAPFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetFromAPFunc().Infix, httptransport.NewServer(
 		endpoints.FromAPEndpoint,
 		decodeFromAP,
 		format.EncodeHTTPGenericResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "FromAP", logger)))...,
 	))
 
-	m.Handle(GetFromOAuthFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetFromOAuthFunc().Infix, httptransport.NewServer(
 		endpoints.FromAPEndpoint,
 		decodeFromOAuth,
 		format.EncodeHTTPGenericResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "FromOAuth", logger)))...,
-	))
-
-	m.Handle(GetAdminFunc().Infix, httptransport.NewServer(
-		endpoints.AdminEndpoint,
-		decodeAdmin,
-		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Admin", logger)))...,
 	))
 
 	return m
@@ -96,12 +82,6 @@ func decodeFromAP(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeFromOAuth(_ context.Context, r *http.Request) (interface{}, error) {
 	var req *fs_entry_register.FromOAuthRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	return req, err
-}
-
-func decodeAdmin(_ context.Context, r *http.Request) (interface{}, error) {
-	var req *fs_entry_register.AdminRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
@@ -126,11 +106,6 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "FromOAuth", logger)))...),
-		admin: grpctransport.NewServer(
-			endpoints.AdminEndpoint,
-			format.GrpcMessage,
-			format.GrpcMessage,
-			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Admin", logger)))...),
 	}
 }
 
@@ -197,6 +172,5 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 	return Endpoints{
 		FromOAuthEndpoint: fromOAuthEndpoint,
 		FromAPEndpoint:    fromAPEndpoint,
-		AdminEndpoint:     adminEndpoint,
 	}
 }

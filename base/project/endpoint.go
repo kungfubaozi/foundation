@@ -16,6 +16,7 @@ type Endpoints struct {
 	NewEndpoint            endpoint.Endpoint
 	GetEndpoint            endpoint.Endpoint
 	EnablePlatformEndpoint endpoint.Endpoint
+	InitEndpoint           endpoint.Endpoint
 }
 
 func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
@@ -40,11 +41,27 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		enablePlatform = zipkin.TraceEndpoint(trace, "EnablePlatform")(enablePlatform)
 	}
 
+	var initEndpoint endpoint.Endpoint
+	{
+		initEndpoint = MakeInitEndpoint(svc)
+		initEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(initEndpoint)
+		initEndpoint = zipkin.TraceEndpoint(trace, "Init")(initEndpoint)
+	}
+
 	return Endpoints{
 		NewEndpoint:            newEndpoint,
 		GetEndpoint:            getEndpoint,
 		EnablePlatformEndpoint: enablePlatform,
+		InitEndpoint:           initEndpoint,
 	}
+}
+
+func (g Endpoints) Init(ctx context.Context, in *fs_base_project.InitRequest) (*fs_base_project.InitResponse, error) {
+	resp, err := g.InitEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base_project.InitResponse), nil
 }
 
 func (g Endpoints) New(ctx context.Context, in *fs_base_project.NewRequest) (*fs_base.Response, error) {
@@ -69,6 +86,12 @@ func (g Endpoints) EnablePlatform(ctx context.Context, in *fs_base_project.Enabl
 		return nil, err
 	}
 	return resp.(*fs_base.Response), nil
+}
+
+func MakeInitEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.Init(ctx, request.(*fs_base_project.InitRequest))
+	}
 }
 
 func MakeNewEndpoint(svc Service) endpoint.Endpoint {

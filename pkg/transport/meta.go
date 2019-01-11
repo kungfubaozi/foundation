@@ -52,8 +52,7 @@ func GRPCToContext() grpc.ServerRequestFunc {
 			i = 1
 		}
 		meta.Level = i
-
-		fmt.Println("meta", meta)
+		meta.Session = header[8]
 
 		return context.WithValue(ctx, MetadataTransportKey, meta)
 	}
@@ -67,6 +66,11 @@ func HTTPToContext() http.RequestFunc {
 		meta.Ip = request.Header.Get("X-Real-IP")
 		meta.UserAgent = request.Header.Get("User-Agent")
 		meta.Api = uri(request.RequestURI)
+		forward := request.Header.Get("X-Forward-URI")
+		if len(forward) > 2 {
+			meta.Api = forward
+		}
+		meta.Session = request.Header.Get("X-Server-Session")
 		meta.Token = request.Header.Get("Authorization")
 		return context.WithValue(ctx, MetadataTransportKey, meta)
 	}
@@ -93,6 +97,7 @@ func ContextToGRPC() grpc.ClientRequestFunc {
 				metadata.Device,
 				metadata.UserId,
 				strconv.FormatInt(metadata.Level, 10),
+				metadata.Session,
 			}
 		}
 		return ctx
