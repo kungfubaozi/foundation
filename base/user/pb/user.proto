@@ -52,4 +52,6 @@ message AddRequest {
     string fromProjectId = 6;
     string fromClientId = 7;
     string userId = 8;
+    string username = 9;
+    string realName = 10;
 }

@@ -16,7 +16,7 @@ import (
 	"zskparker.com/foundation/base/message/cmd/messagecli"
 	"zskparker.com/foundation/base/message/pb"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -49,7 +49,7 @@ func StartService() {
 	}
 
 	service := message.NewService(c, logger)
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_MESSAGE, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.SVC_MESSAGE, osenv.GetMicroPortString())
 	defer reporter.Close()
 	endpoints := message.NewEndpoints(service, zipkinTracer, logger)
 	srv := message.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
@@ -59,7 +59,7 @@ func StartService() {
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_MESSAGE, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, fs_constants.SVC_MESSAGE, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())

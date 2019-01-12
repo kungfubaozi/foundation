@@ -26,6 +26,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		refreshEndpoint = MakeRefreshEndpoint(svc)
 		refreshEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(refreshEndpoint)
 		refreshEndpoint = zipkin.TraceEndpoint(trace, "Refresh")(refreshEndpoint)
+
 	}
 
 	var newEndpoint endpoint.Endpoint
@@ -85,7 +86,7 @@ func MakeCheckEndpoint(svc Service) endpoint.Endpoint {
 }
 
 func (g Endpoints) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
-	resp, err := g.NewEndpoint(ctx, in)
+	resp, err := g.RefreshEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}

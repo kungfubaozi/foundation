@@ -12,8 +12,8 @@ import (
 	"zskparker.com/foundation/base/state"
 	"zskparker.com/foundation/base/state/pb"
 	"zskparker.com/foundation/base/user/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
-	"zskparker.com/foundation/pkg/names"
 )
 
 //gRPC
@@ -201,18 +201,20 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 		Password:      string(p),
 		UserId:        userId,
 		Email:         in.Email,
-		Level:         in.Level, //1:游客 2:普通用户 3:开发人员 4:项目管理员 5:最高管理员
+		Level:         in.Level,
 		Phone:         in.Phone,
 		FromClientId:  in.FromClientId,
 		FromProjectId: in.FromProjectId,
+		Username:      in.Username,
+		RealName:      in.RealName,
 	}
 	repo := svc.GetRepo()
 	defer repo.Close()
 	//注册管理员(系统管理员)
-	if in.Level == 5 {
+	if in.Level == fs_constants.LEVEL_ADMIN {
 		i := repo.FindAdmin()
 		if i != 0 {
-			return errno.ErrResponse(errno.ErrRequest)
+			return errno.ErrResponse(errno.ErrUserAlreadyExists)
 		}
 	} else {
 		//查找相同的
@@ -228,7 +230,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	}
 	resp, err := svc.statecli.Upsert(ctx, &fs_base_state.UpsertRequest{
 		Key:    u.UserId.Hex(),
-		Status: names.F_STATE_OK,
+		Status: fs_constants.STATE_OK,
 	})
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)

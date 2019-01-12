@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/strategy"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
@@ -51,7 +51,7 @@ func NewEndpoints(tracer *zipkin.Tracer) strategy.Endpoints {
 		tags        []string
 		passingOnly = true
 		endpoints   = strategy.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_STRATEGY, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_STRATEGY, tags, passingOnly)
 	)
 
 	{

@@ -20,7 +20,7 @@ func DecodeToken(token string) (*UserClaims, error) {
 		return TOKEN_KEY, nil
 	})
 	// 解密转换类型并返回
-	if claims, ok := t.Claims.(*UserClaims); ok && t.Valid {
+	if claims, ok := t.Claims.(*UserClaims); ok {
 		return claims, nil
 	}
 	return nil, err

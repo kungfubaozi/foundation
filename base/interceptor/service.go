@@ -3,8 +3,9 @@ package interceptor
 import (
 	"context"
 	"zskparker.com/foundation/base/interceptor/pb"
+	"zskparker.com/foundation/base/message/cmd/messagecli"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
-	"zskparker.com/foundation/base/validate"
+	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/transport"
 )
 
@@ -14,18 +15,22 @@ type Service interface {
 
 //其余的会在拦截器做处理
 type interceptorService struct {
-	validatecli validate.Service
 	reportercli reportercli.Channel
+	messagecli  messagecli.Channel
 }
 
 func (svc *interceptorService) Auth(ctx context.Context, in *fs_base_interceptor.AuthRequest) (*fs_base_interceptor.AuthResponse, error) {
 	meta := fs_metadata_transport.ContextToMeta(ctx)
+	return &fs_base_interceptor.AuthResponse{
+		State:  errno.Ok,
+		UserId: meta.UserId,
+	}, nil
 }
 
-func NewService(validatecli validate.Service, reportercli reportercli.Channel) Service {
+func NewService(reportercli reportercli.Channel, messagecli messagecli.Channel) Service {
 	var svc Service
 	{
-		svc = &interceptorService{validatecli: validatecli}
+		svc = &interceptorService{reportercli: reportercli, messagecli: messagecli}
 	}
 	return svc
 }

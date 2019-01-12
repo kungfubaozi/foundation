@@ -13,9 +13,9 @@ import (
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/entry/login/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/match"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tags"
 	"zskparker.com/foundation/pkg/transport"
@@ -44,15 +44,15 @@ type loginService struct {
 }
 
 func (svc *loginService) getMaxOnlineCount(platform int64, strategy *fs_base.MaxCountOfOnline) int64 {
-	if platform == names.F_PLATFORM_ANDROID {
+	if platform == fs_constants.PLATFORM_ANDROID {
 		return strategy.Android
-	} else if platform == names.F_PLATFORM_WEB {
+	} else if platform == fs_constants.PLATFORM_WEB {
 		return strategy.Web
-	} else if platform == names.F_PLATFORM_IOS {
+	} else if platform == fs_constants.PLATFORM_IOS {
 		return strategy.IOS
-	} else if platform == names.F_PLATFORM_WINDOWD {
+	} else if platform == fs_constants.PLATFORM_WINDOWD {
 		return strategy.Windows
-	} else if platform == names.F_PLATFORM_MAC_OS {
+	} else if platform == fs_constants.PLATFORM_MAC_OS {
 		return strategy.MacOS
 	}
 	return -1
@@ -121,7 +121,7 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 }
 
 func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_entry_login.EntryResponse, error) {
-	if len(in.Account) <= 6 || len(in.Password) < 6 {
+	if len(in.Account) < 6 || len(in.Password) < 6 {
 		return &fs_entry_login.EntryResponse{State: errno.ErrRequest}, nil
 	}
 

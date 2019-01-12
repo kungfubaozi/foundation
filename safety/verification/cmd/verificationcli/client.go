@@ -13,7 +13,7 @@ import (
 	"io"
 	"os"
 	"time"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/safety/verification"
 )
 
@@ -52,7 +52,7 @@ func NewEndpoints(consulAddr string, tracer *zipkin.Tracer) verification.Endpoin
 		tags        []string
 		passingOnly = true
 		endpoints   = verification.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_SAFETY_VERIFICATION, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_SAFETY_VERIFICATION, tags, passingOnly)
 	)
 
 	{

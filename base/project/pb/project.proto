@@ -20,7 +20,7 @@ service Project {
     rpc Init (InitRequest) returns (InitResponse);
 }
 
-message InitRequest  {
+message InitRequest {
     string userId = 1;
     string logo = 2;
     string desc = 3;
@@ -32,6 +32,11 @@ message InitResponse {
     fs.base.State state = 1;
     string session = 2;
     string projectId = 3;
+    string androidId = 4;
+    string iosId = 5;
+    string webId = 6;
+    string maxOSId = 7;
+    string windowsId = 8;
 }
 
 message EnablePlatformRequest {

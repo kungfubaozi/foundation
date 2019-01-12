@@ -11,8 +11,8 @@ import (
 	"zskparker.com/foundation/base/face/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user/cmd/usercli"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -31,7 +31,7 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_FACE, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.SVC_FACE, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	pool := db.CreatePool(osenv.GetRedisAddr())
@@ -43,7 +43,7 @@ func StartService() {
 	}
 	defer session.Close()
 
-	rch, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_FACE)
+	rch, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), fs_constants.SVC_FACE)
 	defer rch.Close()
 
 	service := face.NewService(session, rch, pool, usercli.NewClient(zipkinTracer))
@@ -55,7 +55,7 @@ func StartService() {
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_FACE, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, fs_constants.SVC_FACE, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())

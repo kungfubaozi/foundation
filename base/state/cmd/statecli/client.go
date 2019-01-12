@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/state"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
@@ -51,7 +51,7 @@ func NewClient(tracer *zipkin.Tracer) state.Service {
 		tags        []string
 		passingOnly = true
 		endpoints   = state.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_STATE, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_STATE, tags, passingOnly)
 	)
 	{
 		factory := Factory(state.MakeGetEndpoint, otTracer, tracer, logger)

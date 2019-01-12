@@ -13,8 +13,8 @@ import (
 	"zskparker.com/foundation/base/reporter"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/reporter/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 )
@@ -47,7 +47,7 @@ func StartService() {
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_REPORTER, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, fs_constants.SVC_REPORTER, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())

@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/entry/register"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
@@ -55,16 +55,8 @@ func NewEndpoints(tracer *zipkin.Tracer) register.Endpoints {
 		tags        []string
 		passingOnly = true
 		endpoints   = register.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_ENTRY_REGISTER, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_ENTRY_REGISTER, tags, passingOnly)
 	)
-
-	{
-		factory := Factory(register.MakeAdminEndpoint, otTracer, tracer, logger)
-		endpointer := sd.NewEndpointer(instancer, factory, logger)
-		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.AdminEndpoint = retry
-	}
 
 	{
 		factory := Factory(register.MakeFromOAuthEndpoint, otTracer, tracer, logger)

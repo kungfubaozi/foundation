@@ -7,6 +7,7 @@ import (
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"net/http"
 	"os"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/safety/verification"
 	"zskparker.com/foundation/safety/verification/cmd/verificationcli"
@@ -36,7 +37,7 @@ func main() {
 	{
 		//verification
 		endpoints := verificationcli.NewEndpoints(osenv.GetConsulAddr(), zipkinTracer)
-		r.PathPrefix(verification.GetRegisterFunc().Prefix).Handler(http.StripPrefix(verification.GetRegisterFunc().Prefix, verification.MakeHTTPHandler(
+		r.PathPrefix(fs_functions.GetRegisterFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetRegisterFunc().Prefix, verification.MakeHTTPHandler(
 			endpoints, tracer, zipkinTracer, logger)))
 	}
 

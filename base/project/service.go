@@ -13,8 +13,8 @@ import (
 	"zskparker.com/foundation/base/strategy"
 	"zskparker.com/foundation/base/strategy/def"
 	"zskparker.com/foundation/base/strategy/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 )
@@ -40,10 +40,10 @@ func (svc *projectService) Init(ctx context.Context, in *fs_base_project.InitReq
 	defer repo.Close()
 
 	if repo.Size() > 0 {
-		return &fs_base_project.InitResponse{State: errno.ErrRequest}, nil
+		return &fs_base_project.InitResponse{State: errno.ErrProjectAlreadyExists}, nil
 	}
 
-	p := defProject(in.Logo, in.Zh, in.En, in.Desc, in.UserId, bson.NewObjectId(), 3)
+	p := defProject(in.Logo, in.Zh, in.En, in.Desc, in.UserId, bson.NewObjectId(), fs_constants.LEVEL_DEVELOPER)
 	r, err := svc.Create(ctx, p)
 	if err != nil {
 		return &fs_base_project.InitResponse{State: errno.ErrSystem}, nil
@@ -55,6 +55,11 @@ func (svc *projectService) Init(ctx context.Context, in *fs_base_project.InitReq
 		State:     errno.Ok,
 		Session:   p.Session,
 		ProjectId: p.Id.Hex(),
+		AndroidId: p.Platforms[0].ClientId,
+		IosId:     p.Platforms[1].ClientId,
+		WindowsId: p.Platforms[2].ClientId,
+		MaxOSId:   p.Platforms[3].ClientId,
+		WebId:     p.Platforms[4].ClientId,
 	}, nil
 }
 
@@ -138,7 +143,7 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 
 func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewRequest) (*fs_base.Response, error) {
 	meta := fs_metadata_transport.ContextToMeta(ctx)
-	p := defProject(in.Logo, in.Zh, in.En, in.Desc, meta.UserId, bson.NewObjectId(), 3)
+	p := defProject(in.Logo, in.Zh, in.En, in.Desc, meta.UserId, bson.NewObjectId(), fs_constants.LEVEL_DEVELOPER)
 	return svc.Create(ctx, p)
 }
 
@@ -195,27 +200,27 @@ func defProject(logo, zh, en, desc, creator string, id bson.ObjectId, level int6
 		Platforms: []*platform{
 			{
 				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_ANDROID,
+				Platform: fs_constants.PLATFORM_ANDROID,
 				Enabled:  true,
 			},
 			{
 				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_IOS,
+				Platform: fs_constants.PLATFORM_IOS,
 				Enabled:  true,
 			},
 			{
 				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_WINDOWD,
+				Platform: fs_constants.PLATFORM_WINDOWD,
 				Enabled:  true,
 			},
 			{
 				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_MAC_OS,
+				Platform: fs_constants.PLATFORM_MAC_OS,
 				Enabled:  true,
 			},
 			{
 				ClientId: node.Generate().Base64(),
-				Platform: names.F_PLATFORM_WEB,
+				Platform: fs_constants.PLATFORM_WEB,
 				Enabled:  true,
 			},
 		},

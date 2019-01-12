@@ -2,17 +2,19 @@ package function
 
 import (
 	"context"
-	"fmt"
 	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/model"
 	"zskparker.com/foundation/pkg/transport"
+	"zskparker.com/foundation/pkg/utils"
 )
 
 type Service interface {
@@ -27,14 +29,14 @@ type functionService struct {
 }
 
 func upsert(c *mgo.Collection, session string, f *fs_pkg_model.APIFunction) {
-	c.Upsert(bson.M{"api": f.Function.Api}, &FunctionModel{
-		Func:        f.Function.Func,
-		ZH:          f.Function.Zh,
-		Level:       f.Function.Level,
-		Fcv:         f.Function.Fcv,
-		EN:          f.Function.En,
-		API:         f.Prefix + f.Infix,
-		FromSession: session,
+	c.Upsert(bson.M{"tag": f.Function.Tag}, &Model{
+		Func:     f.Function.Func,
+		ZH:       f.Function.Zh,
+		Level:    f.Function.Level,
+		Fcv:      f.Function.Fcv,
+		EN:       f.Function.En,
+		CreateAt: time.Now().UnixNano(),
+		Tag:      utils.Md5(f.Prefix + f.Infix + session),
 	})
 }
 
@@ -55,12 +57,10 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 	//safety verification functions
 	upsert(c, in.Session, fs_functions.GetRegisterFunc())
 	upsert(c, in.Session, fs_functions.GetLoginFunc())
-	upsert(c, in.Session, fs_functions.GetAdminRegisterFunc())
 
 	//register functions
 	upsert(c, in.Session, fs_functions.GetFromAPFunc())
 	upsert(c, in.Session, fs_functions.GetFromOAuthFunc())
-	upsert(c, in.Session, fs_functions.GetAdminFunc())
 
 	//safety update functions
 	upsert(c, in.Session, fs_functions.GetUpdateEmailFunc())
@@ -130,14 +130,14 @@ func (svc *functionService) Add(ctx context.Context, in *fs_base_function.Upsert
 		}, nil
 	}
 	uid, _ := uuid.NewV1()
-	f = &FunctionModel{
-		Func:        uuid.NewV5(uid, in.Api).String()[24:],
-		ZH:          in.Zh,
-		API:         in.Api,
-		Level:       in.Level,
-		EN:          in.En,
-		Fcv:         in.Fcv,
-		FromSession: meta.Session,
+
+	f = &Model{
+		Func:  uuid.NewV5(uid, in.Api).String()[24:],
+		ZH:    in.Zh,
+		Tag:   utils.Md5(in.Api + meta.Session),
+		Level: in.Level,
+		EN:    in.En,
+		Fcv:   in.Fcv,
 	}
 	err = repo.Add(f)
 	if err != nil {
@@ -170,17 +170,19 @@ func (svc *functionService) Update(ctx context.Context, in *fs_base_function.Ups
 func (svc *functionService) Get(ctx context.Context, in *fs_base_function.GetRequest) (*fs_base_function.GetResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
-	var function *FunctionModel
+	var function *Model
 	var err error
 	if len(in.Func) != 0 {
 		function, err = repo.FindByFunc(in.Func)
 	} else {
-		function, err = repo.Get(in.Api)
+		function, err = repo.Get(in.Tag)
 	}
 	if err == mgo.ErrNotFound && len(in.Func) == 0 { //不是通过func查找的返回未找到
-		return &fs_base_function.GetResponse{State: errno.ErrFunctionInvalid}, nil
+		return &fs_base_function.GetResponse{State: errno.Ok, Func: &fs_base_function.Func{
+			Fcv:   fs_constants.FCV_AUTH,
+			Level: fs_constants.LEVEL_USER,
+		}}, nil
 	}
-	fmt.Println("err", err)
 	if err != nil {
 		return &fs_base_function.GetResponse{State: errno.ErrSystem}, nil
 	}
@@ -188,7 +190,7 @@ func (svc *functionService) Get(ctx context.Context, in *fs_base_function.GetReq
 		State: errno.Ok,
 		Func: &fs_base_function.Func{
 			Zh:   function.ZH,
-			Api:  function.API,
+			Tag:  function.Tag,
 			En:   function.EN,
 			Fcv:  function.Fcv,
 			Func: function.Func,

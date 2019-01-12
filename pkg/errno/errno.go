@@ -44,9 +44,10 @@ var (
 	ErrAlreadyBind          = &fs_base.State{Ok: false, Message: "err already bind", Code: 10028}
 	ErrEmail                = &fs_base.State{Ok: false, Message: "err email", Code: 10029}
 	ErrUserAlreadyExists    = &fs_base.State{Ok: false, Message: "err user already exists", Code: 10030}
-	ErrProjectPermission    = &fs_base.State{Ok: false, Message: "err project permission", Code: 10031}          //当前用户没有权限访问当前项目
-	ErrProject              = &fs_base.State{Ok: false, Message: "err project", Code: 10032}                     //当前用户没有权限访问当前项目
-	ErrInvalidOrAccount     = &fs_base.State{Ok: false, Message: "err invalid account or password", Code: 10033} //当前用户没有权限访问当前项目
-	ErrRequestPermission    = &fs_base.State{Ok: false, Message: "err request permission", Code: 10034}          //当前用户没有权限访问当前项目
-	ErrProjectAlreadyExists = &fs_base.State{Ok: false, Message: "err project exists", Code: 10035}              //当前用户没有权限访问当前项目
+	ErrProjectPermission    = &fs_base.State{Ok: false, Message: "err project permission", Code: 10031} //当前用户没有权限访问当前项目
+	ErrProject              = &fs_base.State{Ok: false, Message: "err project", Code: 10032}
+	ErrInvalidOrAccount     = &fs_base.State{Ok: false, Message: "err invalid account or password", Code: 10033}
+	ErrRequestPermission    = &fs_base.State{Ok: false, Message: "err request permission", Code: 10034}
+	ErrProjectAlreadyExists = &fs_base.State{Ok: false, Message: "err project exists", Code: 10035}
+	ErrClient               = &fs_base.State{Ok: false, Message: "err client", Code: 10036}
 )

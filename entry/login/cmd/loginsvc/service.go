@@ -15,8 +15,8 @@ import (
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
 	"zskparker.com/foundation/entry/login"
 	"zskparker.com/foundation/entry/login/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -36,10 +36,10 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_ENTRY_LOGIN, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.SVC_ENTRY_LOGIN, osenv.GetMicroPortString())
 	defer reporter.Close()
 
-	rs, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_ENTRY_LOGIN)
+	rs, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), fs_constants.SVC_ENTRY_LOGIN)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +56,7 @@ func StartService() {
 	gs := grpc.NewServer()
 	fs_entry_login.RegisterLoginServer(gs, svc)
 
-	registration.NewRegistrar(gs, names.F_SVC_ENTRY_LOGIN, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, fs_constants.SVC_ENTRY_LOGIN, osenv.GetConsulAddr())
 
 	errc := make(chan error)
 

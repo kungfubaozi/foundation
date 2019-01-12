@@ -18,7 +18,7 @@ import (
 	"time"
 	"zskparker.com/foundation/base/message"
 	"zskparker.com/foundation/base/pb"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type Channel interface {
@@ -126,7 +126,7 @@ func NewClient(consulAddr string, tracer *zipkin.Tracer) message.Service {
 		tags        []string
 		passingOnly = true
 		endpoints   = message.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_MESSAGE, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_MESSAGE, tags, passingOnly)
 	)
 	{
 		factory := Factory(message.MakeSendOfflineEndpoint, otTracer, tracer, logger)

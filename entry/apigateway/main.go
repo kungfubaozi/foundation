@@ -29,17 +29,18 @@ func main() {
 	zipkinTracer, _ := stdzipkin.NewTracer(nil, stdzipkin.WithNoopTracer(true))
 	r := mux.NewRouter()
 
-	{
-		//register
-		endpoints := registercli.NewEndpoints(zipkinTracer)
-		r.PathPrefix(fs_functions.GetAdminFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetAdminFunc().Prefix,
-			register.MakeHTTPHandler(endpoints, tracer, zipkinTracer, logger)))
-	}
+	//osenv.GetInitializeProjectSession()
 
 	{
 		endpoints := logincli.NewEndpoints(zipkinTracer)
 		r.PathPrefix(fs_functions.GetEntryByAPFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetEntryByAPFunc().Prefix,
 			login.MakeHTTPHandler(endpoints, tracer, zipkinTracer, logger)))
+	}
+
+	{
+		endpoints := registercli.NewEndpoints(zipkinTracer)
+		r.PathPrefix(fs_functions.GetFromAPFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetFromAPFunc().Prefix,
+			register.MakeHTTPHandler(endpoints, tracer, zipkinTracer, logger)))
 	}
 
 	errc := make(chan error)

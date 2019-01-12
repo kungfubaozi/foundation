@@ -40,12 +40,12 @@ func (repo *authenticateRepository) Add(auth *fs_base_authenticate.Authorize) er
 	if err != nil {
 		return err
 	}
-	_, err = repo.conn.Do("hmset", "auth."+auth.UserId, fmt.Sprintf("%s.%s", auth.ClientId, auth.Relation), b)
+	_, err = repo.conn.Do("hset", "auth."+auth.UserId, fmt.Sprintf("%s.%s", auth.ClientId, auth.Relation), b)
 	return err
 }
 
 func (repo *authenticateRepository) Get(userId, clientId, relation string) (*fs_base_authenticate.Authorize, error) {
-	v, err := redis.Bytes(repo.conn.Do("hmget", "auth."+userId, fmt.Sprintf("%s.%s", clientId, relation)))
+	v, err := redis.Bytes(repo.conn.Do("hget", "auth."+userId, fmt.Sprintf("%s.%s", clientId, relation)))
 	if err != nil {
 		return nil, err
 	}

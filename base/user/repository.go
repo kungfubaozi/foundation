@@ -3,6 +3,7 @@ package user
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 )
 
@@ -35,7 +36,7 @@ func (repo *userRepository) Close() {
 }
 
 func (repo *userRepository) FindAdmin() int {
-	i, err := repo.collection().Find(bson.M{"level": 5}).Count()
+	i, err := repo.collection().Find(bson.M{"level": fs_constants.LEVEL_ADMIN}).Count()
 	if err != nil && err == mgo.ErrNotFound {
 		i = 0
 		err = nil
@@ -113,6 +114,7 @@ func (repo *userRepository) collection() *mgo.Collection {
 type User struct {
 	UserId        bson.ObjectId `bson:"_id"`
 	Username      string        `bson:"username"`
+	RealName      string        `bson:"real_name"`
 	Password      string        `bson:"password"`
 	Enterprise    string        `bson:"enterprise"`
 	CreateAt      int64         `bson:"create_at"`

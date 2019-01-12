@@ -1,13 +1,30 @@
 package osenv
 
 import (
+	"errors"
 	"os"
 	"strconv"
 )
 
+func GetInitializeProjectSession() string {
+	session := os.Getenv("INIT_SESSION")
+	if len(session) < 32 {
+		panic(errors.New(`
+
+	please set def project session.
+
+	[execute foundation initialize to get the def project session.]
+
+	 -INIT_SESSION			def project session.
+
+`))
+	}
+	return session
+}
+
 func GetTokenKey() string {
 	token := os.Getenv("TOKEN_KEY")
-	if len(token) <= 16 {
+	if len(token) < 32 {
 		return "e48df34a-0f32-11e9-ab14-d663bd873d93"
 	}
 	return token

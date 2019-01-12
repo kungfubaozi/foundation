@@ -11,8 +11,8 @@ import (
 	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/strategy/cmd/strategycli"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -31,7 +31,7 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_PROJECT, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.SVC_PROJECT, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	session, err := db.CreateSession(osenv.GetMongoDBAddr())
@@ -40,7 +40,7 @@ func StartService() {
 	}
 	defer session.Close()
 
-	rs, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), names.F_SVC_PROJECT)
+	rs, err := reportercli.NewMQConnect(osenv.GetReporterAMQPAddr(), fs_constants.SVC_PROJECT)
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +59,7 @@ func StartService() {
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_PROJECT, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, fs_constants.SVC_PROJECT, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())

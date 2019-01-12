@@ -9,6 +9,7 @@ import (
 	"zskparker.com/foundation/base/user"
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/entry/register/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/match"
 	"zskparker.com/foundation/pkg/sync"
@@ -68,7 +69,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 	}
 
 	resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
-		Level:         2,
+		Level:         fs_constants.LEVEL_USER,
 		Password:      in.Password,
 		Phone:         in.Phone,
 		Email:         in.Email,

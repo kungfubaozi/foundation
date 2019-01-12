@@ -2,7 +2,6 @@ package fs_metadata_transport
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-kit/kit/transport/grpc"
 	"github.com/go-kit/kit/transport/http"
 	"google.golang.org/grpc/metadata"
@@ -11,7 +10,9 @@ import (
 	"strings"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/project/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/osenv"
 )
 
 var (
@@ -49,7 +50,7 @@ func GRPCToContext() grpc.ServerRequestFunc {
 		meta.UserId = header[6]
 		i, e := strconv.ParseInt(header[7], 10, 64)
 		if e != nil || i == 0 {
-			i = 1
+			i = fs_constants.LEVEL_TOURIST
 		}
 		meta.Level = i
 		meta.Session = header[8]
@@ -59,6 +60,8 @@ func GRPCToContext() grpc.ServerRequestFunc {
 }
 
 func HTTPToContext() http.RequestFunc {
+	//检查session
+	session := osenv.GetInitializeProjectSession()
 	return func(ctx context.Context, request *stdhttp.Request) context.Context {
 		meta := &fs_base.Metadata{}
 		meta.Device = request.Header.Get("X-User-Device")
@@ -71,6 +74,12 @@ func HTTPToContext() http.RequestFunc {
 			meta.Api = forward
 		}
 		meta.Session = request.Header.Get("X-Server-Session")
+
+		//使用默认的session
+		if len(meta.Session) < 32 {
+			meta.Session = session
+		}
+
 		meta.Token = request.Header.Get("Authorization")
 		return context.WithValue(ctx, MetadataTransportKey, meta)
 	}
@@ -105,10 +114,9 @@ func ContextToGRPC() grpc.ClientRequestFunc {
 }
 
 func GetResponseState(err error, resp interface{}) *fs_base.State {
-	fmt.Println("response state")
 	if err == errno.ERROR {
 		if resp == nil {
-			return errno.ErrSystem
+			return errno.ErrRequest
 		}
 		return resp.(*fs_base.State)
 	}

@@ -9,8 +9,8 @@ import (
 	"os"
 	"zskparker.com/foundation/base/state"
 	"zskparker.com/foundation/base/state/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -30,7 +30,7 @@ func StartService() {
 		otTracer = stdopentracing.GlobalTracer()
 	}
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_STATE, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.SVC_STATE, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	pool := db.CreatePool(osenv.GetRedisAddr())
@@ -51,7 +51,7 @@ func StartService() {
 
 	errc := make(chan error)
 
-	registration.NewRegistrar(gs, names.F_SVC_STATE, osenv.GetConsulAddr())
+	registration.NewRegistrar(gs, fs_constants.SVC_STATE, osenv.GetConsulAddr())
 
 	go func() {
 		grpcListener, err := net.Listen("tcp", osenv.GetMicroPortString())

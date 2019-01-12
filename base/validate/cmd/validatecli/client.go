@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/validate"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
@@ -51,7 +51,7 @@ func NewClient(tracer *zipkin.Tracer) validate.Service {
 		tags        []string
 		passingOnly = true
 		endpoints   = validate.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_VALIDATE, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_VALIDATE, tags, passingOnly)
 	)
 
 	{

@@ -16,7 +16,7 @@ import (
 	"time"
 	"zskparker.com/foundation/base/reporter"
 	"zskparker.com/foundation/base/reporter/pb"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type Channel interface {
@@ -95,7 +95,7 @@ func NewClient(consulAddr string) reporter.Service {
 		tags        []string
 		passingOnly = true
 		endpoints   = reporter.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, l, names.F_SVC_REPORTER, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, l, fs_constants.SVC_REPORTER, tags, passingOnly)
 	)
 	{
 		factory := Factory(reporter.MakeWriteEndpoint)

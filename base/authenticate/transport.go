@@ -21,6 +21,7 @@ import (
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/transport"
 )
 
@@ -73,16 +74,16 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	}
 
 	m := http.NewServeMux()
-	m.Handle("/refresh", httptransport.NewServer(
+	m.Handle(fs_functions.GetRefreshFunc().Infix, httptransport.NewServer(
 		endpoints.RefreshEndpoint,
-		decodeHTPPUpdate,
+		decodeHTTPUpdate,
 		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Sum", logger)))...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Refresh", logger)))...,
 	))
 
 	return m
 }
-func decodeHTPPUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeHTTPUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	var req *fs_base_authenticate.RefreshRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err

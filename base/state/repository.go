@@ -52,7 +52,7 @@ func (repo *stateRepository) Upset(tag string, status int64) error {
 }
 
 func (repo *stateRepository) Get(tag string) (int64, error) {
-	i, err := redis.Int64(repo.conn.Do("hmget", "state_manage", "a2."+tag))
+	i, err := redis.Int64(repo.conn.Do("hget", "state_manage", "a2."+tag))
 	if i == 0 {
 		status := &store{}
 		err = repo.collection().Find(bson.M{"tag": tag}).One(status)
@@ -87,7 +87,7 @@ func (repo *stateRepository) addToDataStore(tag string, status int64) error {
 }
 
 func (repo *stateRepository) addCacheStore(tag string, status int64) error {
-	_, err := repo.conn.Do("hmset", "state_manage", "a2."+tag, status)
+	_, err := repo.conn.Do("hset", "state_manage", "a2."+tag, status)
 	return err
 }
 

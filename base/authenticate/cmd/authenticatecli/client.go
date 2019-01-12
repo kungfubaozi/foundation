@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/authenticate"
-	"zskparker.com/foundation/pkg/names"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
@@ -51,7 +51,7 @@ func NewEndpoints(tracer *zipkin.Tracer) authenticate.Endpoints {
 		tags        []string
 		passingOnly = true
 		endpoints   = authenticate.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, names.F_SVC_AUTHENTICATE, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_AUTHENTICATE, tags, passingOnly)
 	)
 	{
 		factory := Factory(authenticate.MakeRefreshEndpoint, otTracer, tracer, logger)

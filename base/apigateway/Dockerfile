@@ -4,6 +4,6 @@ RUN mkdir /app
 
 WORKDIR /app
 
-ADD cmd /app/user
+ADD apigateway /app/user
 
 CMD ["./user"]

@@ -17,9 +17,8 @@ message InitRequest {
 }
 
 message GetRequest {
-    string api = 1;
+    string tag = 1;
     string func = 2;
-    string projectId = 3;
 }
 
 message GetResponse {
@@ -31,7 +30,7 @@ message Func {
     string func = 1;
     string zh = 2;
     string en = 3;
-    string api = 4;
+    string tag = 4;
     int64 fcv = 5; //验证模式
     int64 level = 6;
     int64 type = 7;

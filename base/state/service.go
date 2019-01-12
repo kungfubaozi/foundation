@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"gopkg.in/mgo.v2"
 	"zskparker.com/foundation/base/pb"
@@ -39,6 +40,7 @@ func (svc *stateService) Get(ctx context.Context, in *fs_base_state.GetRequest) 
 	defer repo.Close()
 	i, e := repo.Get(in.Key)
 	if e != nil {
+		fmt.Println("err", e)
 		return &fs_base_state.GetResponse{State: errno.ErrInvalid}, nil
 	}
 	return &fs_base_state.GetResponse{

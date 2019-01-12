@@ -2,7 +2,6 @@ package functionmw
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/openzipkin/zipkin-go"
@@ -23,10 +22,11 @@ import (
 	"zskparker.com/foundation/base/validate"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
 	"zskparker.com/foundation/base/validate/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/ref"
 	"zskparker.com/foundation/pkg/transport"
+	"zskparker.com/foundation/pkg/utils"
 	"zskparker.com/foundation/safety/blacklist"
 )
 
@@ -74,8 +74,13 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 			var p *fs_base_project.ProjectInfo
 			var wg sync.WaitGroup
 
+			//必须传入对应的项目session
+			if len(meta.Session) < 32 {
+				return errno.ErrRequest, errno.ERROR
+			}
+
 			errc := func(s *fs_base.State) {
-				if ps.Ok {
+				if !ps.Ok {
 					ps = s
 				}
 				wg.Done()
@@ -106,7 +111,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 			wg.Add(1)
 			go func() {
 				fr, _ := mwcli.functioncli.Get(context.Background(), &fs_base_function.GetRequest{
-					Api:  meta.Api,
+					Tag:  utils.Md5(meta.Api + meta.Session),
 					Func: function,
 				})
 				if fr == nil {
@@ -123,59 +128,25 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 				wg.Done()
 			}()
 
-			//wg.Add(1)
-			//go func() {
-			//	//blacklist
-			//	var userId string
-			//	if len(meta.Token) > 0 {
-			//		s, err := authenticate.DecodeToken(meta.Token)
-			//		if err != nil {
-			//			errc(errno.ErrToken)
-			//			return
-			//		}
-			//		userId = s.Token.UserId
-			//	}
-			//
-			//	br, _ := mwcli.blacklistcli.Check(context.Background(), &fs_safety_blacklist.CheckRequest{
-			//		Ip:     meta.Ip,
-			//		UserId: userId,
-			//		Device: meta.Device,
-			//	})
-			//
-			//	if br == nil {
-			//		errc(errno.ErrSystem)
-			//		return
-			//	}
-			//	if !br.State.Ok {
-			//		errc(br.State)
-			//		return
-			//	}
-			//	wg.Done()
-			//}()
-
 			wg.Wait()
 
 			if !ps.Ok {
-				if ps == errno.ErrFunctionInvalid { //功能未找到
-					logger.Log("middleware", "function", "invalid", meta.Api)
-					cf = &fs_base_function.Func{
-						Fcv:   names.F_FCV_AUTH | names.F_FCV_SESSION, //没在这里注册功能基本都是外部服务访问的，需要加入session判断
-						Level: 1,
-					}
-				} else {
-					fmt.Println("e1-1")
-					return ps, errno.ERROR
-				}
+				logger.Log("middleware", "state", "!ok", ps)
+				return ps, errno.ERROR
 			}
 
 			if strategy == nil || p == nil {
 				logger.Log("middleware", "check", "strategy|project", "invalid")
-				return errno.ErrSystem, errno.ERROR
+				return errno.ErrClient, errno.ERROR
 			}
 
 			//项目权限
 			if !ignoreProjectLevel && meta.Level >= p.Level {
 				return errno.ErrProjectPermission, errno.ERROR
+			}
+
+			if meta.Session != p.Session {
+				return errno.ErrRequestPermission, errno.ERROR
 			}
 
 			metaCheck := func(face bool) bool {
@@ -194,13 +165,17 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 			}
 
 			validateCheck := func() {
-				resp, _ := mwcli.validatecli.Verification(context.Background(), &fs_base_validate.VerificationRequest{
+				resp, err := mwcli.validatecli.Verification(context.Background(), &fs_base_validate.VerificationRequest{
 					VerId:          mr.Id,
 					Code:           mr.Validate,
 					Func:           cf.Func,
 					OnVerification: strategy.Events.OnVerification,
 					Metadata:       meta,
 				})
+				if err != nil {
+					ps = errno.ErrSystem
+					return
+				}
 				if resp == nil {
 					ps = errno.ErrSystem
 					return
@@ -210,82 +185,87 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 			}
 
 			authCheck := func() {
-				if ctx.Value("token") == nil {
-					ps = errno.ErrRequest
+				if len(meta.Token) <= 32 {
+					ps = errno.ErrToken
 					return
 				}
-				resp, _ := mwcli.authenticatecli.Check(context.Background(), &fs_base_authenticate.CheckRequest{
+				resp, err := mwcli.authenticatecli.Check(context.Background(), &fs_base_authenticate.CheckRequest{
 					Metadata: meta,
 				})
+				if err != nil {
+					ps = errno.ErrSystem
+					return
+				}
 				ps = resp.State
 				meta.UserId = resp.UserId
 				meta.Level = resp.Level
 			}
 
 			faceCheck := func() {
-				resp, _ := mwcli.facecli.Search(context.Background(), &fs_base_face.SearchRequest{
+				resp, err := mwcli.facecli.Search(context.Background(), &fs_base_face.SearchRequest{
 					Base64Face: mr.Face,
 				})
+				if err != nil {
+					ps = errno.ErrSystem
+					return
+				}
 				ps = resp.State
 				meta.UserId = resp.UserId
 				meta.Level = resp.Level
 			}
 
 			//验证
-			if cf.Fcv != 0 && cf.Fcv != names.F_FCV_NONE {
-				fmt.Println("e2-0")
-				if cf.Fcv == names.F_FCV_AUTH {
+			if cf.Fcv != 0 && cf.Fcv != fs_constants.FCV_NONE {
+				logger.Log("middleware", "fcv", "step", "check")
+				if cf.Fcv == fs_constants.FCV_AUTH {
+					logger.Log("middleware", "fcv", "step", "1-0-1")
 					authCheck()
-				} else if cf.Fcv == names.F_FCV_VALIDATE_CODE {
+				} else if cf.Fcv == fs_constants.FCV_VALIDATE_CODE {
+					logger.Log("middleware", "fcv", "step", "2-0-1")
 					if metaCheck(false) {
+						logger.Log("middleware", "fcv", "step", "2-1-1")
 						validateCheck()
 					}
-				} else if cf.Fcv == names.F_FCV_FACE {
+				} else if cf.Fcv == fs_constants.FCV_FACE {
+					logger.Log("middleware", "fcv", "step", "3-0-1")
 					if metaCheck(false) {
+						logger.Log("middleware", "fcv", "step", "3-1-1")
 						faceCheck()
 					}
-				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_FACE {
+				} else if cf.Fcv == fs_constants.FCV_AUTH|fs_constants.FCV_FACE {
+					logger.Log("middleware", "fcv", "step", "4-0-1")
 					if metaCheck(true) {
+						logger.Log("middleware", "fcv", "step", "4-1-1")
 						authCheck()
 						if !ps.Ok {
-							return errno.ErrResponse(ps)
+							logger.Log("middleware", "fcv", "step", "4-1-2", "err", ps)
+							return ps, errno.ERROR
 						}
+						logger.Log("middleware", "fcv", "step", "4-2-1")
 						faceCheck()
 					}
-				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_VALIDATE_CODE {
+				} else if cf.Fcv == fs_constants.FCV_AUTH|fs_constants.FCV_VALIDATE_CODE {
+					logger.Log("middleware", "fcv", "step", "5-0-1")
 					if metaCheck(false) {
+						logger.Log("middleware", "fcv", "step", "5-1-1")
 						authCheck()
 						if !ps.Ok {
-							return errno.ErrResponse(ps)
+							logger.Log("middleware", "fcv", "step", "5-1-2", "err", ps)
+							return ps, errno.ERROR
 						}
-						validateCheck()
-					}
-				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_SESSION {
-					authCheck()
-					if !ps.Ok {
-						return errno.ErrResponse(ps)
-					}
-					if meta.Session != p.Session {
-						return errno.ErrResponse(errno.ErrRequestPermission)
-					}
-				} else if cf.Fcv == names.F_FCV_AUTH|names.F_FCV_SESSION|names.F_FCV_VALIDATE_CODE {
-					if metaCheck(false) {
-						authCheck()
-						if !ps.Ok {
-							return errno.ErrResponse(ps)
-						}
-						if meta.Session != p.Session {
-							return errno.ErrResponse(errno.ErrRequestPermission)
-						}
+						logger.Log("middleware", "fcv", "step", "5-2-1")
 						validateCheck()
 					}
 				} else {
-					fmt.Println("e2")
-					return errno.ErrResponse(errno.ErrFunction)
+					logger.Log("middleware", "fcv", "step", "failed")
+					return errno.ErrFunction, errno.ERROR
+				}
+				if ps == nil {
+					return nil, errno.ERROR
 				}
 				if !ps.Ok {
-					fmt.Println("e3")
-					return errno.ErrResponse(ps)
+					logger.Log("middleware", "fcv", "step", "!ok", ps)
+					return ps, errno.ERROR
 				}
 			}
 
@@ -296,7 +276,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 
 			//check level
 			if meta.Level >= cf.Level {
-				fmt.Println("next")
+				logger.Log("middleware", "fcv", "step", "next")
 				return next(ctx, request)
 			}
 

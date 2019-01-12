@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -24,6 +25,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		authEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(authEndpoint)
 		authEndpoint = zipkin.TraceEndpoint(trace, "Auth")(authEndpoint)
 
+		authEndpoint = functionmw.WithMeta(logger, client)(authEndpoint)
 	}
 
 	return Endpoints{
@@ -35,6 +37,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 func (g Endpoints) Auth(ctx context.Context, in *fs_base_interceptor.AuthRequest) (*fs_base_interceptor.AuthResponse, error) {
 	resp, err := g.AuthEndpoint(ctx, in)
 	if err != nil {
+		fmt.Println("auth")
 		return nil, err
 	}
 	return resp.(*fs_base_interceptor.AuthResponse), nil

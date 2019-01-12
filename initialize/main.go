@@ -17,9 +17,9 @@ import (
 	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/base/user/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/match"
-	"zskparker.com/foundation/pkg/names"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/serv"
 )
@@ -83,7 +83,7 @@ func main() {
 	os.Setenv("CONSUL_ADDR", consul)
 	time.Sleep(200)
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), names.F_SVC_PROJECT, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.SVC_PROJECT, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	usersrv := usercli.NewClient(zipkinTracer)
@@ -91,9 +91,10 @@ func main() {
 	projectsrv := projectcli.NewClient(zipkinTracer)
 
 	userId := bson.NewObjectId().Hex()
+	userAlreadyRegister := false
 
 	pr, err := projectsrv.Init(context.Background(), &fs_base_project.InitRequest{
-		Desc:   "root",
+		Desc:   "def project",
 		En:     "foundation",
 		Zh:     "foundation",
 		UserId: userId,
@@ -104,9 +105,16 @@ func main() {
 	}
 	if !pr.State.Ok {
 		fmt.Println("add project err", pr.State.Message)
-		if pr.State != errno.ErrProjectAlreadyExists {
+		if pr.State.Code != errno.ErrProjectAlreadyExists.Code {
 			return
 		}
+	} else {
+		fmt.Println("def project session [set it to the API Service environment variable]:", pr.Session)
+		fmt.Println("android client id:", pr.AndroidId)
+		fmt.Println("iOS client id:", pr.IosId)
+		fmt.Println("macOS client id:", pr.MaxOSId)
+		fmt.Println("web client id:", pr.WebId)
+		fmt.Println("windows client id:", pr.WindowsId)
 	}
 
 	time.Sleep(100)
@@ -114,8 +122,10 @@ func main() {
 	ur, err := usersrv.Add(context.Background(), &fs_base_user.AddRequest{
 		UserId:        userId,
 		Password:      password,
+		Username:      username,
+		RealName:      name,
 		Enterprise:    enterprise,
-		Level:         5,
+		Level:         fs_constants.LEVEL_ADMIN,
 		Phone:         phone,
 		Email:         email,
 		FromProjectId: pr.ProjectId,
@@ -125,8 +135,9 @@ func main() {
 		return
 	}
 	if !ur.State.Ok {
+		userAlreadyRegister = true
 		fmt.Println("add user err", ur.State.Message)
-		if pr.State != errno.ErrInvalid {
+		if pr.State != errno.ErrUserAlreadyExists {
 			return
 		}
 	}
@@ -149,25 +160,27 @@ func main() {
 		return
 	}
 
-	b, err := ioutil.ReadFile("system_admin.jpg")
-	if err != nil {
-		panic(err)
-	}
+	if !userAlreadyRegister {
+		b, err := ioutil.ReadFile("system_admin.jpg")
+		if err != nil {
+			panic(err)
+		}
 
-	str := base64.StdEncoding.EncodeToString(b)
+		str := base64.StdEncoding.EncodeToString(b)
 
-	fr, err := facesrv.Upsert(context.Background(), &fs_base_face.UpsertRequest{
-		UserId:     ur.Content,
-		Base64Face: str,
-	})
+		fr, err := facesrv.Upsert(context.Background(), &fs_base_face.UpsertRequest{
+			UserId:     ur.Content,
+			Base64Face: str,
+		})
 
-	if err != nil {
-		fmt.Println("add face err", err)
-		return
-	}
-	if !fr.State.Ok {
-		fmt.Println("add face err", fr.State.Message)
-		return
+		if err != nil {
+			fmt.Println("add face err", err)
+			return
+		}
+		if !fr.State.Ok {
+			fmt.Println("add face err", fr.State.Message)
+			return
+		}
 	}
 
 	time.Sleep(100)

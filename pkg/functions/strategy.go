@@ -2,8 +2,8 @@ package fs_functions
 
 import (
 	"zskparker.com/foundation/base/function/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/model"
-	"zskparker.com/foundation/pkg/names"
 )
 
 func GetUpdateProjectStrategyFunc() *fs_pkg_model.APIFunction {
@@ -12,13 +12,12 @@ func GetUpdateProjectStrategyFunc() *fs_pkg_model.APIFunction {
 		Infix:  "/update",
 	}
 	f.Function = &fs_base_function.Func{
-		Api:   f.Prefix + f.Infix,
 		Zh:    "更新策略",
 		En:    "UpdateStrategy",
 		Func:  "7551e6a14638",
-		Level: 5,
-		Fcv:   names.F_FCV_AUTH | names.F_FCV_FACE,
-		Type:  names.F_FUNC_TYPE_HIDE,
+		Level: fs_constants.LEVEL_ADMIN,
+		Fcv:   fs_constants.FCV_AUTH | fs_constants.FCV_FACE,
+		Type:  fs_constants.TYPE_HIDE,
 	}
 	return f
 }
