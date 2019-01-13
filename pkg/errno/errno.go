@@ -54,4 +54,5 @@ var (
 	ErrInviteUsername       = &fs_base.State{Ok: false, Message: "err invite user username", Code: 10038}
 	ErrInviteExists         = &fs_base.State{Ok: false, Message: "err invite user already exits", Code: 10039}
 	ErrInviteLevel          = &fs_base.State{Ok: false, Message: "err invite user level", Code: 10040}
+	ErrInvalidInviteKey     = &fs_base.State{Ok: false, Message: "err invalid invite code", Code: 10041}
 )

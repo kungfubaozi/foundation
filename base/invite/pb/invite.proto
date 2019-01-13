@@ -12,6 +12,7 @@ service Invite {
     //获取
     rpc Get (GetRequest) returns (GetResponse);
 
+    //移动到用户组里
     rpc MoveToUser (MoveToUserRequest) returns (fs.base.Response);
 
 }
@@ -23,15 +24,12 @@ message MoveToUserRequest {
 
 message GetResponse {
     fs.base.State state = 1;
-    string account = 2;
-    string enterprise = 3;
-    string username = 4;
-    string realName = 5;
-    string inviteId = 6;
+    string inviteId = 2;
 }
 
 message GetRequest {
     string code = 1;
+    string account = 2;
 }
 
 message AddRequest {
@@ -42,5 +40,5 @@ message AddRequest {
 
     fs.base.Meta meta = 5;
 
-    int64 level = 6;
+    int64 level = 6; //必填
 }

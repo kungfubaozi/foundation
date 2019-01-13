@@ -122,7 +122,39 @@ func (svc *inviteService) MoveToUser(ctx context.Context, in *fs_base_invite.Mov
 }
 
 func (svc *inviteService) Get(ctx context.Context, in *fs_base_invite.GetRequest) (*fs_base_invite.GetResponse, error) {
-	panic("implement me")
+	repo := svc.GetRepo()
+	defer repo.Close()
+
+	resp := func(s *fs_base.State) (*fs_base_invite.GetResponse, error) {
+		return &fs_base_invite.GetResponse{State: s}, nil
+	}
+
+	var m *model
+	var err error
+
+	if fs_regx_match.Email(in.Account) {
+		m, err = repo.FindInvite("phone", in.Account)
+	} else if fs_regx_match.Phone(in.Account) {
+		m, err = repo.FindInvite("email", in.Account)
+	} else {
+		return resp(errno.ErrInviteAccount)
+	}
+
+	if err != nil {
+		return resp(errno.ErrSystem)
+	}
+
+	if m != nil && len(m.InviteId) > 10 {
+		if bcrypt.CompareHashAndPassword([]byte(m.Code), []byte(in.Code)) != nil {
+			return resp(errno.ErrInvalidInviteKey)
+		}
+		return &fs_base_invite.GetResponse{
+			State:    errno.Ok,
+			InviteId: m.InviteId.Hex(),
+		}, nil
+	}
+
+	return resp(errno.ErrInvalid)
 }
 
 func NewSerivce(session *mgo.Session, messagecli messagecli.Channel, reportercli reportercli.Channel, usercli user.Service) Service {

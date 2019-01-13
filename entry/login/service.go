@@ -8,6 +8,7 @@ import (
 	"zskparker.com/foundation/base/face"
 	"zskparker.com/foundation/base/face/pb"
 	"zskparker.com/foundation/base/invite"
+	"zskparker.com/foundation/base/invite/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user"
@@ -89,7 +90,24 @@ func (svc *loginService) getAuthorize(meta *fs_base.Metadata, userId, mode strin
 //3 成功后移动到用户表里
 //4 成功
 func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.EntryByInviteRequest) (*fs_entry_login.EntryResponse, error) {
-	panic("implement me")
+	resp := func(s *fs_base.State) (*fs_entry_login.EntryResponse, error) {
+		return &fs_entry_login.EntryResponse{State: s}, nil
+	}
+
+	if len(in.Code) != 6 {
+		return resp(errno.ErrRequest)
+	}
+
+	ir, err := svc.invitecli.Get(context.Background(), &fs_base_invite.GetRequest{
+		Code: in.Code,
+	})
+	if err != nil {
+		return resp(errno.ErrSystem)
+	}
+	if !ir.State.Ok {
+		return resp(ir.State)
+	}
+
 }
 
 func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.EntryByFaceRequest) (*fs_entry_login.EntryResponse, error) {
