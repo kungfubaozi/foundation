@@ -6,6 +6,10 @@ import (
 	"strconv"
 )
 
+func GetInviteMessage() string {
+	return os.Getenv("INVITE_MESSAGE")
+}
+
 func GetInitializeProjectSession() string {
 	session := os.Getenv("INIT_SESSION")
 	if len(session) < 32 {

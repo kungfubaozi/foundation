@@ -20,6 +20,14 @@ service Login {
 
     //刷脸登录
     rpc EntryByFace (EntryByFaceRequest) returns (EntryResponse);
+
+    //邀请码登录
+    rpc EntryByInvite (EntryByInviteRequest) returns (EntryResponse);
+}
+
+message EntryByInviteRequest {
+    fs.base.State state = 1;
+    string code = 2;
 }
 
 message EntryResponse {

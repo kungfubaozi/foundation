@@ -40,6 +40,11 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		return errno.ErrResponse(errno.ErrRequest)
 	}
 	strategy := fs_metadata_transport.ContextToStrategy(ctx)
+
+	if strategy.Events.OnRegister.AllowNewRegistrations == 1 {
+		return errno.ErrResponse(errno.ErrRequest)
+	}
+
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 	mode := strategy.Events.OnRegister.Mode
 	var v string

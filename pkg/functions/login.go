@@ -7,6 +7,21 @@ import (
 	"zskparker.com/foundation/pkg/tags"
 )
 
+func GetEntryByInviteFunc() *fs_pkg_model.APIFunction {
+	f := &fs_pkg_model.APIFunction{
+		Prefix: "/fds/api/entry/login",
+		Infix:  "/invite",
+	}
+	f.Function = &fs_base_function.Func{
+		Zh:    "邀请码登录",
+		En:    "EntryByInvite",
+		Func:  fs_function_tags.GetEntryByInviteTag(),
+		Type:  fs_constants.TYPE_HIDE,
+		Level: fs_constants.LEVEL_TOURIST, //刷脸登录目前只对最高管理员开放
+	}
+	return f
+}
+
 func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/fds/api/entry/login",

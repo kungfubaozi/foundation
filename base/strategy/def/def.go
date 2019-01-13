@@ -29,8 +29,10 @@ func DefStrategy(projectId, creator string) *fs_base.ProjectStrategy {
 				AnIPRegistrationInterval:     5,
 				AnDeviceRegistrationInterval: 5,
 				Submitlal:                    1, //不提交经纬度信息
+				AllowNewRegistrations:        2,
 			},
 			OnLogin: &fs_base.OnLogin{
+				AllowLogin:                   2,
 				AllowOtherProjectUserToLogin: 2,
 				Mode: []int64{
 					1, 2, 3, 4, 5, 6,
@@ -113,7 +115,7 @@ func DefStrategy(projectId, creator string) *fs_base.ProjectStrategy {
 			},
 			OnSubmitReview: &fs_base.OnSubmitReview{},
 			OnInviteUser: &fs_base.OnInviteUser{
-				ExpireTime: 10 * 60 * 24 * 3, //3天
+				ExpireTime: 48, //48小时
 				Review:     2,
 			},
 		}}

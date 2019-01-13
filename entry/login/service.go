@@ -7,6 +7,7 @@ import (
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/face"
 	"zskparker.com/foundation/base/face/pb"
+	"zskparker.com/foundation/base/invite"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user"
@@ -32,6 +33,9 @@ type Service interface {
 
 	//admin
 	EntryByFace(ctx context.Context, in *fs_entry_login.EntryByFaceRequest) (*fs_entry_login.EntryResponse, error)
+
+	//使用邀请码登录
+	EntryByInvite(ctx context.Context, in *fs_entry_login.EntryByInviteRequest) (*fs_entry_login.EntryResponse, error)
 }
 
 type loginService struct {
@@ -41,6 +45,7 @@ type loginService struct {
 	validatecli     validate.Service
 	facecli         face.Service
 	redisync        *fs_redisync.Redisync
+	invitecli       invite.Service
 }
 
 func (svc *loginService) getMaxOnlineCount(platform int64, strategy *fs_base.MaxCountOfOnline) int64 {
@@ -78,13 +83,27 @@ func (svc *loginService) getAuthorize(meta *fs_base.Metadata, userId, mode strin
 	}
 }
 
+//如果有邀请
+//1 验证
+//2 输入密码
+//3 成功后移动到用户表里
+//4 成功
+func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.EntryByInviteRequest) (*fs_entry_login.EntryResponse, error) {
+	panic("implement me")
+}
+
 func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.EntryByFaceRequest) (*fs_entry_login.EntryResponse, error) {
 	resp := func(state *fs_base.State) (*fs_entry_login.EntryResponse, error) {
 		return &fs_entry_login.EntryResponse{State: state}, nil
 	}
-
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 	strategy := fs_metadata_transport.ContextToStrategy(ctx)
+
+	//不允许登录
+	if strategy.Events.OnLogin.AllowLogin == 1 {
+		return resp(errno.ErrRequest)
+	}
+
 	project := fs_metadata_transport.ContextToProject(ctx)
 	//查找人脸库
 	fr, _ := svc.facecli.Search(context.Background(), &fs_base_face.SearchRequest{
@@ -131,6 +150,12 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 	strategy := fs_metadata_transport.ContextToStrategy(ctx)
+
+	//不允许登录
+	if strategy.Events.OnLogin.AllowLogin == 1 {
+		return resp(errno.ErrRequest)
+	}
+
 	project := fs_metadata_transport.ContextToProject(ctx)
 	var u *fs_base_user.FindResponse
 	var err error

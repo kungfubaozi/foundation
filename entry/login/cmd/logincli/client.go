@@ -98,6 +98,14 @@ func NewEndpoints(tracer *zipkin.Tracer) login.Endpoints {
 		endpoints.EntryByAPEndpoint = retry
 	}
 
+	{
+		factory := Factory(login.MakeEntryByInviteEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.EntryByInviteEndpoint = retry
+	}
+
 	return endpoints
 }
 

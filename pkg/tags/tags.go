@@ -1,5 +1,12 @@
 package fs_function_tags
 
+func GetEntryByInviteTag() string {
+	return "12216ce02393"
+}
+func GetInviteTag() string {
+	return "72777f71a26d"
+}
+
 func GetAuthenticateRefreshTag() string {
 	return "b1e63a952aec"
 }

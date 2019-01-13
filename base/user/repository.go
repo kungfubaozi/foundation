@@ -123,4 +123,5 @@ type User struct {
 	Level         int64         `bson:"level"`
 	FromProjectId string        `bson:"from_project_id"`
 	FromClientId  string        `bson:"from_client_id"`
+	Type          int64         `bson:"type"`
 }

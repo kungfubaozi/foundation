@@ -124,6 +124,9 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 			if in.Strategy.Events.OnRegister.Mode > 0 {
 				p.Events.OnRegister.Mode = in.Strategy.Events.OnRegister.Mode
 			}
+			if in.Strategy.Events.OnRegister.AllowNewRegistrations > 0 {
+				p.Events.OnRegister.AllowNewRegistrations = in.Strategy.Events.OnRegister.AllowNewRegistrations
+			}
 		}
 		if in.Strategy.Events.OnLogin != nil {
 			if in.Strategy.Events.OnLogin.Mode != nil && len(in.Strategy.Events.OnLogin.Mode) > 0 {
@@ -137,6 +140,9 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 			}
 			if in.Strategy.Events.OnLogin.AllowOtherProjectUserToLogin > 0 {
 				p.Events.OnLogin.AllowOtherProjectUserToLogin = in.Strategy.Events.OnLogin.AllowOtherProjectUserToLogin
+			}
+			if in.Strategy.Events.OnLogin.AllowLogin > 0 {
+				p.Events.OnLogin.AllowLogin = in.Strategy.Events.OnLogin.AllowLogin
 			}
 			if in.Strategy.Events.OnLogin.MaxCountOfOnline != nil {
 				if in.Strategy.Events.OnLogin.MaxCountOfOnline.IOS > 0 {

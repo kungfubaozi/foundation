@@ -106,6 +106,8 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 	//interceptor
 	upsert(c, in.Session, fs_functions.GetInterceptFunc())
 
+	upsert(c, in.Session, fs_functions.GetEntryByInviteFunc())
+
 	return &fs_base.Response{State: errno.Ok}, nil
 }
 

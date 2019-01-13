@@ -1,6 +1,11 @@
 package fs_constants
 
 const (
+	USER_TYPE_FROM_INVITE   = 5 << 10 //来自邀请
+	USER_TYPE_FROM_REGISTER = 5 << 13 //来自注册
+)
+
+const (
 	LEVEL_TOURIST         = 8 << 3 //游客
 	LEVEL_USER            = 8 << 4 //用户
 	LEVEL_DEVELOPER       = 8 << 5 //开发者

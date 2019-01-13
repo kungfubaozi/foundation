@@ -50,4 +50,8 @@ var (
 	ErrRequestPermission    = &fs_base.State{Ok: false, Message: "err request permission", Code: 10034}
 	ErrProjectAlreadyExists = &fs_base.State{Ok: false, Message: "err project exists", Code: 10035}
 	ErrClient               = &fs_base.State{Ok: false, Message: "err client", Code: 10036}
+	ErrInviteAccount        = &fs_base.State{Ok: false, Message: "err invite user account", Code: 10037}
+	ErrInviteUsername       = &fs_base.State{Ok: false, Message: "err invite user username", Code: 10038}
+	ErrInviteExists         = &fs_base.State{Ok: false, Message: "err invite user already exits", Code: 10039}
+	ErrInviteLevel          = &fs_base.State{Ok: false, Message: "err invite user level", Code: 10040}
 )

@@ -40,7 +40,7 @@ message Events {
 
 //邀请用户时
 message OnInviteUser {
-    int64 expireTime = 1; //过期时间,单位（秒）
+    int64 expireTime = 1; //过期时间,单位（小时）
     int64 review = 2; //如果有审核，是否需要填写
 }
 
@@ -116,6 +116,7 @@ message OnRegister {
     int64 anIPRegistrationInterval = 4; //一个IP注册间隔
     int64 anDeviceRegistrationInterval = 5; //一个设备注册间隔
     int64 submitlal = 6; //是否提交经纬度信息
+    int64 allowNewRegistrations = 7; //是否开启注册
 }
 
 message OnRegisterOpeningTime {
@@ -134,6 +135,7 @@ message OnLogin {
     repeated MaxCountOfInvalidAccount maxCountOfInvalidAccount = 5; //当用户输入账号达到对应次数时
     int64 submitlal = 6; //是否提交经纬度信息
     MaxCountOfOnline MaxCountOfOnline = 7; //最大在线数量
+    int64 allowLogin = 8; //是否开启登录
 }
 
 //既一个用户（IP/Device）在规定的时间内输入多次错误的用户账号，可以怀疑是刷数据等其他操作

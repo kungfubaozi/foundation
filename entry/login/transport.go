@@ -30,6 +30,15 @@ type GRPCServer struct {
 	entrybyvalidatecode grpctransport.Handler
 	entrybyqrcode       grpctransport.Handler
 	entrybyface         grpctransport.Handler
+	entrybyinvite       grpctransport.Handler
+}
+
+func (g *GRPCServer) EntryByInvite(ctx context.Context, in *fs_entry_login.EntryByInviteRequest) (*fs_entry_login.EntryResponse, error) {
+	_, resp, err := g.entrybyinvite.ServeGRPC(ctx, in)
+	if err != nil {
+		return &fs_entry_login.EntryResponse{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
+	}
+	return resp.(*fs_entry_login.EntryResponse), nil
 }
 
 func (g *GRPCServer) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_entry_login.EntryResponse, error) {
@@ -117,7 +126,20 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "EntryByValidateCode", logger)))...,
 	))
 
+	m.Handle(fs_functions.GetEntryByInviteFunc().Infix, httptransport.NewServer(
+		endpoints.EntryByInviteEndpoint,
+		decodeEntryByInvite,
+		format.EncodeHTTPGenericResponse,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "EntryByInvite", logger)))...,
+	))
+
 	return m
+}
+
+func decodeEntryByInvite(_ context.Context, r *http.Request) (interface{}, error) {
+	var req *fs_entry_login.EntryByInviteRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	return req, err
 }
 
 func decodeEntryByAP(_ context.Context, r *http.Request) (interface{}, error) {
@@ -185,6 +207,11 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "EntryByValidateCode", logger)))...),
+		entrybyinvite: grpctransport.NewServer(
+			endpoints.EntryByInviteEndpoint,
+			format.GrpcMessage,
+			format.GrpcMessage,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "EntryByInvite", logger)))...),
 	}
 }
 
@@ -282,12 +309,30 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(entryByFaceEndpoint)
 	}
 
+	var entryByInviteEndpoint endpoint.Endpoint
+	{
+		entryByInviteEndpoint = grpctransport.NewClient(conn,
+			"fs.entry.login.Login",
+			"EntryByInvite",
+			format.GrpcMessage,
+			format.GrpcMessage,
+			fs_entry_login.EntryResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
+		entryByInviteEndpoint = limiter(entryByInviteEndpoint)
+		entryByInviteEndpoint = opentracing.TraceClient(otTracer, "EntryByInvite")(entryByInviteEndpoint)
+		entryByInviteEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "EntryByInvite",
+			Timeout: 5 * time.Second,
+		}))(entryByInviteEndpoint)
+	}
+
 	return Endpoints{
 		EntryByQRCodeEndpoint:       entryByQRCodeEndpoint,
 		EntryByOAuthEndpoint:        entryByOAuthEndpoint,
 		EntryByFaceEndpoint:         entryByFaceEndpoint,
 		EntryByAPEndpoint:           entryByAPEndpoint,
 		EntryByValidateCodeEndpoint: entryByValidateCodeEndpoint,
+		EntryByInviteEndpoint:       entryByInviteEndpoint,
 	}
 
 }

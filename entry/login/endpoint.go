@@ -18,6 +18,15 @@ type Endpoints struct {
 	EntryByOAuthEndpoint        endpoint.Endpoint
 	EntryByValidateCodeEndpoint endpoint.Endpoint
 	EntryByQRCodeEndpoint       endpoint.Endpoint
+	EntryByInviteEndpoint       endpoint.Endpoint
+}
+
+func (g Endpoints) EntryByInvite(ctx context.Context, in *fs_entry_login.EntryByInviteRequest) (*fs_entry_login.EntryResponse, error) {
+	resp, err := g.EntryByInviteEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_entry_login.EntryResponse), nil
 }
 
 func (g Endpoints) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_entry_login.EntryResponse, error) {
@@ -107,14 +116,30 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		entryByQRCodeEndpoint = functionmw.WithMeta(logger, client)(entryByQRCodeEndpoint)
 	}
 
+	var entryByInviteEndpoint endpoint.Endpoint
+	{
+		entryByInviteEndpoint = MakeEntryByInviteEndpoint(svc)
+		entryByInviteEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(entryByInviteEndpoint)
+		entryByInviteEndpoint = zipkin.TraceEndpoint(trace, "EntryByInvite")(entryByInviteEndpoint)
+
+		entryByInviteEndpoint = functionmw.WithMeta(logger, client)(entryByInviteEndpoint)
+	}
+
 	return Endpoints{
 		EntryByAPEndpoint:           entryByAPEndpoint,
 		EntryByFaceEndpoint:         entryByFaceEndpoint,
 		EntryByOAuthEndpoint:        entryByOAuthEndpoint,
 		EntryByQRCodeEndpoint:       entryByQRCodeEndpoint,
 		EntryByValidateCodeEndpoint: entryByValidateCodeEndpoint,
+		EntryByInviteEndpoint:       entryByInviteEndpoint,
 	}
 
+}
+
+func MakeEntryByInviteEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return svc.EntryByInvite(ctx, request.(*fs_entry_login.EntryByInviteRequest))
+	}
 }
 
 func MakeEntryByAPEndpoint(svc Service) endpoint.Endpoint {

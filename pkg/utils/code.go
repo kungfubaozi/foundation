@@ -7,10 +7,16 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
 )
+
+func GetRandNumber() string {
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return fmt.Sprintf("%06v", rnd.Int31n(1000000))
+}
 
 func GetRandomString() string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+{}|:?><~"

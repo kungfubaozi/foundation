@@ -9,9 +9,38 @@ service Invite {
     //添加
     rpc Add (AddRequest) returns (fs.base.Response);
 
+    //获取
+    rpc Get (GetRequest) returns (GetResponse);
+
+    rpc MoveToUser (MoveToUserRequest) returns (fs.base.Response);
+
+}
+
+message MoveToUserRequest {
+    string password = 1;
+    string inviteId = 2;
+}
+
+message GetResponse {
+    fs.base.State state = 1;
+    string account = 2;
+    string enterprise = 3;
+    string username = 4;
+    string realName = 5;
+    string inviteId = 6;
+}
+
+message GetRequest {
+    string code = 1;
 }
 
 message AddRequest {
-    string user = 1; //phone or email
+    string account = 1; //phone or email
     string enterprise = 2; //可以绑定的企业号
+    string username = 3;
+    string realName = 4;
+
+    fs.base.Meta meta = 5;
+
+    int64 level = 6;
 }
