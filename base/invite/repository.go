@@ -12,7 +12,7 @@ type repository interface {
 
 	Close()
 
-	FindInvite(key, account string) (*model, error)
+	FindInvite(code string) (*model, error)
 }
 
 type inviteRepository struct {
@@ -25,9 +25,9 @@ func (repo *inviteRepository) Get(key, user string) (*model, error) {
 	return m, err
 }
 
-func (repo *inviteRepository) FindInvite(key, account string) (*model, error) {
+func (repo *inviteRepository) FindInvite(code string) (*model, error) {
 	m := &model{}
-	err := repo.collection().Find(bson.M{key: account}).One(m)
+	err := repo.collection().Find(bson.M{"code": code}).One(m)
 	return m, err
 }
 

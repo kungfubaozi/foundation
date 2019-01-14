@@ -85,10 +85,7 @@ func (svc *loginService) getAuthorize(meta *fs_base.Metadata, userId, mode strin
 }
 
 //如果有邀请
-//1 验证
-//2 输入密码
-//3 成功后移动到用户表里
-//4 成功
+//输入手机号和邀请码
 func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.EntryByInviteRequest) (*fs_entry_login.EntryResponse, error) {
 	resp := func(s *fs_base.State) (*fs_entry_login.EntryResponse, error) {
 		return &fs_entry_login.EntryResponse{State: s}, nil

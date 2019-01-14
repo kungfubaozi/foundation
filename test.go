@@ -1,17 +1,21 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
-	"github.com/twinj/uuid"
-	"zskparker.com/foundation/pkg/utils"
+	"zskparker.com/foundation/pkg/tool/encrypt"
 )
 
 func main() {
 
-	node := utils.NodeGenerate()
-	fmt.Println(node.Generate().Base64())
-	fmt.Println(node.Generate().Base64())
+	//h := sha1.New()
+	//io.WriteString(h, "aaaaaa")
+	//fmt.Printf("%x\n", h.Sum(nil))
+	//
+	////hmac ,use sha1
+	//key := []byte("123456")
+	//mac := hmac.New(sha1.New, key)
+	//mac.Write([]byte("aaaaaa"))
+	//fmt.Printf("%x\n", mac.Sum(nil))
 
-	fmt.Println(base64.StdEncoding.EncodeToString([]byte(uuid.NewV4().String())))
+	fmt.Println(fs_tools_encrypt.SHA256_1_512("123442342356"))
 }

@@ -29,7 +29,6 @@ message GetResponse {
 
 message GetRequest {
     string code = 1;
-    string account = 2;
 }
 
 message AddRequest {

@@ -3,7 +3,6 @@ package validate
 import (
 	"context"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
@@ -17,6 +16,7 @@ import (
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/states"
 	"zskparker.com/foundation/pkg/sync"
+	"zskparker.com/foundation/pkg/tool/encrypt"
 	"zskparker.com/foundation/pkg/utils"
 )
 
@@ -57,7 +57,7 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	if len(in.Metadata.UserId) > 0 {
 		voucher = in.Metadata.UserId + ";" + in.Func
 	}
-	voucher = utils.Md5(voucher)
+	voucher = fs_tools_encrypt.SHA256(voucher)
 
 	//锁一会(默认60秒)
 	if s := svc.redisync.Lock(in.Func, voucher, in.OnVerification.VoucherDuration); s != nil {
@@ -71,21 +71,17 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	} else {
 		code = strings.ToUpper(utils.GetRandomString())[0:8]
 	}
-	b, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
-	if err != nil {
-		return resp(errno.ErrSystem)
-	}
 
 	vl := &verification{
 		VerId:    bson.NewObjectId(),
 		Func:     in.Func,
 		Voucher:  voucher,
 		CreateAt: time.Now().UnixNano(),
-		Code:     string(b),
+		Code:     fs_tools_encrypt.SHA1_256_512(code),
 		State:    states.F_STATE_WAITING,
 	}
 
-	err = repo.Create(vl)
+	err := repo.Create(vl)
 	if err != nil {
 		return resp(errno.ErrSystem)
 	}
@@ -127,7 +123,6 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 
 	vl, err := repo.Get(in.VerId)
 	if err != nil {
-		fmt.Println("err1", err)
 		return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 	}
 
@@ -139,24 +134,17 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 		if len(in.Metadata.UserId) > 16 {
 			voucher = in.Metadata.UserId + ";" + in.Func
 		}
-		md := utils.Md5(voucher)
+		md := fs_tools_encrypt.SHA256(voucher)
 		if md != vl.Voucher {
 			return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 		}
 		//需要在等待验证状态
 		if vl.State == states.F_STATE_WAITING {
 			code := strings.ToLower(in.Code)
-			if bcrypt.CompareHashAndPassword([]byte(vl.Code), []byte(code)) == nil {
-
-				err = repo.Update(in.VerId, states.F_STATE_OK)
-				if err != nil {
-					return &fs_base_validate.VerificationResponse{State: errno.ErrSystem}, nil
-				}
-
+			if a := fs_tools_encrypt.SHA1_256_512(code); a == vl.Code {
 				return &fs_base_validate.VerificationResponse{State: errno.Ok, To: vl.To}, nil
-			} else {
-				return &fs_base_validate.VerificationResponse{State: errno.ErrValidateCode}, nil
 			}
+			return &fs_base_validate.VerificationResponse{State: errno.ErrValidateCode}, nil
 		}
 	}
 

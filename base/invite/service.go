@@ -3,7 +3,6 @@ package invite
 import (
 	"context"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
 	"time"
 	"zskparker.com/foundation/base/invite/pb"
@@ -16,6 +15,7 @@ import (
 	"zskparker.com/foundation/pkg/match"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/tags"
+	"zskparker.com/foundation/pkg/tool/encrypt"
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 )
@@ -87,11 +87,7 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 	m.ExpireAt = strategy.Events.OnInviteUser.ExpireTime * 60 * 1e9
 
 	code := utils.GetRandNumber()
-	s, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
-	}
-	m.Code = string(s)
+	m.Code = fs_tools_encrypt.SHA1_256_512(code)
 
 	err = repo.Add(m)
 	if err != nil {
@@ -129,25 +125,13 @@ func (svc *inviteService) Get(ctx context.Context, in *fs_base_invite.GetRequest
 		return &fs_base_invite.GetResponse{State: s}, nil
 	}
 
-	var m *model
-	var err error
-
-	if fs_regx_match.Email(in.Account) {
-		m, err = repo.FindInvite("phone", in.Account)
-	} else if fs_regx_match.Phone(in.Account) {
-		m, err = repo.FindInvite("email", in.Account)
-	} else {
-		return resp(errno.ErrInviteAccount)
-	}
+	m, err := repo.FindInvite(fs_tools_encrypt.SHA1_256_512(in.Code))
 
 	if err != nil {
 		return resp(errno.ErrSystem)
 	}
 
 	if m != nil && len(m.InviteId) > 10 {
-		if bcrypt.CompareHashAndPassword([]byte(m.Code), []byte(in.Code)) != nil {
-			return resp(errno.ErrInvalidInviteKey)
-		}
 		return &fs_base_invite.GetResponse{
 			State:    errno.Ok,
 			InviteId: m.InviteId.Hex(),
