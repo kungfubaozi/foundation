@@ -13,18 +13,44 @@ service Invite {
     rpc Get (GetRequest) returns (GetResponse);
 
     //移动到用户组里
-    rpc MoveToUser (MoveToUserRequest) returns (fs.base.Response);
+    rpc Update (UpdateRequest) returns (fs.base.Response);
 
+    rpc GetInvites (GetInvitesRequest) returns (GetInvitesResponse);
 }
 
-message MoveToUserRequest {
-    string password = 1;
-    string inviteId = 2;
+message GetInvitesRequest {
+    fs.base.Meta meta = 1;
+    int64 page = 2;
+    int64 size = 3;
+}
+
+message GetInvitesResponse {
+    fs.base.State state = 1;
+    repeated InviteInfo info = 2;
+}
+
+message InviteInfo {
+    string phone = 1;
+    string createAt = 2;
+    int64 okAt = 3;
+    string operateUserId = 4;
+    string email = 5;
+    string enterprise = 6;
+    string username = 7;
+    string realName = 8;
+    int64 level = 9;
+}
+
+message UpdateRequest {
+    string inviteId = 1;
+    string inviteCode = 2;
+    string account = 3;
 }
 
 message GetResponse {
     fs.base.State state = 1;
     string inviteId = 2;
+    InviteInfo detail = 3;
 }
 
 message GetRequest {

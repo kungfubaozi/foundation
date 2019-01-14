@@ -54,4 +54,5 @@ message AddRequest {
     string userId = 8;
     string username = 9;
     string realName = 10;
+    bool reset = 11;
 }

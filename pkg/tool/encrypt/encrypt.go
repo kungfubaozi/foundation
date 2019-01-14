@@ -7,6 +7,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"zskparker.com/foundation/pkg/tool/number"
 )
 
 func str(str string) string {
@@ -59,4 +60,8 @@ func SHA1_256_512(value string) string {
 
 func SHA256_1_512(value string) string {
 	return SHA512(SHA1(SHA256(value)))
+}
+
+func Rnd_SHA1_256_512(size int) string {
+	return SHA1_256_512(fs_tools_number.GetRndNumber(size))
 }

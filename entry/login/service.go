@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"sync"
 	"time"
 	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/authenticate/pb"
@@ -20,6 +21,7 @@ import (
 	"zskparker.com/foundation/pkg/match"
 	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tags"
+	"zskparker.com/foundation/pkg/tool/number"
 	"zskparker.com/foundation/pkg/transport"
 )
 
@@ -91,7 +93,10 @@ func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.E
 		return &fs_entry_login.EntryResponse{State: s}, nil
 	}
 
-	if len(in.Code) != 6 {
+	meta := fs_metadata_transport.ContextToMeta(ctx)
+
+	//邀请码为8位数字码
+	if len(in.Code) != 8 {
 		return resp(errno.ErrRequest)
 	}
 
@@ -105,6 +110,57 @@ func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.E
 		return resp(ir.State)
 	}
 
+	//找到用户就把用户移动到用户表里并删除在邀请里的用户
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	ps := errno.Ok
+
+	errc := func(s *fs_base.State) {
+		if ps.Ok {
+			ps = s
+		}
+		wg.Done()
+	}
+
+	//写入用户表
+	go func() {
+		resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
+			Password:      fs_tools_number.GetRndNumber(8), //设置随机密码
+			Enterprise:    ir.Detail.Enterprise,
+			Username:      ir.Detail.Username,
+			Phone:         ir.Detail.Phone,
+			Email:         ir.Detail.Email,
+			FromProjectId: meta.ProjectId,
+			FromClientId:  meta.ClientId,
+			Level:         ir.Detail.Level,
+			RealName:      ir.Detail.RealName,
+			Reset_:        true, //需要重置密码
+		})
+		if err != nil {
+			errc(errno.ErrSystem)
+			return
+		}
+		errc(resp.State)
+	}()
+
+	//更新
+	go func() {
+		resp, err := svc.invitecli.Update(context.Background(), &fs_base_invite.UpdateRequest{
+			InviteCode: in.Code,
+			InviteId:   ir.InviteId,
+			Account:    ir.Detail.Phone + ir.Detail.Email,
+		})
+		if err != nil {
+			errc(errno.ErrSystem)
+			return
+		}
+		errc(resp.State)
+	}()
+
+	//重置密码
+	return &fs_entry_login.EntryResponse{State: errno.ErrResetPassword}, nil
 }
 
 func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.EntryByFaceRequest) (*fs_entry_login.EntryResponse, error) {

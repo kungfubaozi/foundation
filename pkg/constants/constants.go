@@ -33,10 +33,11 @@ const (
 )
 
 const (
-	STATE_OK            int64 = 3 << 1
-	STATE_USER_FROZE    int64 = 3 << 2 //用户状态冻结
-	STATE_USER_LOCK     int64 = 3 << 3 //用户被锁定
-	STATE_USER_VALIDATE int64 = 3 << 3 //需要通过手机验证才可继续
+	STATE_OK                  int64 = 3 << 1
+	STATE_USER_FROZE          int64 = 3 << 2 //用户状态冻结
+	STATE_USER_LOCK           int64 = 3 << 3 //用户被锁定
+	STATE_USER_VALIDATE       int64 = 3 << 6 //需要通过手机验证才可继续
+	STATE_USER_RESET_PASSWORD int64 = 3 << 8 //需要通过手机验证才可继续
 )
 
 const (

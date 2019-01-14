@@ -228,9 +228,15 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
+	var s int64
+	if in.Reset_ {
+		s = fs_constants.STATE_USER_RESET_PASSWORD
+	} else {
+		s = fs_constants.STATE_OK
+	}
 	resp, err := svc.statecli.Upsert(ctx, &fs_base_state.UpsertRequest{
 		Key:    u.UserId.Hex(),
-		Status: fs_constants.STATE_OK,
+		Status: s,
 	})
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)

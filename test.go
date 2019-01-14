@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"zskparker.com/foundation/pkg/tool/encrypt"
+	"time"
 )
 
 func main() {
@@ -16,6 +16,20 @@ func main() {
 	//mac := hmac.New(sha1.New, key)
 	//mac.Write([]byte("aaaaaa"))
 	//fmt.Printf("%x\n", mac.Sum(nil))
+	//
+	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
+	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
+	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
+	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
+	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
+	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
 
-	fmt.Println(fs_tools_encrypt.SHA256_1_512("123442342356"))
+	//s := "1322202107"
+
+	//fmt.Println(s[:1] + s[strings.Index(s, "@")+1:])
+	//fmt.Println(s[:3] + s[len(s)-1:])
+
+	var t int64 = 1547491722498592000
+
+	fmt.Println(t - time.Now().UnixNano())
 }
