@@ -35,6 +35,7 @@ func (svc *reporterService) Write(ctx context.Context, in *fs_base_reporter.Writ
 		Func:      in.Func,
 		Where:     in.Where,
 		Who:       in.Who,
+		State:     in.State,
 	}
 
 	fmt.Println(log)

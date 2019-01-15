@@ -1,66 +1,68 @@
 package invite
 
 import (
-	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
 type repository interface {
-	Add(inviteCode, fix string, m *model) error
+	Add(m *model) error
 
 	Close()
 
-	FindInvite(inviteCode string, code string) (*model, error)
+	FindInvite(code string) (*model, error)
 
-	Update(inviteCode, fix, account, id string) error
+	FindInviteByAccount(account string, phone bool) (*model, error)
 
-	FindHistory(fix, account string) (*history, error)
+	//GetInviteByUserId(userId string, pageIndex, pageSize int64) ([]*model, error)
+
+	Update(account, id string) error
 }
 
 type inviteRepository struct {
 	session *mgo.Session
 }
 
-func (repo *inviteRepository) FindInvite(inviteCode string, code string) (*model, error) {
+func (repo *inviteRepository) FindInvite(code string) (*model, error) {
 	m := &model{}
-	err := repo.collection(inviteCode).Find(bson.M{"code": code}).One(m)
+	err := repo.collection().Find(bson.M{"code": code}).One(m)
 	return m, err
 }
 
-func (repo *inviteRepository) Add(inviteCode, fix string, m *model) error {
-	_, e := repo.collection(inviteCode).Upsert(bson.M{"_id": m.InviteId}, m)
+//func (repo *inviteRepository) GetInviteByUserId(userId string, pageIndex, pageSize int64) ([]*model, error) {
+//	m := &model{}
+//	err := repo.collection().Find(bson.M{"operateUserId": userId}).Sort("-create_at").
+//	return m, err
+//}
+
+func (repo *inviteRepository) FindInviteByAccount(account string, phone bool) (*model, error) {
+	m := &model{}
+	var b bson.M
+	if phone {
+		b = bson.M{"phone": account}
+	} else {
+		b = bson.M{"email": account}
+	}
+	err := repo.collection().Find(b).One(m)
+	return m, err
+}
+
+func (repo *inviteRepository) Add(m *model) error {
+	_, e := repo.collection().Upsert(bson.M{"_id": m.InviteId}, m)
 	if e != nil {
 		return e
 	}
-	tag := fmt.Sprintf("%s%s", m.Phone, m.Email)
-	_, e = repo.inviteHistoryCollection(fix).Upsert(bson.M{"tag": tag}, &history{
-		Tag:      tag,
-		At:       inviteCode[:1],
-		ExpireAt: m.ExpireAt,
-	})
 	return e
 }
 
-func (repo *inviteRepository) Update(inviteCode, fix, account, id string) error {
-	e := repo.collection(inviteCode).Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"ok": true, "ok_time": time.Now().UnixNano()}})
-	e = repo.inviteHistoryCollection(fix).Update(bson.M{"tag": account}, bson.M{"$set": bson.M{"ok": true}})
+func (repo *inviteRepository) Update(account, id string) error {
+	e := repo.collection().Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"ok": true, "ok_time": time.Now().UnixNano()}})
 	return e
 }
 
-func (repo *inviteRepository) FindHistory(fix, account string) (*history, error) {
-	h := &history{}
-	e := repo.inviteHistoryCollection(fix).Find(bson.M{"tag": account}).One(h)
-	return h, e
-}
-
-func (repo *inviteRepository) collection(code string) *mgo.Collection {
-	return repo.session.DB("foundation").C("invite_" + code[0:1])
-}
-
-func (repo *inviteRepository) inviteHistoryCollection(fix string) *mgo.Collection {
-	return repo.session.DB("foundation").C("invite_history_" + fix)
+func (repo *inviteRepository) collection() *mgo.Collection {
+	return repo.session.DB("foundation").C("invite")
 }
 
 func (repo *inviteRepository) Close() {
@@ -83,11 +85,4 @@ type model struct {
 	Ok            bool          `bson:"ok"`
 	OkTime        int64         `bson:"ok_time"`
 	OperateUserId string        `bson:"operate_user_id"`
-}
-
-type history struct {
-	Tag      string `bson:"tag"`
-	At       string `bson:"at"`
-	ExpireAt int64  `bson:"expire_at"` //过期时间
-	Ok       bool   `bson:"ok"`
 }

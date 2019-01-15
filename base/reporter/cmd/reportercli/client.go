@@ -20,7 +20,7 @@ import (
 )
 
 type Channel interface {
-	Write(function, who, where string)
+	Write(function, who, where string, state int64)
 
 	Close()
 }
@@ -31,12 +31,13 @@ type channel struct {
 	svc     string
 }
 
-func (c *channel) Write(function, who, where string) {
+func (c *channel) Write(function, who, where string, state int64) {
 	b, _ := msgpack.Marshal(&fs_base_reporter.WriteRequest{
 		Svc:       c.svc,
 		Func:      function,
 		Who:       who,
 		Where:     where,
+		State:     state,
 		Timestamp: time.Now().UnixNano(),
 	})
 	c.channel.Publish("", "foundation.reporter", false, false, amqp.Publishing{

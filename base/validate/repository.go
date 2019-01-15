@@ -10,8 +10,6 @@ type repository interface {
 
 	Get(id string) (*verification, error)
 
-	FindLast(voucher string) (*verification, error)
-
 	Update(id string, state int64) error
 
 	Close()
@@ -36,26 +34,26 @@ func (svc *validateRepository) Close() {
 }
 
 func (svc *validateRepository) Create(v *verification) error {
-	return svc.collection().Insert(v)
+	return svc.collection(v.VerId.Hex()).Insert(v)
 }
 
 func (svc *validateRepository) Update(id string, state int64) error {
-	err := svc.collection().Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"state": state}})
+	err := svc.collection(id).Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"state": state}})
 	return err
 }
 
-func (svc *validateRepository) FindLast(voucher string) (*verification, error) {
-	ver := &verification{}
-	err := svc.collection().Find(bson.M{"voucher": voucher}).Sort("-create_at").One(ver)
-	return ver, err
-}
+//func (svc *validateRepository) FindLast(voucher string) (*verification, error) {
+//	ver := &verification{}
+//	err := svc.collection().Find(bson.M{"voucher": voucher}).Sort("-create_at").One(ver)
+//	return ver, err
+//}
 
 func (svc *validateRepository) Get(id string) (*verification, error) {
 	ver := &verification{}
-	err := svc.collection().Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(ver)
+	err := svc.collection(id).Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(ver)
 	return ver, err
 }
 
-func (svc *validateRepository) collection() *mgo.Collection {
-	return svc.session.DB("foundation").C("validate")
+func (svc *validateRepository) collection(id string) *mgo.Collection {
+	return svc.session.DB("fds_validate").C("v_" + id[len(id)-1:])
 }

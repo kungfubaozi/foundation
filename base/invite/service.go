@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"time"
 	"zskparker.com/foundation/base/invite/pb"
 	"zskparker.com/foundation/base/message/cmd/messagecli"
@@ -62,16 +61,13 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 	strategy := fs_metadata_transport.ContextToStrategy(ctx)
 
 	m := &model{}
-	h := &history{}
 	var err error
 
-	fix := getInfix(in.Account)
-
 	if fs_regx_match.Phone(in.Account) {
-		h, err = repo.FindHistory(fix, in.Account)
+		m, err = repo.FindInviteByAccount(in.Account, true)
 		m.Phone = in.Account
 	} else if fs_regx_match.Email(in.Account) {
-		h, err = repo.FindHistory(fix, in.Account)
+		m, err = repo.FindInviteByAccount(in.Account, false)
 		m.Email = in.Account
 	} else {
 		return errno.ErrResponse(errno.ErrInviteAccount)
@@ -81,12 +77,12 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 		return errno.ErrResponse(errno.ErrSystem)
 	}
 
-	//是否已经查找过
-	if h.Ok {
+	//是否已经邀请过且通过了
+	if m.Ok {
 		return errno.ErrResponse(errno.ErrAlreadyInvited)
 	}
 	//如果存在且没有过期则返回错误
-	if len(h.Tag) > 0 && h.ExpireAt-time.Now().UnixNano() > 0 {
+	if len(m.InviteId) > 0 && m.ExpireAt-time.Now().UnixNano() > 0 {
 		return errno.ErrResponse(errno.ErrInviteExists)
 	}
 
@@ -105,7 +101,7 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 		m.InviteId = bson.NewObjectId()
 	}
 
-	err = repo.Add(code, fix, m)
+	err = repo.Add(m)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -128,22 +124,12 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 	return errno.ErrResponse(errno.Ok)
 }
 
-func getInfix(a string) string {
-	var fix string
-	if fs_regx_match.Phone(a) {
-		fix = a[:1] + a[strings.Index(a, "@")+1:]
-	} else {
-		fix = a[:3] + a[len(a)-1:]
-	}
-	return fix
-}
-
 //移动完成后需要更新对应的邀请数据
 func (svc *inviteService) Update(ctx context.Context, in *fs_base_invite.UpdateRequest) (*fs_base.Response, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	err := repo.Update(in.InviteCode, getInfix(in.Account), in.Account, in.InviteId)
+	err := repo.Update(in.Account, in.InviteId)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -163,7 +149,7 @@ func (svc *inviteService) Get(ctx context.Context, in *fs_base_invite.GetRequest
 		return &fs_base_invite.GetResponse{State: s}, nil
 	}
 
-	m, err := repo.FindInvite(in.Code, fs_tools_encrypt.SHA1_256_512(in.Code))
+	m, err := repo.FindInvite(fs_tools_encrypt.SHA1_256_512(in.Code))
 
 	if err != nil {
 		return resp(errno.ErrSystem)

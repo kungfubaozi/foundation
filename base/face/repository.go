@@ -105,6 +105,7 @@ func (repo *faceRepository) Close() {
 	repo.session.Close()
 }
 
+//最后两个字符
 func (repo *faceRepository) collection(userId string) *mgo.Collection {
-	return repo.session.DB("foundation").C("faceset_" + userId[0:5])
+	return repo.session.DB("fds_faceset").C("set_" + userId[len(userId)-2:])
 }

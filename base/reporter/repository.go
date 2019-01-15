@@ -16,6 +16,7 @@ type logger struct {
 	Where     string `bson:"where"`
 	Timestamp int64  `bson:"timestamp"`
 	Date      string `bson:"date"`
+	State     int64  `bson:"state"`
 }
 
 type reporterRepository struct {
@@ -27,5 +28,5 @@ func (repo *reporterRepository) Close() {
 }
 
 func (repo *reporterRepository) Write(logger *logger) error {
-	return repo.session.DB("foundation_logger").C(logger.Func + "_" + logger.Date).Insert(logger)
+	return repo.session.DB("fds_logger").C(logger.Func + "_" + logger.Date).Insert(logger)
 }
