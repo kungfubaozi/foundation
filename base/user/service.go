@@ -17,7 +17,7 @@ import (
 	"zskparker.com/foundation/pkg/errno"
 )
 
-//gRPC
+//gRPCs
 type Service interface {
 	Add(ctx context.Context, in *fs_base_user.AddRequest) (*fs_base.Response, error)
 

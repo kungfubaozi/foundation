@@ -20,10 +20,12 @@ message CheckAccountRequest {
 message CheckMetaRequest {
     string ip = 1;
     string device = 2;
+    string clientId = 3;
 }
 
 message AddRequest {
     string userId = 1;
     string ip = 2;
     string device = 3;
+    string account = 4;
 }

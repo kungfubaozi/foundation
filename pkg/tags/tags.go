@@ -1,5 +1,13 @@
 package fs_function_tags
 
+func GetBlacklistCheckIP() string {
+	return "f4813ec5a9c2"
+}
+
+func GetBlacklistCheckDevice() string {
+	return "9d15429d4cf3"
+}
+
 func GetEntryByInviteTag() string {
 	return "12216ce02393"
 }

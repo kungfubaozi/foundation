@@ -28,6 +28,7 @@ import (
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 	"zskparker.com/foundation/safety/blacklist"
+	"zskparker.com/foundation/safety/blacklist/pb"
 )
 
 type MWServices struct {
@@ -86,6 +87,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 				wg.Done()
 			}
 
+			//项目检查
 			wg.Add(1)
 			go func() {
 				pr, _ := mwcli.projectcli.Get(context.Background(), &fs_base_project.GetRequest{
@@ -108,6 +110,7 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 				wg.Done()
 			}()
 
+			//功能检查
 			wg.Add(1)
 			go func() {
 				fr, _ := mwcli.functioncli.Get(context.Background(), &fs_base_function.GetRequest{
@@ -126,6 +129,21 @@ func middleware(logger log.Logger, mwcli *MWServices, function string, ignorePro
 				}
 				cf = fr.Func
 				wg.Done()
+			}()
+
+			//黑名单检查
+			wg.Add(1)
+			go func() {
+				br, err := mwcli.blacklistcli.CheckMeta(context.Background(), &fs_safety_blacklist.CheckMetaRequest{
+					Ip:       meta.Ip,
+					Device:   meta.Device,
+					ClientId: meta.ClientId,
+				})
+				if err != nil {
+					errc(errno.ErrSystem)
+					return
+				}
+				errc(br.State)
 			}()
 
 			wg.Wait()
