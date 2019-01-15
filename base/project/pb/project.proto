@@ -71,6 +71,7 @@ message ProjectInfo {
     Platform platform = 5;
     int64 level = 6;
     string session = 7;
+    string website = 8;
 }
 
 message Platform {

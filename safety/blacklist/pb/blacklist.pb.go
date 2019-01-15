@@ -26,55 +26,86 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type CheckRequest struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
-	Ip                   string   `protobuf:"bytes,2,opt,name=ip,proto3" json:"ip,omitempty"`
-	Device               string   `protobuf:"bytes,3,opt,name=device,proto3" json:"device,omitempty"`
+type CheckAccountRequest struct {
+	Account              string   `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *CheckRequest) Reset()         { *m = CheckRequest{} }
-func (m *CheckRequest) String() string { return proto.CompactTextString(m) }
-func (*CheckRequest) ProtoMessage()    {}
-func (*CheckRequest) Descriptor() ([]byte, []int) {
+func (m *CheckAccountRequest) Reset()         { *m = CheckAccountRequest{} }
+func (m *CheckAccountRequest) String() string { return proto.CompactTextString(m) }
+func (*CheckAccountRequest) ProtoMessage()    {}
+func (*CheckAccountRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bc33b09e0453396d, []int{0}
 }
 
-func (m *CheckRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_CheckRequest.Unmarshal(m, b)
+func (m *CheckAccountRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CheckAccountRequest.Unmarshal(m, b)
 }
-func (m *CheckRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_CheckRequest.Marshal(b, m, deterministic)
+func (m *CheckAccountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CheckAccountRequest.Marshal(b, m, deterministic)
 }
-func (m *CheckRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CheckRequest.Merge(m, src)
+func (m *CheckAccountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CheckAccountRequest.Merge(m, src)
 }
-func (m *CheckRequest) XXX_Size() int {
-	return xxx_messageInfo_CheckRequest.Size(m)
+func (m *CheckAccountRequest) XXX_Size() int {
+	return xxx_messageInfo_CheckAccountRequest.Size(m)
 }
-func (m *CheckRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CheckRequest.DiscardUnknown(m)
+func (m *CheckAccountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CheckAccountRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CheckRequest proto.InternalMessageInfo
+var xxx_messageInfo_CheckAccountRequest proto.InternalMessageInfo
 
-func (m *CheckRequest) GetUserId() string {
+func (m *CheckAccountRequest) GetAccount() string {
 	if m != nil {
-		return m.UserId
+		return m.Account
 	}
 	return ""
 }
 
-func (m *CheckRequest) GetIp() string {
+type CheckMetaRequest struct {
+	Ip                   string   `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
+	Device               string   `protobuf:"bytes,2,opt,name=device,proto3" json:"device,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CheckMetaRequest) Reset()         { *m = CheckMetaRequest{} }
+func (m *CheckMetaRequest) String() string { return proto.CompactTextString(m) }
+func (*CheckMetaRequest) ProtoMessage()    {}
+func (*CheckMetaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bc33b09e0453396d, []int{1}
+}
+
+func (m *CheckMetaRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CheckMetaRequest.Unmarshal(m, b)
+}
+func (m *CheckMetaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CheckMetaRequest.Marshal(b, m, deterministic)
+}
+func (m *CheckMetaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CheckMetaRequest.Merge(m, src)
+}
+func (m *CheckMetaRequest) XXX_Size() int {
+	return xxx_messageInfo_CheckMetaRequest.Size(m)
+}
+func (m *CheckMetaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CheckMetaRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CheckMetaRequest proto.InternalMessageInfo
+
+func (m *CheckMetaRequest) GetIp() string {
 	if m != nil {
 		return m.Ip
 	}
 	return ""
 }
 
-func (m *CheckRequest) GetDevice() string {
+func (m *CheckMetaRequest) GetDevice() string {
 	if m != nil {
 		return m.Device
 	}
@@ -94,7 +125,7 @@ func (m *AddRequest) Reset()         { *m = AddRequest{} }
 func (m *AddRequest) String() string { return proto.CompactTextString(m) }
 func (*AddRequest) ProtoMessage()    {}
 func (*AddRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bc33b09e0453396d, []int{1}
+	return fileDescriptor_bc33b09e0453396d, []int{2}
 }
 
 func (m *AddRequest) XXX_Unmarshal(b []byte) error {
@@ -137,7 +168,8 @@ func (m *AddRequest) GetDevice() string {
 }
 
 func init() {
-	proto.RegisterType((*CheckRequest)(nil), "fs.safety.blacklist.CheckRequest")
+	proto.RegisterType((*CheckAccountRequest)(nil), "fs.safety.blacklist.CheckAccountRequest")
+	proto.RegisterType((*CheckMetaRequest)(nil), "fs.safety.blacklist.CheckMetaRequest")
 	proto.RegisterType((*AddRequest)(nil), "fs.safety.blacklist.AddRequest")
 }
 
@@ -153,7 +185,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BlacklistClient interface {
-	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*pb.Response, error)
+	CheckMeta(ctx context.Context, in *CheckMetaRequest, opts ...grpc.CallOption) (*pb.Response, error)
+	CheckAccount(ctx context.Context, in *CheckAccountRequest, opts ...grpc.CallOption) (*pb.Response, error)
 	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*pb.Response, error)
 }
 
@@ -165,9 +198,18 @@ func NewBlacklistClient(cc *grpc.ClientConn) BlacklistClient {
 	return &blacklistClient{cc}
 }
 
-func (c *blacklistClient) Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+func (c *blacklistClient) CheckMeta(ctx context.Context, in *CheckMetaRequest, opts ...grpc.CallOption) (*pb.Response, error) {
 	out := new(pb.Response)
-	err := c.cc.Invoke(ctx, "/fs.safety.blacklist.Blacklist/Check", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/fs.safety.blacklist.Blacklist/CheckMeta", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *blacklistClient) CheckAccount(ctx context.Context, in *CheckAccountRequest, opts ...grpc.CallOption) (*pb.Response, error) {
+	out := new(pb.Response)
+	err := c.cc.Invoke(ctx, "/fs.safety.blacklist.Blacklist/CheckAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +227,8 @@ func (c *blacklistClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.
 
 // BlacklistServer is the server API for Blacklist service.
 type BlacklistServer interface {
-	Check(context.Context, *CheckRequest) (*pb.Response, error)
+	CheckMeta(context.Context, *CheckMetaRequest) (*pb.Response, error)
+	CheckAccount(context.Context, *CheckAccountRequest) (*pb.Response, error)
 	Add(context.Context, *AddRequest) (*pb.Response, error)
 }
 
@@ -193,20 +236,38 @@ func RegisterBlacklistServer(s *grpc.Server, srv BlacklistServer) {
 	s.RegisterService(&_Blacklist_serviceDesc, srv)
 }
 
-func _Blacklist_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckRequest)
+func _Blacklist_CheckMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckMetaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BlacklistServer).Check(ctx, in)
+		return srv.(BlacklistServer).CheckMeta(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/fs.safety.blacklist.Blacklist/Check",
+		FullMethod: "/fs.safety.blacklist.Blacklist/CheckMeta",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BlacklistServer).Check(ctx, req.(*CheckRequest))
+		return srv.(BlacklistServer).CheckMeta(ctx, req.(*CheckMetaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Blacklist_CheckAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlacklistServer).CheckAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fs.safety.blacklist.Blacklist/CheckAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlacklistServer).CheckAccount(ctx, req.(*CheckAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -234,8 +295,12 @@ var _Blacklist_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*BlacklistServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Check",
-			Handler:    _Blacklist_Check_Handler,
+			MethodName: "CheckMeta",
+			Handler:    _Blacklist_CheckMeta_Handler,
+		},
+		{
+			MethodName: "CheckAccount",
+			Handler:    _Blacklist_CheckAccount_Handler,
 		},
 		{
 			MethodName: "Add",
@@ -251,20 +316,22 @@ func init() {
 }
 
 var fileDescriptor_bc33b09e0453396d = []byte{
-	// 230 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x90, 0x3d, 0x4b, 0x04, 0x31,
-	0x10, 0x86, 0xd9, 0x3d, 0x3c, 0xb8, 0x41, 0x04, 0x23, 0xc8, 0x72, 0x8d, 0x7a, 0x36, 0x82, 0x90,
-	0x80, 0x56, 0x16, 0x16, 0xa7, 0x95, 0x20, 0x16, 0xfb, 0x0f, 0xf2, 0x31, 0x8b, 0x21, 0xe7, 0x26,
-	0x66, 0xb2, 0x82, 0xf6, 0xfe, 0x6f, 0xd9, 0x44, 0x5d, 0x8b, 0x2d, 0x2d, 0xdf, 0xe4, 0x99, 0x97,
-	0x79, 0x06, 0xce, 0x49, 0x76, 0x98, 0xde, 0x85, 0xda, 0x49, 0xed, 0x76, 0x96, 0x92, 0x08, 0x6a,
-	0x0a, 0x3c, 0x44, 0x9f, 0x3c, 0x3b, 0xea, 0x88, 0x17, 0x8e, 0xff, 0x7e, 0xad, 0x2f, 0x3f, 0xc8,
-	0x05, 0x19, 0x1d, 0x46, 0xae, 0xfd, 0x8b, 0xe8, 0xfc, 0xd0, 0x1b, 0x99, 0xac, 0xef, 0x85, 0x92,
-	0x84, 0xb9, 0x46, 0x12, 0x96, 0x86, 0xcd, 0x13, 0xec, 0xdf, 0x3f, 0xa3, 0x76, 0x2d, 0xbe, 0x0e,
-	0x48, 0x89, 0x1d, 0xc3, 0x72, 0x20, 0x8c, 0x0f, 0xa6, 0xa9, 0x4e, 0xab, 0x8b, 0x55, 0xfb, 0x9d,
-	0xd8, 0x01, 0xd4, 0x36, 0x34, 0x75, 0x7e, 0xab, 0x6d, 0x18, 0x39, 0x83, 0x6f, 0x56, 0x63, 0xb3,
-	0x28, 0x5c, 0x49, 0x9b, 0x47, 0x80, 0xad, 0x31, 0xff, 0xd4, 0x76, 0xf5, 0x59, 0xc1, 0xea, 0xee,
-	0x47, 0x8c, 0xdd, 0xc2, 0x5e, 0xde, 0x95, 0x9d, 0xf1, 0x19, 0x6f, 0xfe, 0xd7, 0x63, 0x7d, 0x38,
-	0x22, 0xd9, 0xb3, 0x45, 0x0a, 0xbe, 0x27, 0x64, 0x37, 0xb0, 0xd8, 0x1a, 0xc3, 0x4e, 0x66, 0x87,
-	0xa7, 0xa5, 0x67, 0x46, 0xd5, 0x32, 0x1f, 0xeb, 0xfa, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x84, 0x65,
-	0x1b, 0x2c, 0x95, 0x01, 0x00, 0x00,
+	// 272 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0x41, 0x4b, 0xc4, 0x30,
+	0x10, 0x85, 0x69, 0x17, 0x2a, 0x1d, 0x44, 0x34, 0x0b, 0x4b, 0xd9, 0x8b, 0x52, 0x11, 0x16, 0x84,
+	0x14, 0xf4, 0xa4, 0xb7, 0x2a, 0x1e, 0x44, 0xbd, 0xf4, 0x1f, 0xa4, 0xc9, 0x14, 0x4b, 0xd7, 0x26,
+	0x76, 0x52, 0x41, 0x7f, 0xaa, 0xbf, 0x46, 0x6c, 0xd3, 0xdd, 0x55, 0xb2, 0xc7, 0x37, 0x79, 0xef,
+	0x63, 0xf2, 0x06, 0xce, 0x49, 0x54, 0x68, 0x3f, 0xb3, 0x72, 0x2d, 0x64, 0xb3, 0xae, 0xc9, 0x66,
+	0xa6, 0xdc, 0x0a, 0x6e, 0x3a, 0x6d, 0x35, 0x9b, 0x57, 0xc4, 0x47, 0x1f, 0xdf, 0x3c, 0x2d, 0x2f,
+	0xbf, 0xa8, 0x31, 0xa2, 0x6b, 0xb0, 0xe3, 0x52, 0xbf, 0x65, 0x95, 0xee, 0x5b, 0x25, 0x6c, 0xad,
+	0xdb, 0xac, 0x14, 0x84, 0x03, 0x46, 0x10, 0x8e, 0x84, 0x34, 0x83, 0xf9, 0xfd, 0x2b, 0xca, 0x26,
+	0x97, 0x52, 0xf7, 0xad, 0x2d, 0xf0, 0xbd, 0x47, 0xb2, 0x2c, 0x81, 0x03, 0x31, 0x4e, 0x92, 0xe0,
+	0x2c, 0x58, 0xc5, 0xc5, 0x24, 0xd3, 0x5b, 0x38, 0x1e, 0x02, 0x2f, 0x68, 0xc5, 0xe4, 0x3e, 0x82,
+	0xb0, 0x36, 0xce, 0x18, 0xd6, 0x86, 0x2d, 0x20, 0x52, 0xf8, 0x51, 0x4b, 0x4c, 0xc2, 0x61, 0xe6,
+	0x54, 0xfa, 0x0c, 0x90, 0x2b, 0x35, 0xa5, 0x16, 0x10, 0xf5, 0x84, 0xdd, 0xa3, 0x72, 0x49, 0xa7,
+	0x1c, 0x2d, 0xf4, 0xd0, 0x66, 0xbb, 0xb4, 0xab, 0xef, 0x00, 0xe2, 0xbb, 0xe9, 0xd7, 0xec, 0x01,
+	0xe2, 0xcd, 0x5e, 0xec, 0x82, 0x7b, 0x8a, 0xe1, 0xff, 0xf7, 0x5e, 0x9e, 0xfc, 0xda, 0x86, 0x32,
+	0x0a, 0x24, 0xa3, 0x5b, 0x42, 0xf6, 0x04, 0x87, 0xbb, 0x7d, 0xb0, 0xd5, 0x7e, 0xd2, 0xdf, 0xca,
+	0x7c, 0xb0, 0x1b, 0x98, 0xe5, 0x4a, 0xb1, 0x53, 0x2f, 0x63, 0xdb, 0x84, 0x27, 0x5a, 0x46, 0xc3,
+	0x79, 0xae, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x4b, 0x5e, 0xb4, 0x57, 0x07, 0x02, 0x00, 0x00,
 }

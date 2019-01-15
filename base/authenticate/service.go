@@ -148,6 +148,10 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 			svc.logger.Log("state", a.State)
 			return
 		}
+		if a.Status != fs_constants.STATE_OK {
+			errc(errno.ErrRequest)
+			return
+		}
 		wg.Done()
 	}()
 

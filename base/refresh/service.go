@@ -97,7 +97,12 @@ func (svc *refreshService) Auth(ctx context.Context, in *fs_base_refresh.AuthReq
 				svc.logger.Log("err")
 				return resp(errno.ErrSystem)
 			}
-		} else {
+
+			//由于在缓存里取出的是遵循 userId,clientId,relationId
+			//当出现使用refreshToken刷新别的web client时，会新建一个以当前用户的基本信息+client生成token
+			//公用一个refreshToken的Relation，
+			auth.ClientId = meta.ClientId
+		} else { //除了web端其他的客户端不支持token公用
 			svc.logger.Log("step")
 			return resp(errno.ErrSupport)
 		}

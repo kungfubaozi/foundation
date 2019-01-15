@@ -101,6 +101,7 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 		Zh:      p.ZH,
 		Level:   p.Level,
 		Session: p.Session,
+		Website: p.Website,
 	}
 
 	if len(p.Platforms) != 5 {

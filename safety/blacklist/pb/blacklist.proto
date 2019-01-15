@@ -6,15 +6,20 @@ import "zskparker.com/foundation/base/pb/base.proto";
 
 service Blacklist {
 
-    rpc Check (CheckRequest) returns (fs.base.Response);
+    rpc CheckMeta (CheckMetaRequest) returns (fs.base.Response);
 
-    rpc Add(AddRequest) returns (fs.base.Response);
+    rpc CheckAccount (CheckAccountRequest) returns (fs.base.Response);
+
+    rpc Add (AddRequest) returns (fs.base.Response);
 }
 
-message CheckRequest {
-    string userId = 1;
-    string ip = 2;
-    string device = 3;
+message CheckAccountRequest {
+    string account = 1;
+}
+
+message CheckMetaRequest {
+    string ip = 1;
+    string device = 2;
 }
 
 message AddRequest {

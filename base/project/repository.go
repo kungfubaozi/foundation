@@ -31,6 +31,7 @@ type project struct {
 	Creator   string        `bson:"creator"`
 	Session   string        `bson:"session"` //用来服务器与sso通讯用
 	Level     int64         `bson:"level"`   // 等级限制
+	Website   string        `bson:"website"` //网页 sso会跳转到这里
 }
 
 type platform struct {
