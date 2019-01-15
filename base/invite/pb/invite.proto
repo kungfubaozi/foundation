@@ -43,8 +43,7 @@ message InviteInfo {
 
 message UpdateRequest {
     string inviteId = 1;
-    string inviteCode = 2;
-    string account = 3;
+    string account = 2;
 }
 
 message GetResponse {

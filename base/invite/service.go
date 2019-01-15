@@ -36,6 +36,14 @@ type inviteService struct {
 	reportercli reportercli.Channel
 }
 
+func NewService(session *mgo.Session, messagecli messagecli.Channel, reportercli reportercli.Channel) Service {
+	var svc Service
+	{
+		svc = &inviteService{session: session, messagecli: messagecli, reportercli: reportercli}
+	}
+	return svc
+}
+
 func (svc *inviteService) GetRepo() repository {
 	return &inviteRepository{session: svc.session.Clone()}
 }
@@ -119,7 +127,7 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 		})
 	}
 
-	svc.reportercli.Write(fs_function_tags.GetInviteTag(), meta.UserId, meta.ClientId)
+	svc.reportercli.Write(fs_function_tags.GetInviteTag(), meta.UserId, meta.ClientId, 1)
 
 	return errno.ErrResponse(errno.Ok)
 }

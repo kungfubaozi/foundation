@@ -2,7 +2,6 @@ package authenticate
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -10,25 +9,23 @@ import (
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	httptransport "github.com/go-kit/kit/transport/http"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
-	"net/http"
 	"time"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/pkg/format"
-	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/transport"
 )
 
 type GRPCServer struct {
 	new         grpctransport.Handler
 	check       grpctransport.Handler
-	refresh     grpctransport.Handler
+	get         grpctransport.Handler
+	replaceAuth grpctransport.Handler
 	offlineUser grpctransport.Handler
 }
 
@@ -48,45 +45,28 @@ func (g *GRPCServer) Check(ctx context.Context, in *fs_base_authenticate.CheckRe
 	return resp.(*fs_base_authenticate.CheckResponse), nil
 }
 
-func (g *GRPCServer) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
-	_, resp, err := g.refresh.ServeGRPC(ctx, in)
+func (g *GRPCServer) Get(ctx context.Context, in *fs_base_authenticate.GetRequest) (*fs_base_authenticate.GetResponse, error) {
+	_, resp, err := g.get.ServeGRPC(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*fs_base_authenticate.RefreshResponse), nil
+	return resp.(*fs_base_authenticate.GetResponse), nil
 }
 
 func (g *GRPCServer) OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error) {
-	_, resp, err := g.refresh.ServeGRPC(ctx, in)
+	_, resp, err := g.offlineUser.ServeGRPC(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return resp.(*fs_base.Response), nil
 }
 
-func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
-	zipkinServer := zipkin.HTTPServerTrace(zipkinTracer)
-
-	options := []httptransport.ServerOption{
-		httptransport.ServerErrorLogger(logger),
-		httptransport.ServerBefore(fs_metadata_transport.HTTPToContext()),
-		zipkinServer,
+func (g *GRPCServer) ReplaceAuth(ctx context.Context, in *fs_base_authenticate.ReplaceAuthRequest) (*fs_base.Response, error) {
+	_, resp, err := g.replaceAuth.ServeGRPC(ctx, in)
+	if err != nil {
+		return nil, err
 	}
-
-	m := http.NewServeMux()
-	m.Handle(fs_functions.GetRefreshFunc().Infix, httptransport.NewServer(
-		endpoints.RefreshEndpoint,
-		decodeHTTPUpdate,
-		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Refresh", logger)))...,
-	))
-
-	return m
-}
-func decodeHTTPUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	var req *fs_base_authenticate.RefreshRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	return req, err
+	return resp.(*fs_base.Response), nil
 }
 
 func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer *stdzipkin.Tracer, logger log.Logger) fs_base_authenticate.AuthenticateServer {
@@ -109,11 +89,16 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Check", logger)))...),
-		refresh: grpctransport.NewServer(
-			endpoints.RefreshEndpoint,
+		get: grpctransport.NewServer(
+			endpoints.GetEndpoint,
 			format.GrpcMessage,
 			format.GrpcMessage,
-			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Refresh", logger)))...),
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Get", logger)))...),
+		replaceAuth: grpctransport.NewServer(
+			endpoints.ReplaceAuthEndpoint,
+			format.GrpcMessage,
+			format.GrpcMessage,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "ReplaceAuth", logger)))...),
 		offlineUser: grpctransport.NewServer(
 			endpoints.OfflineUserEndpoint,
 			format.GrpcMessage,
@@ -165,21 +150,21 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(checkEndpoint)
 	}
 
-	var refreshEndpoint endpoint.Endpoint
+	var getEndpoint endpoint.Endpoint
 	{
-		refreshEndpoint = grpctransport.NewClient(conn,
+		getEndpoint = grpctransport.NewClient(conn,
 			"fs.base.authenticate.Authenticate",
-			"Refresh",
+			"Get",
 			format.GrpcMessage,
 			format.GrpcMessage,
-			fs_base_authenticate.RefreshResponse{},
+			fs_base_authenticate.GetResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
-		refreshEndpoint = limiter(refreshEndpoint)
-		refreshEndpoint = opentracing.TraceClient(otTracer, "Refresh")(refreshEndpoint)
-		refreshEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "Refresh",
+		getEndpoint = limiter(getEndpoint)
+		getEndpoint = opentracing.TraceClient(otTracer, "Get")(getEndpoint)
+		getEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Get",
 			Timeout: 5 * time.Second,
-		}))(refreshEndpoint)
+		}))(getEndpoint)
 	}
 
 	var offlineUserEndpoint endpoint.Endpoint
@@ -199,10 +184,28 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(offlineUserEndpoint)
 	}
 
+	var replaceAuthEndpoint endpoint.Endpoint
+	{
+		replaceAuthEndpoint = grpctransport.NewClient(conn,
+			"fs.base.authenticate.Authenticate",
+			"ReplaceAuth",
+			format.GrpcMessage,
+			format.GrpcMessage,
+			fs_base.Response{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
+		replaceAuthEndpoint = limiter(replaceAuthEndpoint)
+		replaceAuthEndpoint = opentracing.TraceClient(otTracer, "ReplaceAuth")(replaceAuthEndpoint)
+		replaceAuthEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "ReplaceAuth",
+			Timeout: 5 * time.Second,
+		}))(replaceAuthEndpoint)
+	}
+
 	return Endpoints{
 		NewEndpoint:         newEndpoint,
 		CheckEndpoint:       checkEndpoint,
-		RefreshEndpoint:     refreshEndpoint,
+		ReplaceAuthEndpoint: replaceAuthEndpoint,
 		OfflineUserEndpoint: offlineUserEndpoint,
+		GetEndpoint:         getEndpoint,
 	}
 }

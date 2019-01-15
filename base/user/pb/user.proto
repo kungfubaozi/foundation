@@ -25,6 +25,7 @@ service User {
 
 message UpdateRequest {
     string value = 1;
+    string userId = 2;
 }
 
 message FindRequest {

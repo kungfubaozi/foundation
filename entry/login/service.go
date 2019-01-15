@@ -148,9 +148,8 @@ func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.E
 	//更新
 	go func() {
 		resp, err := svc.invitecli.Update(context.Background(), &fs_base_invite.UpdateRequest{
-			InviteCode: in.Code,
-			InviteId:   ir.InviteId,
-			Account:    ir.Detail.Phone + ir.Detail.Email,
+			InviteId: ir.InviteId,
+			Account:  ir.Detail.Phone + ir.Detail.Email,
 		})
 		if err != nil {
 			errc(errno.ErrSystem)
@@ -158,6 +157,8 @@ func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.E
 		}
 		errc(resp.State)
 	}()
+
+	wg.Wait()
 
 	//重置密码
 	return &fs_entry_login.EntryResponse{State: errno.ErrResetPassword}, nil

@@ -9,6 +9,8 @@ import (
 	"os"
 	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/osenv"
+	"zskparker.com/foundation/safety/update"
+	"zskparker.com/foundation/safety/update/cmd/updatecli"
 	"zskparker.com/foundation/safety/verification"
 	"zskparker.com/foundation/safety/verification/cmd/verificationcli"
 )
@@ -30,8 +32,9 @@ func main() {
 
 	{
 		//update
-		//svc := update.MakeGRPCClient()
-		//r.PathPrefix("/update").Handler(http.StripPrefix("/update", update.MakeHTTPHandler(svc, tracer, zipkinTracer, logger)))
+		endpoints := updatecli.NewEndpoints(zipkinTracer)
+		r.PathPrefix(fs_functions.GetUpdateEmailFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetUpdateEmailFunc().Prefix, update.MakeHTTPHandler(
+			endpoints, tracer, zipkinTracer, logger)))
 	}
 
 	{

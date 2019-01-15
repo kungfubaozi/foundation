@@ -20,6 +20,7 @@ import (
 	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/safety/update/pb"
 )
@@ -41,34 +42,34 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	}
 
 	m := http.NewServeMux()
-	m.Handle("/update/password", httptransport.NewServer(
+	m.Handle(fs_functions.GetUpdatePasswordFunc().Infix, httptransport.NewServer(
 		endpoints.UpdatePasswordEndpoint,
-		decodeHTPPUpdate,
+		decodeHTTPUpdate,
 		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Sum", logger)))...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "UpdatePassword", logger)))...,
 	))
-	m.Handle("/update/phone", httptransport.NewServer(
+	m.Handle(fs_functions.GetUpdatePhoneFunc().Infix, httptransport.NewServer(
 		endpoints.UpdatePhoneEndpoint,
-		decodeHTPPUpdate,
+		decodeHTTPUpdate,
 		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Concat", logger)))...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "UpdatePhone", logger)))...,
 	))
-	m.Handle("/update/enterprise", httptransport.NewServer(
+	m.Handle(fs_functions.GetUpdateEnterpriseFunc().Infix, httptransport.NewServer(
 		endpoints.UpdateEnterpriseEndpoint,
-		decodeHTPPUpdate,
+		decodeHTTPUpdate,
 		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Concat", logger)))...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "UpdateEnterprise", logger)))...,
 	))
-	m.Handle("/update/email", httptransport.NewServer(
+	m.Handle(fs_functions.GetUpdateEmailFunc().Infix, httptransport.NewServer(
 		endpoints.UpdateEmailEndpoint,
-		decodeHTPPUpdate,
+		decodeHTTPUpdate,
 		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Concat", logger)))...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "UpdateEmail", logger)))...,
 	))
 	return m
 }
 
-func decodeHTPPUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeHTTPUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	var req *fs_safety_update.UpdateRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err

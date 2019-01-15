@@ -26,7 +26,7 @@ func DecodeToken(token string) (*UserClaims, error) {
 	return nil, err
 }
 
-func encodeAccessToken(authorize *fs_base_authenticate.Authorize) (string, error) {
+func EncodeAccessToken(authorize *fs_base_authenticate.Authorize) (string, error) {
 	sa := &SimpleAuthorize{
 		UserId:   authorize.UserId,
 		ClientId: authorize.ClientId,
@@ -37,7 +37,7 @@ func encodeAccessToken(authorize *fs_base_authenticate.Authorize) (string, error
 	return encodeToken(time.Minute*10, sa)
 }
 
-func encodeRefreshToken(authorize *fs_base_authenticate.Authorize) (string, error) {
+func EncodeRefreshToken(authorize *fs_base_authenticate.Authorize) (string, error) {
 	sa := &SimpleAuthorize{
 		UserId:   authorize.UserId,
 		ClientId: authorize.ClientId,

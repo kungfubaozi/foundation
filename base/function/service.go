@@ -53,6 +53,7 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 	upsert(c, in.Session, fs_functions.GetEntryByAPFunc())
 	upsert(c, in.Session, fs_functions.GetEntryByOAuthFunc())
 	upsert(c, in.Session, fs_functions.GetEntryByQRCodeFunc())
+	upsert(c, in.Session, fs_functions.GetEntryByInviteFunc())
 
 	//safety verification functions
 	upsert(c, in.Session, fs_functions.GetRegisterFunc())
@@ -106,8 +107,7 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 	//interceptor
 	upsert(c, in.Session, fs_functions.GetInterceptFunc())
 
-	upsert(c, in.Session, fs_functions.GetEntryByInviteFunc())
-
+	upsert(c, in.Session, fs_functions.GetRefreshFunc())
 	return &fs_base.Response{State: errno.Ok}, nil
 }
 

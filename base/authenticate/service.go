@@ -17,7 +17,6 @@ import (
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
-	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 )
 
@@ -26,7 +25,9 @@ type Service interface {
 
 	Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error)
 
-	Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error)
+	Get(ctx context.Context, in *fs_base_authenticate.GetRequest) (*fs_base_authenticate.GetResponse, error)
+
+	ReplaceAuth(ctx context.Context, in *fs_base_authenticate.ReplaceAuthRequest) (*fs_base.Response, error)
 
 	OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error)
 }
@@ -39,6 +40,38 @@ type authenticateService struct {
 	messsagecli messagecli.Channel
 	pool        *redis.Pool
 	logger      log.Logger
+}
+
+func (svc *authenticateService) Get(ctx context.Context, in *fs_base_authenticate.GetRequest) (*fs_base_authenticate.GetResponse, error) {
+	repo := svc.GetRepo()
+	defer repo.Close()
+	resp := func(s *fs_base.State) (*fs_base_authenticate.GetResponse, error) {
+		return &fs_base_authenticate.GetResponse{State: s}, nil
+	}
+
+	auth, err := repo.Get(in.UserId, in.ClientId, in.Relation)
+	if err != nil {
+		svc.logger.Log("step")
+		return resp(errno.ErrTokenExpired)
+	}
+	return &fs_base_authenticate.GetResponse{
+		State: errno.Ok,
+		Auth:  auth,
+	}, nil
+}
+
+func (svc *authenticateService) ReplaceAuth(ctx context.Context, in *fs_base_authenticate.ReplaceAuthRequest) (*fs_base.Response, error) {
+	repo := svc.GetRepo()
+	defer repo.Close()
+
+	//覆盖原有的token
+	err := repo.Add(in.Auth)
+	if err != nil {
+		svc.logger.Log("step")
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	return errno.ErrResponse(errno.Ok)
 }
 
 func (svc *authenticateService) OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error) {
@@ -55,144 +88,6 @@ func (svc *authenticateService) OfflineUser(ctx context.Context, in *fs_base_aut
 
 func (svc *authenticateService) GetRepo() repository {
 	return &authenticateRepository{conn: svc.pool.Get()}
-}
-
-//获取新的AccessToken
-func (svc *authenticateService) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
-	resp := func(state *fs_base.State) (*fs_base_authenticate.RefreshResponse, error) {
-		return &fs_base_authenticate.RefreshResponse{State: state}, nil
-	}
-	if len(in.RefreshToken) < 32 {
-		svc.logger.Log("step")
-		return resp(errno.ErrRequest)
-	}
-	refreshTokenClaims, err := DecodeToken(in.RefreshToken)
-	svc.logger.Log(refreshTokenClaims.ExpiresAt)
-	if err != nil {
-		svc.logger.Log("step")
-		return resp(errno.ErrToken)
-	}
-	if refreshTokenClaims.Valid() != nil {
-		svc.logger.Log("step")
-		return resp(errno.ErrTokenExpired)
-	}
-	token := refreshTokenClaims.Token
-	if token.Access {
-		svc.logger.Log("step")
-		return resp(errno.ErrToken)
-	}
-	repo := svc.GetRepo()
-	defer repo.Close()
-
-	meta := fs_metadata_transport.ContextToMeta(ctx)
-
-	auth, err := repo.Get(token.UserId, token.ClientId, token.Relation)
-	if err != nil {
-		svc.logger.Log("step")
-		return resp(errno.ErrTokenExpired)
-	}
-	node := utils.NodeGenerate()
-	auth.AccessTokenUUID = node.Generate().Base64()
-	var accessToken string
-	var wr *fs_base.State
-
-	wg := sync.WaitGroup{}
-
-	errc := func(e error) {
-		if err == nil {
-			err = e
-		}
-		wg.Done()
-	}
-
-	//检查用户状态
-	wg.Add(1)
-	go func() {
-		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{
-			Key: auth.UserId,
-		})
-		if e != nil {
-			errc(e)
-			return
-		}
-		if !a.State.Ok {
-			wr = a.State
-			errc(errno.ERROR)
-			return
-		}
-		wg.Done()
-	}()
-
-	//检查是否存在用户
-	wg.Add(1)
-	go func() {
-		a, e := svc.usercli.FindByUserId(context.Background(), &fs_base_user.FindRequest{
-			Value: auth.UserId,
-		})
-		if e != nil {
-			errc(e)
-			return
-		}
-		if !a.State.Ok {
-			wr = a.State
-			errc(errno.ERROR)
-			return
-		}
-		wg.Done()
-	}()
-
-	wg.Wait()
-
-	if err != nil {
-		svc.logger.Log("step")
-		return resp(errno.ErrSystem)
-	}
-
-	if wr != nil {
-		svc.logger.Log("step")
-		return resp(wr)
-	}
-
-	//可能是跳转的token
-	if auth.ClientId != meta.ClientId {
-		svc.logger.Log("step")
-		//需要通过web端才可跨项目访问
-		if auth.Platform == fs_constants.PLATFORM_WEB && meta.Platform == fs_constants.PLATFORM_WEB {
-			accessToken, err = encodeAccessToken(&fs_base_authenticate.Authorize{
-				ClientId:        meta.ClientId,
-				UserId:          auth.UserId,
-				AccessTokenUUID: auth.AccessTokenUUID,
-				Relation:        auth.Relation,
-			})
-			if err != nil {
-				svc.logger.Log("err")
-				return resp(errno.ErrSystem)
-			}
-		} else {
-			svc.logger.Log("step")
-			return resp(errno.ErrSupport)
-		}
-	} else {
-		svc.logger.Log("step")
-		accessToken, err = encodeAccessToken(auth)
-		if err != nil {
-			svc.logger.Log("step")
-			return resp(errno.ErrSystem)
-		}
-	}
-
-	//覆盖原有的token
-	err = repo.Add(auth)
-	if err != nil {
-		svc.logger.Log("step")
-		return resp(errno.ErrSystem)
-	}
-
-	return &fs_base_authenticate.RefreshResponse{
-		State:       errno.Ok,
-		AccessToken: accessToken,
-	}, nil
-
 }
 
 func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error) {
@@ -334,13 +229,13 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	}
 	wg.Add(1)
 	go func() {
-		a, err := encodeAccessToken(in.Authorize)
+		a, err := EncodeAccessToken(in.Authorize)
 		auth.Access = a
 		errc(err)
 	}()
 	wg.Add(1)
 	go func() {
-		a, err := encodeRefreshToken(in.Authorize)
+		a, err := EncodeRefreshToken(in.Authorize)
 		auth.Refresh = a
 		errc(err)
 	}()

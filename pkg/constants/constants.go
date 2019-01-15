@@ -30,6 +30,7 @@ const (
 	FCV_VALIDATE_CODE = 6 << 7
 	FCV_AUTH          = 6 << 9
 	FCV_NONE          = 6 << 10
+	FCV_PASSWORD      = 6 << 11
 )
 
 const (
@@ -56,4 +57,6 @@ const (
 	SVC_ENTRY_REGISTER      = "fd.svc.entry.register"
 	SVC_ENTRY_LOGIN         = "fd.svc.entry.login"
 	SVC_INTERCEPTOR         = "fd.svc.interceptor"
+	SVC_REFRESH             = "fd.svc.refresh"
+	SVC_INVITE              = "fd.svc.invite"
 )

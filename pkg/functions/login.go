@@ -17,7 +17,7 @@ func GetEntryByInviteFunc() *fs_pkg_model.APIFunction {
 		En:    "EntryByInvite",
 		Func:  fs_function_tags.GetEntryByInviteTag(),
 		Type:  fs_constants.TYPE_HIDE,
-		Level: fs_constants.LEVEL_TOURIST, //刷脸登录目前只对最高管理员开放
+		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
 }

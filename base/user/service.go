@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"sync"
 	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/state"
@@ -97,8 +98,6 @@ func (svc *userService) UpdatePhone(ctx context.Context, in *fs_base_user.Update
 		return errno.ErrResponse(errno.ErrRequest)
 	}
 
-	meta := ctx.Value("meta").(*fs_base.Metadata)
-
 	//update
 	repo := svc.GetRepo()
 	defer repo.Close()
@@ -108,7 +107,7 @@ func (svc *userService) UpdatePhone(ctx context.Context, in *fs_base_user.Update
 		return errno.ErrResponse(errno.ErrAlreadyBind)
 	}
 
-	err := repo.UpdatePhone(meta.UserId, in.Value)
+	err := repo.UpdatePhone(in.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -120,7 +119,6 @@ func (svc *userService) UpdateEmail(ctx context.Context, in *fs_base_user.Update
 	if len(in.Value) == 0 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
-	meta := ctx.Value("meta").(*fs_base.Metadata)
 
 	//update
 	repo := svc.GetRepo()
@@ -131,7 +129,7 @@ func (svc *userService) UpdateEmail(ctx context.Context, in *fs_base_user.Update
 		return errno.ErrResponse(errno.ErrAlreadyBind)
 	}
 
-	err := repo.UpdateEmail(meta.UserId, in.Value)
+	err := repo.UpdateEmail(in.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -143,7 +141,6 @@ func (svc *userService) UpdateEnterprise(ctx context.Context, in *fs_base_user.U
 	if len(in.Value) == 0 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
-	meta := ctx.Value("meta").(*fs_base.Metadata)
 
 	//update
 	repo := svc.GetRepo()
@@ -154,7 +151,7 @@ func (svc *userService) UpdateEnterprise(ctx context.Context, in *fs_base_user.U
 		return errno.ErrResponse(errno.ErrAlreadyBind)
 	}
 
-	err := repo.UpdateEnterprise(meta.UserId, in.Value)
+	err := repo.UpdateEnterprise(in.UserId, in.Value)
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -166,23 +163,62 @@ func (svc *userService) UpdatePassword(ctx context.Context, in *fs_base_user.Upd
 	if len(in.Value) < 6 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
-	meta := ctx.Value("meta").(*fs_base.Metadata)
 
 	//update
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	p, err := bcrypt.GenerateFromPassword([]byte(in.Value), bcrypt.DefaultCost)
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
+	var wg sync.WaitGroup
+	ps := errno.Ok
+
+	errc := func(s *fs_base.State) {
+		if ps.Ok {
+			ps = s
+		}
+		wg.Done()
 	}
 
-	err = repo.UpdatePassword(meta.UserId, string(p))
-	if err != nil {
-		return errno.ErrResponse(errno.ErrSystem)
-	}
+	wg.Add(2)
+	go func() {
+		p, err := bcrypt.GenerateFromPassword([]byte(in.Value), bcrypt.DefaultCost)
+		if err != nil {
+			errc(errno.ErrSystem)
+			return
+		}
+		err = repo.UpdatePassword(in.UserId, string(p))
+		if err != nil {
+			errc(errno.ErrSystem)
+			return
+		}
+		errc(errno.Ok)
+	}()
 
-	return errno.ErrResponse(errno.Ok)
+	go func() {
+		sr, err := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{
+			Key: in.UserId,
+		})
+		if err != nil {
+			errc(errno.ErrSystem)
+			return
+		}
+		//如果是重置密码状态则验证通过
+		if sr.Status == fs_constants.STATE_USER_RESET_PASSWORD {
+			resp, err := svc.statecli.Upsert(context.Background(), &fs_base_state.UpsertRequest{
+				Key:    in.UserId,
+				Status: fs_constants.STATE_OK,
+			})
+			if err != nil {
+				errc(errno.ErrSystem)
+				return
+			}
+			errc(resp.State)
+		}
+		errc(errno.Ok)
+	}()
+
+	wg.Wait()
+
+	return errno.ErrResponse(ps)
 }
 
 func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*fs_base.Response, error) {

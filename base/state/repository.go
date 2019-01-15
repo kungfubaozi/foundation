@@ -55,7 +55,7 @@ func (repo *stateRepository) Get(tag string) (int64, error) {
 	i, err := redis.Int64(repo.conn.Do("hget", "state_manage", "a2."+tag))
 	if i == 0 {
 		status := &store{}
-		err = repo.collection().Find(bson.M{"tag": tag}).One(status)
+		err = repo.collection(tag).Find(bson.M{"tag": tag}).One(status)
 		if err != nil {
 			if err == mgo.ErrNotFound {
 				return -1, mgo.ErrNotFound
@@ -79,9 +79,9 @@ func (repo *stateRepository) addToDataStore(tag string, status int64) error {
 		ModifyAt: time.Now().UnixNano(),
 	}
 
-	e := repo.collection().Update(bson.M{"tag": tag}, bson.M{"$set": bson.M{"modify_at": time.Now().UnixNano(), "status": status}})
+	e := repo.collection(tag).Update(bson.M{"tag": tag}, bson.M{"$set": bson.M{"modify_at": time.Now().UnixNano(), "status": status}})
 	if e != nil && e == mgo.ErrNotFound {
-		e = repo.collection().Insert(s)
+		e = repo.collection(tag).Insert(s)
 	}
 	return e
 }
@@ -91,8 +91,8 @@ func (repo *stateRepository) addCacheStore(tag string, status int64) error {
 	return err
 }
 
-func (repo *stateRepository) collection() *mgo.Collection {
-	return repo.session.DB("foundation").C("stores")
+func (repo *stateRepository) collection(tag string) *mgo.Collection {
+	return repo.session.DB("foundation").C("stores_" + tag[len(tag)-2:])
 }
 
 func (repo *stateRepository) Close() {

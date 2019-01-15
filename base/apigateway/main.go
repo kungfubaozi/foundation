@@ -7,10 +7,12 @@ import (
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"net/http"
 	"os"
-	"zskparker.com/foundation/base/authenticate"
-	"zskparker.com/foundation/base/authenticate/cmd/authenticatecli"
 	"zskparker.com/foundation/base/interceptor"
 	"zskparker.com/foundation/base/interceptor/cmd/interceptorcli"
+	"zskparker.com/foundation/base/invite"
+	"zskparker.com/foundation/base/invite/cmd/invitecli"
+	"zskparker.com/foundation/base/refresh"
+	"zskparker.com/foundation/base/refresh/cmd/refreshcli"
 	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/osenv"
 )
@@ -35,8 +37,14 @@ func main() {
 	}
 
 	{
-		endpoints := authenticatecli.NewEndpoints(zipkinTracer)
-		r.PathPrefix(fs_functions.GetRefreshFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetRefreshFunc().Prefix, authenticate.MakeHTTPHandler(
+		endpoints := refreshcli.NewEndpoints(zipkinTracer)
+		r.PathPrefix(fs_functions.GetRefreshFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetRefreshFunc().Prefix, refresh.MakeHTTPHandler(
+			endpoints, tracer, zipkinTracer, logger)))
+	}
+
+	{
+		endpoints := invitecli.NewEndpoint(zipkinTracer)
+		r.PathPrefix(fs_functions.GetInviteUserFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetInviteUserFunc().Prefix, invite.MakeHTTPHandler(
 			endpoints, tracer, zipkinTracer, logger)))
 	}
 

@@ -58,7 +58,26 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 			httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "NewLogin", logger)))...,
 	))
 
+	//reset password
+	m.Handle(fs_functions.GetVerificationUpdatePasswordFunc().Infix, httptransport.NewServer(
+		endpoints.NewEndpoint,
+		decodeHTTPNewResetPassword,
+		format.EncodeHTTPGenericResponse,
+		append(options,
+			httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "NewResetPassword", logger)))...,
+	))
+
 	return m
+}
+
+//使用密码账号注册验证码
+func decodeHTTPNewResetPassword(_ context.Context, r *http.Request) (interface{}, error) {
+	var req *fs_safety_verification.NewRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if req != nil {
+		req.Func = fs_function_tags.GetUpdatePasswordFuncTag()
+	}
+	return req, err
 }
 
 //使用密码账号注册验证码
