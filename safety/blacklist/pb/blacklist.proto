@@ -15,12 +15,16 @@ service Blacklist {
 
 message CheckAccountRequest {
     string account = 1;
+    fs.base.Metadata meta = 2;
+
 }
 
 message CheckMetaRequest {
     string ip = 1;
     string device = 2;
     string clientId = 3;
+    string userId = 4;
+    fs.base.Metadata meta = 5;
 }
 
 message AddRequest {

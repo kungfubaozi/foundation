@@ -189,7 +189,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 func (g *GRPCServer) UpdatePhone(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
 	_, resp, err := g.updatePhone.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -197,7 +197,7 @@ func (g *GRPCServer) UpdatePhone(ctx context.Context, in *fs_safety_update.Updat
 func (g *GRPCServer) UpdateEnterprise(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
 	_, resp, err := g.updateEnterprise.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -205,7 +205,7 @@ func (g *GRPCServer) UpdateEnterprise(ctx context.Context, in *fs_safety_update.
 func (g *GRPCServer) UpdatePassword(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
 	_, resp, err := g.updatePassword.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -213,7 +213,7 @@ func (g *GRPCServer) UpdatePassword(ctx context.Context, in *fs_safety_update.Up
 func (g *GRPCServer) UpdateEmail(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
 	_, resp, err := g.updateEmail.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }

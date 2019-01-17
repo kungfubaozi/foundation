@@ -44,7 +44,7 @@ func (svc *projectService) Init(ctx context.Context, in *fs_base_project.InitReq
 	}
 
 	p := defProject(in.Logo, in.Zh, in.En, in.Desc, in.UserId, bson.NewObjectId(), fs_constants.LEVEL_DEVELOPER)
-	r, err := svc.Create(ctx, p)
+	r, err := svc.Create(ctx, p, false)
 	if err != nil {
 		return &fs_base_project.InitResponse{State: errno.ErrSystem}, nil
 	}
@@ -145,10 +145,10 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewRequest) (*fs_base.Response, error) {
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 	p := defProject(in.Logo, in.Zh, in.En, in.Desc, meta.UserId, bson.NewObjectId(), fs_constants.LEVEL_DEVELOPER)
-	return svc.Create(ctx, p)
+	return svc.Create(ctx, p, true)
 }
 
-func (svc *projectService) Create(ctx context.Context, p *project) (*fs_base.Response, error) {
+func (svc *projectService) Create(ctx context.Context, p *project, s bool) (*fs_base.Response, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
 
@@ -167,11 +167,19 @@ func (svc *projectService) Create(ctx context.Context, p *project) (*fs_base.Res
 	}()
 
 	go func() {
-		svc.strategycli.Upsert(ctx, &fs_base_strategy.UpsertRequest{
-			Strategy: strategydef.DefStrategy(p.Id.Hex(), p.Creator),
-		})
+		if s {
+			_, errc <- svc.strategycli.Upsert(ctx, &fs_base_strategy.UpsertRequest{
+				Strategy: strategydef.DefStrategy(p.Id.Hex(), p.Creator),
+			})
+		} else {
+			_, errc <- svc.strategycli.Init(ctx, &fs_base_strategy.InitRequest{
+				Creator:   p.Creator,
+				ProjectId: p.Id.Hex(),
+			})
+		}
 	}()
 
+	g
 	if err := <-errc; err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}

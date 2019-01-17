@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"os"
+	"runtime"
 	"zskparker.com/foundation/base/authenticate"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/message/cmd/messagecli"
@@ -19,9 +20,12 @@ import (
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
+	"zskparker.com/foundation/pkg/sync"
+	"zskparker.com/foundation/safety/blacklist/cmd/blacklistcli"
 )
 
 func StartService() {
+	runtime.GOMAXPROCS(4)
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -49,7 +53,7 @@ func StartService() {
 
 	service := authenticate.NewService(statecli.NewClient(zipkinTracer), usercli.NewClient(zipkinTracer),
 		rp, pool,
-		ch)
+		ch, fs_redisync.Create(pool), blacklistcli.NewClient(zipkinTracer))
 	endpoints := authenticate.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := authenticate.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

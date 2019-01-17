@@ -9,6 +9,7 @@ import (
 	"zskparker.com/foundation/base/project/cmd/projectcli"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
 	"zskparker.com/foundation/pkg/middlewares"
+	"zskparker.com/foundation/safety/blacklist/cmd/blacklistcli"
 )
 
 func NewMiddleware(logger log.Logger, tracer *zipkin.Tracer) fs_endpoint_middlewares.Endpoint {
@@ -16,5 +17,5 @@ func NewMiddleware(logger log.Logger, tracer *zipkin.Tracer) fs_endpoint_middlew
 		authenticatecli.NewClient(tracer),
 		facecli.NewClient(tracer),
 		validatecli.NewClient(tracer),
-		projectcli.NewClient(tracer))
+		projectcli.NewClient(tracer), blacklistcli.NewClient(tracer))
 }

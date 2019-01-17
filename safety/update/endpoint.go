@@ -9,6 +9,7 @@ import (
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/pkg/middlewares"
 	"zskparker.com/foundation/safety/update/pb"
 )
 
@@ -19,7 +20,7 @@ type Endpoints struct {
 	UpdatePasswordEndpoint   endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clients fs_endpoint_middlewares.Endpoint) Endpoints {
 
 	var updatePhone endpoint.Endpoint
 	{
@@ -27,6 +28,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		updatePhone = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updatePhone)
 		updatePhone = zipkin.TraceEndpoint(trace, "UpdatePhone")(updatePhone)
 
+		updatePhone = clients.WithMeta()(updatePhone)
 	}
 
 	var updateEmail endpoint.Endpoint
@@ -34,6 +36,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		updateEmail = MakeUpdateEmailEndpoint(svc)
 		updateEmail = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updateEmail)
 		updateEmail = zipkin.TraceEndpoint(trace, "UpdateEmail")(updateEmail)
+
+		updateEmail = clients.WithMeta()(updateEmail)
 	}
 
 	var updateEnterprise endpoint.Endpoint
@@ -41,6 +45,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		updateEnterprise = MakeUpdateEnterpriseEndpoint(svc)
 		updateEnterprise = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updateEnterprise)
 		updateEnterprise = zipkin.TraceEndpoint(trace, "UpdateEnterprise")(updateEnterprise)
+
+		updateEnterprise = clients.WithMeta()(updateEnterprise)
 	}
 
 	var updatePassword endpoint.Endpoint
@@ -48,6 +54,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		updatePassword = MakeUpdatePasswordEndpoint(svc)
 		updatePassword = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updatePassword)
 		updatePassword = zipkin.TraceEndpoint(trace, "UpdatePassword")(updatePassword)
+
+		updatePassword = clients.WithMeta()(updatePassword)
 	}
 
 	return Endpoints{

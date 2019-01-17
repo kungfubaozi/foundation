@@ -16,19 +16,11 @@ import (
 type Endpoints struct {
 	NewEndpoint         endpoint.Endpoint
 	CheckEndpoint       endpoint.Endpoint
-	GetEndpoint         endpoint.Endpoint
-	ReplaceAuthEndpoint endpoint.Endpoint
 	OfflineUserEndpoint endpoint.Endpoint
+	RefreshEndpoint     endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, mwclient fs_endpoint_middlewares.Endpoint) Endpoints {
-
-	var getEndpoint endpoint.Endpoint
-	{
-		getEndpoint = MakeGetEndpoint(svc)
-		getEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getEndpoint)
-		getEndpoint = zipkin.TraceEndpoint(trace, "Get")(getEndpoint)
-	}
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client fs_endpoint_middlewares.Endpoint) Endpoints {
 
 	var newEndpoint endpoint.Endpoint
 	{
@@ -43,8 +35,6 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, mwcli
 		checkEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(checkEndpoint)
 		checkEndpoint = zipkin.TraceEndpoint(trace, "Check")(checkEndpoint)
 
-		checkEndpoint = mwclient.WithMeta()(checkEndpoint)
-
 	}
 
 	var offlineUserEndpoint endpoint.Endpoint
@@ -55,26 +45,27 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, mwcli
 
 	}
 
-	var replaceAuthEndpoint endpoint.Endpoint
+	var refreshEndpoint endpoint.Endpoint
 	{
-		replaceAuthEndpoint = MakeReplaceAuthEndpoint(svc)
-		replaceAuthEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(replaceAuthEndpoint)
-		replaceAuthEndpoint = zipkin.TraceEndpoint(trace, "ReplaceAuth")(replaceAuthEndpoint)
+		refreshEndpoint = MakeRefreshEndpoint(svc)
+		refreshEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(refreshEndpoint)
+		refreshEndpoint = zipkin.TraceEndpoint(trace, "Refresh")(refreshEndpoint)
 
+		refreshEndpoint = client.WithMeta()(refreshEndpoint)
 	}
 
 	return Endpoints{
 		NewEndpoint:         newEndpoint,
 		CheckEndpoint:       checkEndpoint,
 		OfflineUserEndpoint: offlineUserEndpoint,
-		GetEndpoint:         getEndpoint,
+		RefreshEndpoint:     refreshEndpoint,
 	}
 
 }
 
-func MakeReplaceAuthEndpoint(svc Service) endpoint.Endpoint {
+func MakeRefreshEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return svc.ReplaceAuth(ctx, request.(*fs_base_authenticate.ReplaceAuthRequest))
+		return svc.Refresh(ctx, request.(*fs_base_authenticate.RefreshRequest))
 	}
 }
 
@@ -90,32 +81,10 @@ func MakeNewEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
-func MakeGetEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return svc.Get(ctx, request.(*fs_base_authenticate.GetRequest))
-	}
-}
-
 func MakeCheckEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return svc.Check(ctx, request.(*fs_base_authenticate.CheckRequest))
 	}
-}
-
-func (g Endpoints) Get(ctx context.Context, in *fs_base_authenticate.GetRequest) (*fs_base_authenticate.GetResponse, error) {
-	resp, err := g.GetEndpoint(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*fs_base_authenticate.GetResponse), nil
-}
-
-func (g Endpoints) ReplaceAuth(ctx context.Context, in *fs_base_authenticate.ReplaceAuthRequest) (*fs_base.Response, error) {
-	resp, err := g.ReplaceAuthEndpoint(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*fs_base.Response), nil
 }
 
 func (g Endpoints) OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error) {
@@ -140,4 +109,12 @@ func (g Endpoints) Check(ctx context.Context, in *fs_base_authenticate.CheckRequ
 		return nil, err
 	}
 	return resp.(*fs_base_authenticate.CheckResponse), nil
+}
+
+func (g Endpoints) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
+	resp, err := g.RefreshEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base_authenticate.RefreshResponse), nil
 }

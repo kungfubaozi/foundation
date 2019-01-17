@@ -4,6 +4,7 @@ import (
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/model"
+	"zskparker.com/foundation/pkg/tags"
 )
 
 //添加黑名单
@@ -15,7 +16,7 @@ func GetAddBlacklistFunc() *fs_pkg_model.APIFunction {
 	f.Function = &fs_base_function.Func{
 		Zh:    "添加黑名单",
 		En:    "AddBlacklist",
-		Func:  "01d69bf4f2f9",
+		Func:  fs_function_tags.GetAddBlacklist(),
 		Fcv:   fs_constants.FCV_AUTH,
 		Level: fs_constants.LEVEL_ADMIN,
 	}
@@ -31,7 +32,7 @@ func GetRemoveBlacklistFunc() *fs_pkg_model.APIFunction {
 	f.Function = &fs_base_function.Func{
 		Zh:    "移除黑名单",
 		En:    "RemoveBlacklist",
-		Func:  "17bb8ce81629",
+		Func:  fs_function_tags.GetRemoveBlacklist(),
 		Fcv:   fs_constants.FCV_AUTH,
 		Level: fs_constants.LEVEL_ADMIN,
 	}

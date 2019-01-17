@@ -42,11 +42,11 @@ func Create(logger log.Logger, functioncli fs_base_function.FunctionServer,
 	authenticatecli fs_base_authenticate.AuthenticateServer,
 	facecli fs_base_face.FaceServer,
 	validatecli fs_base_validate.ValidateServer,
-	projectcli fs_base_project.ProjectServer) Endpoint {
+	projectcli fs_base_project.ProjectServer, blacklistcli fs_safety_blacklist.BlacklistServer) Endpoint {
 	return &authMiddleware{logger: logger, functioncli: functioncli,
 		authenticatecli: authenticatecli, facecli: facecli,
-		validatecli: validatecli,
-		projectcli:  projectcli}
+		validatecli: validatecli, blacklistcli: blacklistcli,
+		projectcli: projectcli}
 }
 
 func (mwcli *authMiddleware) WithMeta() endpoint.Middleware {
@@ -65,7 +65,7 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 
-			runtime.GOMAXPROCS(3)
+			runtime.GOMAXPROCS(4)
 
 			meta := ctx.Value(fs_metadata_transport.MetadataTransportKey).(*fs_base.Metadata)
 

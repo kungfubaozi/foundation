@@ -12,6 +12,8 @@ type repository interface {
 	Get(projectId string) (*fs_base.ProjectStrategy, error)
 
 	Upsert(s *fs_base.ProjectStrategy) error
+
+	Size() int
 }
 
 type strategyRepository struct {
@@ -26,6 +28,11 @@ func (repo *strategyRepository) Get(projectId string) (*fs_base.ProjectStrategy,
 	p := &fs_base.ProjectStrategy{}
 	err := repo.collection().Find(bson.M{"projectid": projectId}).One(p)
 	return p, err
+}
+
+func (repo *strategyRepository) Size() int {
+	i, _ := repo.collection().Count()
+	return i
 }
 
 func (repo *strategyRepository) Upsert(s *fs_base.ProjectStrategy) error {

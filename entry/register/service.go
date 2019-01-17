@@ -15,6 +15,8 @@ import (
 	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tags"
 	"zskparker.com/foundation/pkg/transport"
+	"zskparker.com/foundation/safety/blacklist"
+	"zskparker.com/foundation/safety/blacklist/pb"
 )
 
 type Service interface {
@@ -24,11 +26,12 @@ type Service interface {
 }
 
 type registerService struct {
-	usercli     user.Service
-	facecli     face.Service
-	reportercli reportercli.Channel
-	session     *mgo.Session
-	redisync    *fs_redisync.Redisync
+	usercli      user.Service
+	facecli      face.Service
+	reportercli  reportercli.Channel
+	session      *mgo.Session
+	redisync     *fs_redisync.Redisync
+	blacklistcli blacklist.Service
 }
 
 func (svc *registerService) GetRepo() repository {
@@ -46,6 +49,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 	}
 
 	meta := fs_metadata_transport.ContextToMeta(ctx)
+
 	mode := strategy.Events.OnRegister.Mode
 	var v string
 	if mode == 1 { //phone
@@ -66,6 +70,18 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		v = in.Email
 	} else { //不支持的操作
 		return errno.ErrResponse(errno.ErrSupport)
+	}
+
+	b, e := svc.blacklistcli.CheckAccount(context.Background(), &fs_safety_blacklist.CheckAccountRequest{
+		Meta:    meta,
+		Account: v,
+	})
+
+	if e != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+	if !b.State.Ok {
+		return errno.ErrResponse(b.State)
 	}
 
 	//锁住当前操作的注册值
@@ -100,11 +116,11 @@ func (svc *registerService) FromOAuth(ctx context.Context, in *fs_entry_register
 }
 
 func NewService(usercli user.Service, repotercli reportercli.Channel, facecli face.Service,
-	redisync *fs_redisync.Redisync) Service {
+	redisync *fs_redisync.Redisync, blacklistcli blacklist.Service) Service {
 	var svc Service
 	{
 		svc = &registerService{usercli: usercli, reportercli: repotercli, facecli: facecli,
-			redisync: redisync}
+			redisync: redisync, blacklistcli: blacklistcli}
 	}
 	return svc
 }

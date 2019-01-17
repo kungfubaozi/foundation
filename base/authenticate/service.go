@@ -17,7 +17,12 @@ import (
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/sync"
+	"zskparker.com/foundation/pkg/tags"
+	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
+	"zskparker.com/foundation/safety/blacklist"
+	"zskparker.com/foundation/safety/blacklist/pb"
 )
 
 type Service interface {
@@ -25,53 +30,110 @@ type Service interface {
 
 	Check(ctx context.Context, in *fs_base_authenticate.CheckRequest) (*fs_base_authenticate.CheckResponse, error)
 
-	Get(ctx context.Context, in *fs_base_authenticate.GetRequest) (*fs_base_authenticate.GetResponse, error)
-
-	ReplaceAuth(ctx context.Context, in *fs_base_authenticate.ReplaceAuthRequest) (*fs_base.Response, error)
-
 	OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error)
+
+	Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error)
 }
 
 //只检查用户、状态，以及策略等鉴权问题
 type authenticateService struct {
-	statecli    state.Service
-	usercli     user.Service
-	reportercli reportercli.Channel
-	messsagecli messagecli.Channel
-	pool        *redis.Pool
-	logger      log.Logger
+	statecli     state.Service
+	usercli      user.Service
+	reportercli  reportercli.Channel
+	messsagecli  messagecli.Channel
+	pool         *redis.Pool
+	logger       log.Logger
+	redisync     *fs_redisync.Redisync
+	blacklistcli fs_safety_blacklist.BlacklistServer
 }
 
-func (svc *authenticateService) Get(ctx context.Context, in *fs_base_authenticate.GetRequest) (*fs_base_authenticate.GetResponse, error) {
-	repo := svc.GetRepo()
-	defer repo.Close()
-	resp := func(s *fs_base.State) (*fs_base_authenticate.GetResponse, error) {
-		return &fs_base_authenticate.GetResponse{State: s}, nil
+func (svc *authenticateService) Refresh(ctx context.Context, in *fs_base_authenticate.RefreshRequest) (*fs_base_authenticate.RefreshResponse, error) {
+	resp := func(state *fs_base.State) (*fs_base_authenticate.RefreshResponse, error) {
+		return &fs_base_authenticate.RefreshResponse{State: state}, nil
 	}
-
-	auth, err := repo.Get(in.UserId, in.ClientId, in.Relation)
+	if len(in.RefreshToken) < 32 {
+		svc.logger.Log("step")
+		return resp(errno.ErrRequest)
+	}
+	refreshTokenClaims, err := DecodeToken(in.RefreshToken)
+	svc.logger.Log(refreshTokenClaims.ExpiresAt)
 	if err != nil {
+		svc.logger.Log("step")
+		return resp(errno.ErrToken)
+	}
+	if refreshTokenClaims.Valid() != nil {
 		svc.logger.Log("step")
 		return resp(errno.ErrTokenExpired)
 	}
-	return &fs_base_authenticate.GetResponse{
-		State: errno.Ok,
-		Auth:  auth,
-	}, nil
-}
+	token := refreshTokenClaims.Token
+	if token.Access {
+		svc.logger.Log("step")
+		return resp(errno.ErrToken)
+	}
 
-func (svc *authenticateService) ReplaceAuth(ctx context.Context, in *fs_base_authenticate.ReplaceAuthRequest) (*fs_base.Response, error) {
+	//锁定30s
+	if s := svc.redisync.Lock(fs_function_tags.GetAuthenticateRefreshTag(), token.Relation, 30); s.Ok {
+		return resp(s)
+	}
+
+	meta := fs_metadata_transport.ContextToMeta(ctx)
+
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	//覆盖原有的token
-	err := repo.Add(in.Auth)
+	auth, err := repo.Get(token.UserId, token.ClientId, token.Relation)
 	if err != nil {
-		svc.logger.Log("step")
-		return errno.ErrResponse(errno.ErrSystem)
+		return resp(errno.ErrTokenExpired)
 	}
 
-	return errno.ErrResponse(errno.Ok)
+	node := utils.NodeGenerate()
+	auth.AccessTokenUUID = node.Generate().Base64()
+	var accessToken string
+
+	//!!!验证操作已经在拦截器中设置完成（状态检测，黑名单，用户依存等）
+
+	//可能是跳转的token
+	if auth.ClientId != meta.ClientId {
+		svc.logger.Log("step")
+		//需要通过web端才可跨项目访问
+		if auth.Platform == fs_constants.PLATFORM_WEB && meta.Platform == fs_constants.PLATFORM_WEB {
+			accessToken, err = EncodeAccessToken(&fs_base_authenticate.Authorize{
+				ClientId:        meta.ClientId,
+				UserId:          auth.UserId,
+				AccessTokenUUID: auth.AccessTokenUUID,
+				Relation:        auth.Relation,
+			})
+			if err != nil {
+				svc.logger.Log("err")
+				return resp(errno.ErrSystem)
+			}
+
+			//由于在缓存里取出的是遵循 userId,clientId,relationId
+			//当出现使用refreshToken刷新别的web client时，会新建一个以当前用户的基本信息+client生成token
+			//公用一个refreshToken的Relation，
+			auth.ClientId = meta.ClientId
+		} else { //除了web端其他的客户端不支持token公用
+			svc.logger.Log("step")
+			return resp(errno.ErrSupport)
+		}
+	} else {
+		svc.logger.Log("step")
+		accessToken, err = EncodeAccessToken(auth)
+		if err != nil {
+			svc.logger.Log("step")
+			return resp(errno.ErrSystem)
+		}
+	}
+
+	err = repo.Add(auth)
+	if err != nil {
+		return resp(errno.ErrSystem)
+	}
+
+	return &fs_base_authenticate.RefreshResponse{
+		State:       errno.Ok,
+		AccessToken: accessToken,
+	}, nil
 }
 
 func (svc *authenticateService) OfflineUser(ctx context.Context, in *fs_base_authenticate.OfflineUserRequest) (*fs_base.Response, error) {
@@ -133,7 +195,7 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 	}
 
 	//检查用户状态
-	wg.Add(1)
+	wg.Add(3)
 	go func() {
 		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{
 			Key: token.UserId,
@@ -156,7 +218,6 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 	}()
 
 	//检查是否存在用户
-	wg.Add(1)
 	go func() {
 		a, e := svc.usercli.FindByUserId(context.Background(), &fs_base_user.FindRequest{
 			Value: auth.UserId,
@@ -172,6 +233,24 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 			return
 		}
 		level = a.Level
+		wg.Done()
+	}()
+
+	//检查黑名单
+	go func() {
+		b, e := svc.blacklistcli.CheckMeta(context.Background(), &fs_safety_blacklist.CheckMetaRequest{
+			UserId: in.Metadata.UserId,
+		})
+		if e != nil {
+			errc(errno.ErrSystem)
+			svc.logger.Log("err", e)
+			return
+		}
+		if !b.State.Ok {
+			errc(b.State)
+			svc.logger.Log("state", b.State)
+			return
+		}
 		wg.Done()
 	}()
 
@@ -225,39 +304,60 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	var cs *fs_base.State
 
 	wg := sync.WaitGroup{}
-	errc := func(e error) {
-		if err == nil {
-			err = e
+	errc := func(e *fs_base.State) {
+		if cs.Ok {
+			cs = e
 		}
 		wg.Done()
 	}
-	wg.Add(1)
+	wg.Add(4)
 	go func() {
 		a, err := EncodeAccessToken(in.Authorize)
+		if err != nil {
+			errc(errno.ErrSystem)
+			return
+		}
 		auth.Access = a
-		errc(err)
+		errc(errno.Ok)
 	}()
-	wg.Add(1)
 	go func() {
 		a, err := EncodeRefreshToken(in.Authorize)
+		if err != nil {
+			errc(errno.ErrSystem)
+			return
+		}
 		auth.Refresh = a
-		errc(err)
+		errc(errno.Ok)
 	}()
-	wg.Add(1)
 	go func() {
 		a, e := svc.statecli.Get(context.Background(), &fs_base_state.GetRequest{
 			Key: in.Authorize.UserId,
 		})
 		if e != nil {
-			errc(e)
+			errc(errno.ErrSystem)
 			return
 		}
 		if !a.State.Ok {
-			cs = a.State
-			errc(errno.ERROR)
+			errc(a.State)
 			return
 		}
-		wg.Done()
+		errc(errno.Ok)
+	}()
+	go func() {
+		b, e := svc.blacklistcli.CheckMeta(context.Background(), &fs_safety_blacklist.CheckMetaRequest{
+			UserId: in.Authorize.UserId,
+		})
+		if e != nil {
+			errc(errno.ErrSystem)
+			svc.logger.Log("err", e)
+			return
+		}
+		if !b.State.Ok {
+			errc(b.State)
+			svc.logger.Log("state", b.State)
+			return
+		}
+		errc(errno.Ok)
 	}()
 	wg.Wait()
 
@@ -323,7 +423,7 @@ func b2s(bs []uint8) string {
 }
 
 func NewService(statecli state.Service, usercli user.Service, reportercli reportercli.Channel,
-	pool *redis.Pool, messsagecli messagecli.Channel) Service {
+	pool *redis.Pool, messsagecli messagecli.Channel, redisync *fs_redisync.Redisync, blacklistcli blacklist.Service) Service {
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -334,7 +434,7 @@ func NewService(statecli state.Service, usercli user.Service, reportercli report
 	{
 
 		svc = &authenticateService{statecli: statecli, usercli: usercli, reportercli: reportercli,
-			pool: pool, messsagecli: messsagecli, logger: logger}
+			pool: pool, messsagecli: messsagecli, logger: logger, redisync: redisync, blacklistcli: blacklistcli}
 	}
 	return svc
 }

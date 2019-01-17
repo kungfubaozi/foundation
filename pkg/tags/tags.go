@@ -1,11 +1,23 @@
 package fs_function_tags
 
+func GetAddBlacklist() string {
+	return "01d69bf4f2f9"
+}
+
+func GetRemoveBlacklist() string {
+	return "17bb8ce81629"
+}
+
 func GetBlacklistCheckIP() string {
 	return "f4813ec5a9c2"
 }
 
 func GetBlacklistCheckDevice() string {
 	return "9d15429d4cf3"
+}
+
+func GetBlacklistCheckUser() string {
+	return "324a19440b7e"
 }
 
 func GetEntryByInviteTag() string {

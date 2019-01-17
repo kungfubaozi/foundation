@@ -65,6 +65,7 @@ const (
 	SVC_ENTRY_REGISTER      = "fd.svc.entry.register"
 	SVC_ENTRY_LOGIN         = "fd.svc.entry.login"
 	SVC_INTERCEPTOR         = "fd.svc.interceptor"
-	SVC_REFRESH             = "fd.svc.refresh"
+	SVC_BLACKLIST           = "fd.svc.blacklist"
 	SVC_INVITE              = "fd.svc.invite"
+	INIT                    = "fd.init"
 )

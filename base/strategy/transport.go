@@ -23,6 +23,7 @@ import (
 type GRPCServer struct {
 	upsert grpctransport.Handler
 	get    grpctransport.Handler
+	init   grpctransport.Handler
 }
 
 func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer *stdzipkin.Tracer, logger log.Logger) fs_base_strategy.StrategyServer {
@@ -44,6 +45,11 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Upsert", logger)))...),
+		init: grpctransport.NewServer(
+			endpoints.InitEndpoint,
+			format.GrpcMessage,
+			format.GrpcMessage,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Init", logger)))...),
 	}
 }
 
@@ -89,10 +95,36 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(upsertEndpoint)
 	}
 
+	var initEndpoint endpoint.Endpoint
+	{
+		initEndpoint = grpctransport.NewClient(conn,
+			"fs.base.strategy.Strategy",
+			"Init",
+			format.GrpcMessage,
+			format.GrpcMessage,
+			fs_base.Response{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
+		initEndpoint = limiter(initEndpoint)
+		initEndpoint = opentracing.TraceClient(otTracer, "Init")(initEndpoint)
+		initEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Init",
+			Timeout: 5 * time.Second,
+		}))(initEndpoint)
+	}
+
 	return Endpoints{
 		GetEndpoint:    getEndpoint,
 		UpsertEndpoint: upsertEndpoint,
+		InitEndpoint:   initEndpoint,
 	}
+}
+
+func (g *GRPCServer) Init(ctx context.Context, in *fs_base_strategy.InitRequest) (*fs_base.Response, error) {
+	_, resp, err := g.init.ServeGRPC(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base.Response), nil
 }
 
 func (g *GRPCServer) Get(ctx context.Context, in *fs_base_strategy.GetRequest) (*fs_base_strategy.GetResponse, error) {

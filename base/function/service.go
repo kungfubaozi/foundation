@@ -87,6 +87,7 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 	upsert(c, in.Session, fs_functions.GetCreateProject())
 	upsert(c, in.Session, fs_functions.GetRemoveProject())
 	upsert(c, in.Session, fs_functions.GetUpdateProject())
+	upsert(c, in.Session, fs_functions.GetEnablePlatform())
 
 	//usersync functions
 	upsert(c, in.Session, fs_functions.GetAddUserSyncHookFunc())
@@ -107,6 +108,7 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 	//interceptor
 	upsert(c, in.Session, fs_functions.GetInterceptFunc())
 
+	//auth
 	upsert(c, in.Session, fs_functions.GetRefreshFunc())
 	return &fs_base.Response{State: errno.Ok}, nil
 }

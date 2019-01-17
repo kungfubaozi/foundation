@@ -6,6 +6,7 @@ import (
 	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
+	"zskparker.com/foundation/base/strategy/def"
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/errno"
 )
@@ -14,6 +15,8 @@ type Service interface {
 	Get(ctx context.Context, in *fs_base_strategy.GetRequest) (*fs_base_strategy.GetResponse, error)
 
 	Upsert(ctx context.Context, in *fs_base_strategy.UpsertRequest) (*fs_base.Response, error)
+
+	Init(ctx context.Context, in *fs_base_strategy.InitRequest) (*fs_base.Response, error)
 }
 
 type strategyService struct {
@@ -33,6 +36,21 @@ func (svc *strategyService) Get(ctx context.Context, in *fs_base_strategy.GetReq
 		State:    errno.Ok,
 		Strategy: p,
 	}, nil
+}
+
+func (svc *strategyService) Init(ctx context.Context, in *fs_base_strategy.InitRequest) (*fs_base.Response, error) {
+	repo := svc.GetRepo()
+	defer repo.Close()
+
+	i := repo.Size()
+	if i > 0 {
+		return errno.ErrResponse(errno.ErrAlreadyExists)
+	}
+	err := repo.Upsert(strategydef.DefStrategy(in.ProjectId, in.Creator))
+	if err != nil {
+		return errno.ErrResponse(errno.ErrSystem)
+	}
+	return errno.ErrResponse(errno.Ok)
 }
 
 func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.UpsertRequest) (*fs_base.Response, error) {

@@ -44,7 +44,7 @@ func (svc *reporterService) Write(ctx context.Context, in *fs_base_reporter.Writ
 	fmt.Println(err)
 
 	//发送到统计里
-	svc.statistics.Event(in.Who, in.Where, in.Func, in.Timestamp)
+	svc.statistics.Event(in.Who, in.Where, in.Func, in.Timestamp, in.Status)
 
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)

@@ -75,6 +75,13 @@ func NewEndpoints(tracer *zipkin.Tracer) authenticate.Endpoints {
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
 		endpoints.OfflineUserEndpoint = retry
 	}
+	{
+		factory := Factory(authenticate.MakeRefreshEndpoint, otTracer, tracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.RefreshEndpoint = retry
+	}
 
 	return endpoints
 }

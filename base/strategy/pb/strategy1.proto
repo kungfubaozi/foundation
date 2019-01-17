@@ -11,6 +11,14 @@ service Strategy {
 
     //更新
     rpc Upsert (UpsertRequest) returns (fs.base.Response);
+
+    //初始化
+    rpc Init(InitRequest)  returns (fs.base.Response);
+}
+
+message InitRequest {
+    string projectId = 1;
+    string creator = 2;
 }
 
 message GetRequest {

@@ -83,7 +83,7 @@ func main() {
 	os.Setenv("CONSUL_ADDR", consul)
 	time.Sleep(200)
 
-	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.SVC_PROJECT, osenv.GetMicroPortString())
+	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.INIT, osenv.GetMicroPortString())
 	defer reporter.Close()
 
 	usersrv := usercli.NewClient(zipkinTracer)

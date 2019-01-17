@@ -9,6 +9,8 @@ import (
 	"os"
 	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/osenv"
+	"zskparker.com/foundation/safety/blacklist"
+	"zskparker.com/foundation/safety/blacklist/cmd/blacklistcli"
 	"zskparker.com/foundation/safety/update"
 	"zskparker.com/foundation/safety/update/cmd/updatecli"
 	"zskparker.com/foundation/safety/verification"
@@ -41,6 +43,13 @@ func main() {
 		//verification
 		endpoints := verificationcli.NewEndpoints(osenv.GetConsulAddr(), zipkinTracer)
 		r.PathPrefix(fs_functions.GetRegisterFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetRegisterFunc().Prefix, verification.MakeHTTPHandler(
+			endpoints, tracer, zipkinTracer, logger)))
+	}
+
+	{
+		//blacklist
+		endpoints := blacklistcli.NewEndpoint(zipkinTracer)
+		r.PathPrefix(fs_functions.GetAddBlacklistFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetAddBlacklistFunc().Prefix, blacklist.MakeHTTPHandler(
 			endpoints, tracer, zipkinTracer, logger)))
 	}
 

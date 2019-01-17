@@ -9,6 +9,7 @@ import (
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/tags"
+	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/safety/blacklist/pb"
 )
 
@@ -30,7 +31,13 @@ func (svc *blacklistService) GetRepo() repository {
 }
 
 func (svc *blacklistService) CheckAccount(ctx context.Context, in *fs_safety_blacklist.CheckAccountRequest) (*fs_base.Response, error) {
-	panic("implement me")
+	repo := svc.GetRepo()
+	err := repo.Get(in.Account, ACCOUNT)
+	if err != nil {
+		return errno.ErrResponse(errno.ErrRequest)
+	}
+	fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.Account, fs_function_tags.GetBlacklistCheckIP(), fs_constants.STATUS_OK)
+	return errno.ErrResponse(errno.Ok)
 }
 
 func (svc *blacklistService) Add(ctx context.Context, in *fs_safety_blacklist.AddRequest) (*fs_base.Response, error) {
@@ -58,8 +65,7 @@ func (svc *blacklistService) CheckMeta(ctx context.Context, in *fs_safety_blackl
 			if err == nil {
 				errc(errno.Ok)
 			} else {
-				svc.reportercli.Write(fs_function_tags.GetBlacklistCheckIP(), in.Ip, in.ClientId, fs_constants.STATE_OK)
-
+				fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.Ip, fs_function_tags.GetBlacklistCheckIP(), fs_constants.STATUS_OK)
 				errc(errno.ErrRequest)
 			}
 		}()
@@ -72,8 +78,20 @@ func (svc *blacklistService) CheckMeta(ctx context.Context, in *fs_safety_blackl
 			if err == nil {
 				errc(errno.Ok)
 			} else {
-				svc.reportercli.Write(fs_function_tags.GetBlacklistCheckDevice(), in.Ip, in.ClientId, fs_constants.STATE_OK)
+				fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.Device, fs_function_tags.GetBlacklistCheckDevice(), fs_constants.STATUS_OK)
+				errc(errno.ErrRequest)
+			}
+		}()
+	}
 
+	if len(in.UserId) > 0 {
+		wg.Add(1)
+		go func() {
+			err := repo.Get(in.UserId, USER)
+			if err == nil {
+				errc(errno.Ok)
+			} else {
+				fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.UserId, fs_function_tags.GetBlacklistCheckUser(), fs_constants.STATUS_OK)
 				errc(errno.ErrRequest)
 			}
 		}()

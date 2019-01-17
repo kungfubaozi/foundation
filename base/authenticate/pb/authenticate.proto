@@ -12,25 +12,18 @@ service Authenticate {
 
     rpc OfflineUser (OfflineUserRequest) returns (fs.base.Response);
 
-    rpc Get (GetRequest) returns (GetResponse);
-
-    rpc ReplaceAuth (ReplaceAuthRequest) returns (fs.base.Response);
+    rpc Refresh (RefreshRequest) returns (RefreshResponse);
 
 }
 
-message GetRequest {
-    string userId = 1;
-    string clientId = 2;
-    string relation = 3;
+message RefreshRequest {
+    fs.base.Meta meta = 1;
+    string refreshToken = 2;
 }
 
-message GetResponse {
+message RefreshResponse {
     fs.base.State state = 1;
-    Authorize auth = 2;
-}
-
-message ReplaceAuthRequest {
-    Authorize auth = 1;
+    string accessToken = 2;
 }
 
 message RouteRequest {

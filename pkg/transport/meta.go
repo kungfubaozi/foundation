@@ -28,6 +28,10 @@ func MetaToReporter(reportercli reportercli.Channel, ctx context.Context, who st
 	reportercli.Write(meta.FuncTag, who, fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), status)
 }
 
+func MetaToReporterByMetadata(reportercli reportercli.Channel, meta *fs_base.Metadata, who, tag string, status int64) {
+	reportercli.Write(tag, who, fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), status)
+}
+
 func MetaToReporterByTag(reportercli reportercli.Channel, ctx context.Context, who string, tag string, status int64) {
 	meta := ContextToMeta(ctx)
 	reportercli.Write(tag, who, fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), status)

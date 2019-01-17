@@ -57,4 +57,5 @@ var (
 	ErrInvalidInviteKey     = &fs_base.State{Ok: false, Message: "err invalid invite code", Code: 10041}
 	ErrAlreadyInvited       = &fs_base.State{Ok: false, Message: "err already invited", Code: 10042}
 	ErrResetPassword        = &fs_base.State{Ok: false, Message: "err reset password", Code: 10043}
+	ErrAlreadyExists        = &fs_base.State{Ok: false, Message: "err already exists", Code: 10044}
 )
