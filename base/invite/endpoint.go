@@ -8,9 +8,9 @@ import (
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/invite/pb"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/pkg/middlewares"
 )
 
 type Endpoints struct {
@@ -20,7 +20,7 @@ type Endpoints struct {
 	GetInvitesEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clients *functionmw.MWServices) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client fs_endpoint_middlewares.Endpoint) Endpoints {
 
 	var addEndpoint endpoint.Endpoint
 	{
@@ -28,7 +28,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		addEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(addEndpoint)
 		addEndpoint = zipkin.TraceEndpoint(trace, "Add")(addEndpoint)
 
-		addEndpoint = functionmw.WithMeta(logger, clients)(addEndpoint)
+		addEndpoint = client.WithMeta()(addEndpoint)
 	}
 
 	var updateEndpoint endpoint.Endpoint
@@ -36,6 +36,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		updateEndpoint = MakeUpdateEndpoint(svc)
 		updateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updateEndpoint)
 		updateEndpoint = zipkin.TraceEndpoint(trace, "Update")(updateEndpoint)
+
+		updateEndpoint = client.WithMeta()(updateEndpoint)
 	}
 
 	var getEndpoint endpoint.Endpoint
@@ -51,7 +53,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		getInvitesEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getInvitesEndpoint)
 		getInvitesEndpoint = zipkin.TraceEndpoint(trace, "GetInvites")(getInvitesEndpoint)
 
-		getInvitesEndpoint = functionmw.WithMeta(logger, clients)(getInvitesEndpoint)
+		getInvitesEndpoint = client.WithMeta()(getInvitesEndpoint)
 	}
 
 	return Endpoints{

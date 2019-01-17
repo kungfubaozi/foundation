@@ -14,11 +14,12 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/validate"
+	"zskparker.com/foundation/base/validate/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
-func NewClient(tracer *zipkin.Tracer) validate.Service {
+func NewClient(tracer *zipkin.Tracer) fs_base_validate.ValidateServer {
 	var (
 		retryMax     = 3
 		retryTimeout = 500 * time.Millisecond

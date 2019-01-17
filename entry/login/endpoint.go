@@ -8,8 +8,8 @@ import (
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/entry/login/pb"
+	"zskparker.com/foundation/pkg/middlewares"
 )
 
 type Endpoints struct {
@@ -69,7 +69,7 @@ func (g Endpoints) EntryByFace(ctx context.Context, in *fs_entry_login.EntryByFa
 	return resp.(*fs_entry_login.EntryResponse), nil
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client *functionmw.MWServices) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client fs_endpoint_middlewares.Endpoint) Endpoints {
 
 	var entryByAPEndpoint endpoint.Endpoint
 	{
@@ -77,7 +77,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		entryByAPEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(entryByAPEndpoint)
 		entryByAPEndpoint = zipkin.TraceEndpoint(trace, "EntryByAp")(entryByAPEndpoint)
 
-		entryByAPEndpoint = functionmw.WithMeta(logger, client)(entryByAPEndpoint)
+		entryByAPEndpoint = client.WithMeta()(entryByAPEndpoint)
 	}
 
 	var entryByFaceEndpoint endpoint.Endpoint
@@ -86,7 +86,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		entryByFaceEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(entryByFaceEndpoint)
 		entryByFaceEndpoint = zipkin.TraceEndpoint(trace, "EntryByFace")(entryByFaceEndpoint)
 
-		entryByFaceEndpoint = functionmw.WithMeta(logger, client)(entryByFaceEndpoint)
+		entryByFaceEndpoint = client.WithMeta()(entryByFaceEndpoint)
 	}
 
 	var entryByOAuthEndpoint endpoint.Endpoint
@@ -95,7 +95,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		entryByOAuthEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(entryByOAuthEndpoint)
 		entryByOAuthEndpoint = zipkin.TraceEndpoint(trace, "EntryByOAuth")(entryByOAuthEndpoint)
 
-		entryByOAuthEndpoint = functionmw.WithMeta(logger, client)(entryByOAuthEndpoint)
+		entryByOAuthEndpoint = client.WithMeta()(entryByOAuthEndpoint)
 	}
 
 	var entryByValidateCodeEndpoint endpoint.Endpoint
@@ -104,7 +104,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		entryByValidateCodeEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(entryByValidateCodeEndpoint)
 		entryByValidateCodeEndpoint = zipkin.TraceEndpoint(trace, "EntryByValidateCode")(entryByValidateCodeEndpoint)
 
-		entryByValidateCodeEndpoint = functionmw.WithMeta(logger, client)(entryByValidateCodeEndpoint)
+		entryByValidateCodeEndpoint = client.WithMeta()(entryByValidateCodeEndpoint)
 	}
 
 	var entryByQRCodeEndpoint endpoint.Endpoint
@@ -113,7 +113,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		entryByQRCodeEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(entryByQRCodeEndpoint)
 		entryByQRCodeEndpoint = zipkin.TraceEndpoint(trace, "EntryByQRCode")(entryByQRCodeEndpoint)
 
-		entryByQRCodeEndpoint = functionmw.WithMeta(logger, client)(entryByQRCodeEndpoint)
+		entryByQRCodeEndpoint = client.WithMeta()(entryByQRCodeEndpoint)
 	}
 
 	var entryByInviteEndpoint endpoint.Endpoint
@@ -122,7 +122,7 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		entryByInviteEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(entryByInviteEndpoint)
 		entryByInviteEndpoint = zipkin.TraceEndpoint(trace, "EntryByInvite")(entryByInviteEndpoint)
 
-		entryByInviteEndpoint = functionmw.WithMeta(logger, client)(entryByInviteEndpoint)
+		entryByInviteEndpoint = client.WithMeta()(entryByInviteEndpoint)
 	}
 
 	return Endpoints{

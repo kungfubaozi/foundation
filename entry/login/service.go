@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 	"zskparker.com/foundation/base/authenticate"
@@ -201,7 +202,7 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 		return resp(ar.State)
 	}
 
-	svc.reportercli.Write(fs_function_tags.GetEntryByFaceFuncTag(), meta.UserId, meta.ProjectId)
+	svc.reportercli.Write(fs_function_tags.GetEntryByFaceFuncTag(), meta.UserId, meta.ProjectId, fs_constants.STATE_OK)
 
 	return &fs_entry_login.EntryResponse{
 		State:        errno.Ok,
@@ -266,10 +267,15 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 		return resp(errno.ErrSystem)
 	}
 	if !a.State.Ok {
+		svc.reportercli.Write(fs_function_tags.GetEntryByAPFuncTag(), meta.UserId,
+			fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), fs_constants.STATUS_FAILED)
+
 		return resp(a.State)
 	}
 
-	svc.reportercli.Write(fs_function_tags.GetEntryByAPFuncTag(), meta.UserId, meta.ProjectId)
+	//where有ip和projectId以及clientId
+	svc.reportercli.Write(fs_function_tags.GetEntryByAPFuncTag(), meta.UserId,
+		fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), fs_constants.STATUS_OK)
 
 	return &fs_entry_login.EntryResponse{
 		State:        errno.Ok,

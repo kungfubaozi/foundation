@@ -10,6 +10,7 @@ import (
 	"github.com/sony/gobreaker"
 	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/base/pb"
+	"zskparker.com/foundation/pkg/middlewares"
 )
 
 type Endpoints struct {
@@ -20,7 +21,7 @@ type Endpoints struct {
 	OfflineUserEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, mwclient fs_endpoint_middlewares.Endpoint) Endpoints {
 
 	var getEndpoint endpoint.Endpoint
 	{
@@ -41,6 +42,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		checkEndpoint = MakeCheckEndpoint(svc)
 		checkEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(checkEndpoint)
 		checkEndpoint = zipkin.TraceEndpoint(trace, "Check")(checkEndpoint)
+
+		checkEndpoint = mwclient.WithMeta()(checkEndpoint)
 
 	}
 

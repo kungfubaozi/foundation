@@ -2,6 +2,7 @@ package fs_metadata_transport
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-kit/kit/transport/grpc"
 	"github.com/go-kit/kit/transport/http"
 	"google.golang.org/grpc/metadata"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/project/pb"
+	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/osenv"
@@ -20,6 +22,16 @@ var (
 	StrategyTransportKey = "strategy"
 	ProjectTransportKey  = "project"
 )
+
+func MetaToReporter(reportercli reportercli.Channel, ctx context.Context, who string, status int64) {
+	meta := ContextToMeta(ctx)
+	reportercli.Write(meta.FuncTag, who, fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), status)
+}
+
+func MetaToReporterByTag(reportercli reportercli.Channel, ctx context.Context, who string, tag string, status int64) {
+	meta := ContextToMeta(ctx)
+	reportercli.Write(tag, who, fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), status)
+}
 
 func ContextToStrategy(ctx context.Context) *fs_base.ProjectStrategy {
 	return ctx.Value(StrategyTransportKey).(*fs_base.ProjectStrategy)

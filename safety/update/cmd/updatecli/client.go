@@ -16,9 +16,10 @@ import (
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/safety/update"
+	"zskparker.com/foundation/safety/update/pb"
 )
 
-func NewClient(tracer *zipkin.Tracer) update.Service {
+func NewClient(tracer *zipkin.Tracer) fs_safety_update.UpdateServer {
 	return NewEndpoints(tracer)
 }
 

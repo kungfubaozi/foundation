@@ -9,7 +9,6 @@ import (
 	"os"
 	"zskparker.com/foundation/base/authenticate/cmd/authenticatecli"
 	"zskparker.com/foundation/base/face/cmd/facecli"
-	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
@@ -17,6 +16,7 @@ import (
 	"zskparker.com/foundation/entry/login/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
+	"zskparker.com/foundation/pkg/middlewares/mwclients"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -50,7 +50,7 @@ func StartService() {
 
 	service := login.NewService(usercli.NewClient(zipkinTracer), rs, authenticatecli.NewClient(zipkinTracer), validatecli.NewClient(zipkinTracer),
 		facecli.NewClient(zipkinTracer), fs_redisync.Create(pool))
-	endpoints := login.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
+	endpoints := login.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := login.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()

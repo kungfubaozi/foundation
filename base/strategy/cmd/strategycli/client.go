@@ -14,6 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/strategy"
+	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
@@ -73,7 +74,7 @@ func NewEndpoints(tracer *zipkin.Tracer) strategy.Endpoints {
 	return endpoints
 }
 
-func NewClient(tracer *zipkin.Tracer) strategy.Service {
+func NewClient(tracer *zipkin.Tracer) fs_base_strategy.StrategyServer {
 	return NewEndpoints(tracer)
 }
 

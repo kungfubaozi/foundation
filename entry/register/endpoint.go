@@ -8,9 +8,9 @@ import (
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/entry/register/pb"
+	"zskparker.com/foundation/pkg/middlewares"
 	"zskparker.com/foundation/pkg/tags"
 )
 
@@ -19,7 +19,7 @@ type Endpoints struct {
 	FromOAuthEndpoint endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client *functionmw.MWServices) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client fs_endpoint_middlewares.Endpoint) Endpoints {
 
 	var fromAPEndpoint endpoint.Endpoint
 	{
@@ -27,7 +27,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		fromAPEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(fromAPEndpoint)
 		fromAPEndpoint = zipkin.TraceEndpoint(trace, "FromAP")(fromAPEndpoint)
 
-		fromAPEndpoint = functionmw.WithExpress(logger, client, fs_function_tags.GetFromAPFuncTag())(fromAPEndpoint)
+		fromAPEndpoint = client.WithExpress(fs_function_tags.GetFromAPFuncTag())(fromAPEndpoint)
+
 	}
 
 	var fromOAuthEndpoint endpoint.Endpoint
@@ -36,7 +37,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		fromOAuthEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(fromOAuthEndpoint)
 		fromOAuthEndpoint = zipkin.TraceEndpoint(trace, "FromOAuth")(fromOAuthEndpoint)
 
-		fromOAuthEndpoint = functionmw.WithExpress(logger, client, fs_function_tags.GetFromOAuthFuncTag())(fromOAuthEndpoint)
+		fromOAuthEndpoint = client.WithExpress(fs_function_tags.GetFromOAuthFuncTag())(fromOAuthEndpoint)
+
 	}
 
 	return Endpoints{

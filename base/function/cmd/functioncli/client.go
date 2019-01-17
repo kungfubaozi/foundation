@@ -14,6 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/function"
+	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
@@ -74,7 +75,7 @@ func NewEndpoints(tracer *zipkin.Tracer) function.Endpoints {
 
 }
 
-func NewClient(tracer *zipkin.Tracer) function.Service {
+func NewClient(tracer *zipkin.Tracer) fs_base_function.FunctionServer {
 	return NewEndpoints(tracer)
 }
 

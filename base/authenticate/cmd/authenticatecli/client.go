@@ -14,6 +14,7 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/authenticate"
+	"zskparker.com/foundation/base/authenticate/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
@@ -54,13 +55,6 @@ func NewEndpoints(tracer *zipkin.Tracer) authenticate.Endpoints {
 		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_AUTHENTICATE, tags, passingOnly)
 	)
 	{
-		factory := Factory(authenticate.MakeRefreshEndpoint, otTracer, tracer, logger)
-		endpointer := sd.NewEndpointer(instancer, factory, logger)
-		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.RefreshEndpoint = retry
-	}
-	{
 		factory := Factory(authenticate.MakeNewEndpoint, otTracer, tracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
@@ -85,7 +79,7 @@ func NewEndpoints(tracer *zipkin.Tracer) authenticate.Endpoints {
 	return endpoints
 }
 
-func NewClient(tracer *zipkin.Tracer) authenticate.Service {
+func NewClient(tracer *zipkin.Tracer) fs_base_authenticate.AuthenticateServer {
 	return NewEndpoints(tracer)
 }
 

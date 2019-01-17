@@ -15,6 +15,7 @@ import (
 	"time"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/safety/verification"
+	"zskparker.com/foundation/safety/verification/pb"
 )
 
 func NewEndpoints(consulAddr string, tracer *zipkin.Tracer) verification.Endpoints {
@@ -66,7 +67,7 @@ func NewEndpoints(consulAddr string, tracer *zipkin.Tracer) verification.Endpoin
 	return endpoints
 }
 
-func NewClient(consulAddr string, tracer *zipkin.Tracer) verification.Service {
+func NewClient(consulAddr string, tracer *zipkin.Tracer) fs_safety_verification.VerificationServer {
 	return NewEndpoints(consulAddr, tracer)
 }
 

@@ -8,13 +8,13 @@ import (
 	"net"
 	"os"
 	"zskparker.com/foundation/base/face/cmd/facecli"
-	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/entry/register"
 	"zskparker.com/foundation/entry/register/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
+	"zskparker.com/foundation/pkg/middlewares/mwclients"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -47,7 +47,7 @@ func StartService() {
 	defer pool.Close()
 
 	service := register.NewService(usercli.NewClient(zipkinTracer), rs, facecli.NewClient(zipkinTracer), fs_redisync.Create(pool))
-	endpoints := register.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
+	endpoints := register.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := register.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()

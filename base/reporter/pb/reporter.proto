@@ -19,6 +19,6 @@ message WriteRequest {
     int64 timestamp = 4;
     string where = 5;
     string date = 6;
-    int64 state = 7;
+    int64 status = 7;
 
 }

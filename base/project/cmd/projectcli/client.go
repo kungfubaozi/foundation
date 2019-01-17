@@ -14,11 +14,12 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/project"
+	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
-func NewClient(tracer *zipkin.Tracer) project.Service {
+func NewClient(tracer *zipkin.Tracer) fs_base_project.ProjectServer {
 	return NewEndpoints(tracer)
 }
 

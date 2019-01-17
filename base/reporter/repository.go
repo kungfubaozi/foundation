@@ -16,7 +16,7 @@ type logger struct {
 	Where     string `bson:"where"`
 	Timestamp int64  `bson:"timestamp"`
 	Date      string `bson:"date"`
-	State     int64  `bson:"state"`
+	Status    int64  `bson:"Status"`
 }
 
 type reporterRepository struct {

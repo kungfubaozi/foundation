@@ -89,7 +89,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		return errno.ErrResponse(resp.State)
 	}
 
-	svc.reportercli.Write(fs_function_tags.GetFromAPFuncTag(), resp.Content, meta.Ip)
+	fs_metadata_transport.MetaToReporter(svc.reportercli, ctx, resp.Content, fs_constants.STATE_OK)
 
 	return errno.ErrResponse(errno.Ok)
 }

@@ -42,6 +42,14 @@ const (
 )
 
 const (
+	STATUS_OK                   int64 = 7 << 4
+	STATUS_FAILED               int64 = 7 << 5
+	STATUS_LOGIN_FAILD          int64 = 7 << 7
+	STATUS_LOGIN_PASSWORD_ERROR int64 = 7 << 8
+	STATUS_LOGIN_FACE_ERROR     int64 = 7 << 10
+)
+
+const (
 	SVC_MESSAGE             = "fd.svc.message"
 	SVC_STATE               = "fd.svc.state"
 	SVC_VALIDATE            = "fd.svc.validate"

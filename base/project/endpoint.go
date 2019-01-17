@@ -10,6 +10,7 @@ import (
 	"github.com/sony/gobreaker"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/project/pb"
+	"zskparker.com/foundation/pkg/middlewares"
 )
 
 type Endpoints struct {
@@ -19,12 +20,14 @@ type Endpoints struct {
 	InitEndpoint           endpoint.Endpoint
 }
 
-func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpoints {
+func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, client fs_endpoint_middlewares.Endpoint) Endpoints {
 	var newEndpoint endpoint.Endpoint
 	{
 		newEndpoint = MakeNewEndpoint(svc)
 		newEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(newEndpoint)
 		newEndpoint = zipkin.TraceEndpoint(trace, "New")(newEndpoint)
+
+		newEndpoint = client.WithMeta()(newEndpoint)
 	}
 
 	var getEndpoint endpoint.Endpoint
@@ -39,6 +42,8 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger) Endpo
 		enablePlatform = MakeEnablePlatformEndpoint(svc)
 		enablePlatform = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(enablePlatform)
 		enablePlatform = zipkin.TraceEndpoint(trace, "EnablePlatform")(enablePlatform)
+
+		enablePlatform = client.WithMeta()(enablePlatform)
 	}
 
 	var initEndpoint endpoint.Endpoint

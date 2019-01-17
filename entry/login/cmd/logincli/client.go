@@ -14,11 +14,12 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/entry/login"
+	"zskparker.com/foundation/entry/login/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
-func NewClient(tracer *zipkin.Tracer) login.Service {
+func NewClient(tracer *zipkin.Tracer) fs_entry_login.LoginServer {
 	return NewEndpoints(tracer)
 }
 

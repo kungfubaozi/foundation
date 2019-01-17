@@ -14,11 +14,12 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/face"
+	"zskparker.com/foundation/base/face/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
-func NewClient(tracer *zipkin.Tracer) face.Service {
+func NewClient(tracer *zipkin.Tracer) fs_base_face.FaceServer {
 	return NewEndpoints(tracer)
 }
 

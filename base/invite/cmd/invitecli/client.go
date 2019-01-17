@@ -14,11 +14,12 @@ import (
 	"os"
 	"time"
 	"zskparker.com/foundation/base/invite"
+	"zskparker.com/foundation/base/invite/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/osenv"
 )
 
-func NewClient(tracer *zipkin.Tracer) invite.Service {
+func NewClient(tracer *zipkin.Tracer) fs_base_invite.InviteServer {
 	return NewEndpoint(tracer)
 }
 
