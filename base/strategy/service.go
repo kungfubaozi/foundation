@@ -60,7 +60,7 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 	p, err := repo.Get(in.Strategy.ProjectId)
 	if err != nil && err == mgo.ErrNotFound {
 		err = nil
-		p = &fs_base.ProjectStrategy{
+		p = &fs_base.Strategy{
 			Configuration: &fs_base.Configuration{},
 			Events: &fs_base.Events{
 				OnCommonEquipmentChanges: &fs_base.OnCommonEquipmentChanges{},
@@ -69,7 +69,6 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 				OnChangeOAuth:            &fs_base.OnChangeOAuth{},
 				OnResetPassword:          &fs_base.OnResetPassword{},
 				OnElsewhereLogin:         &fs_base.OnElsewhereLogin{},
-				OnSubmitReview:           &fs_base.OnSubmitReview{},
 				OnInviteUser:             &fs_base.OnInviteUser{},
 				OnLogin: &fs_base.OnLogin{
 					MaxCountOfOnline: &fs_base.MaxCountOfOnline{},
@@ -127,9 +126,6 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 			}
 		}
 		if in.Strategy.Events.OnRegister != nil {
-			if in.Strategy.Events.OnRegister.OpenReview > 0 {
-				p.Events.OnRegister.OpenReview = in.Strategy.Events.OnRegister.OpenReview
-			}
 			if in.Strategy.Events.OnRegister.Submitlal > 0 {
 				p.Events.OnRegister.Submitlal = in.Strategy.Events.OnRegister.Submitlal
 			}
@@ -192,14 +188,6 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 			}
 			if in.Strategy.Events.OnInviteUser.ExpireTime > 0 {
 				p.Events.OnInviteUser.ExpireTime = in.Strategy.Events.OnInviteUser.ExpireTime
-			}
-		}
-		if in.Strategy.Events.OnSubmitReview != nil {
-			if len(in.Strategy.Events.OnSubmitReview.ReportUserId) > 0 {
-				p.Events.OnSubmitReview.ReportUserId = in.Strategy.Events.OnSubmitReview.ReportUserId
-			}
-			if len(in.Strategy.Events.OnSubmitReview.ResponseMessage) > 0 {
-				p.Events.OnSubmitReview.ResponseMessage = in.Strategy.Events.OnSubmitReview.ResponseMessage
 			}
 		}
 		if in.Strategy.Events.OnElsewhereLogin != nil {

@@ -52,7 +52,7 @@ message GetRequest {
 message GetResponse {
     fs.base.State state = 1;
     ProjectInfo info = 2;
-    fs.base.ProjectStrategy strategy = 3;
+    fs.base.Strategy strategy = 3; //策略一律返回主项目的
 }
 
 message NewRequest {
@@ -72,6 +72,7 @@ message ProjectInfo {
     int64 level = 6;
     string session = 7;
     string website = 8;
+    int64 openReview = 9;
 }
 
 message Platform {

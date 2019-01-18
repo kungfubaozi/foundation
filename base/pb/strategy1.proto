@@ -2,16 +2,12 @@ syntax = "proto3";
 
 package fs.base;
 
-message ProjectStrategy {
-    //以下不用提交
-    string projectId = 1;
-    string creator = 2;
-    int64 createAt = 3;
-    int64 modifyAt = 4;
-    int64 version = 5; //版本(策略版本)
+//策略只针对主项目
+message Strategy {
+    int64 version = 1; //版本(策略版本)
 
-    Events events = 6;
-    Configuration configuration = 7;
+    Events events = 2;
+    Configuration configuration = 3;
 }
 
 message Configuration {
@@ -34,8 +30,7 @@ message Events {
     OnChangeFace onChangeFace = 12;
     OnResetPassword onResetPassword = 13;
     OnElsewhereLogin onElsewhereLogin = 14;
-    OnSubmitReview onSubmitReview = 15;
-    OnInviteUser onInviteUser = 16;
+    OnInviteUser onInviteUser = 15;
 }
 
 //邀请用户时
@@ -110,13 +105,12 @@ message OnQRLogin {
 }
 
 message OnRegister {
-    int64 openReview = 1; //  开启审核
-    int64 mode = 2; //  1:手机  2：邮箱  3：第三方账号
-    repeated OnRegisterOpeningTime openingTime = 3; //开放时间
-    int64 anIPRegistrationInterval = 4; //一个IP注册间隔
-    int64 anDeviceRegistrationInterval = 5; //一个设备注册间隔
-    int64 submitlal = 6; //是否提交经纬度信息
-    int64 allowNewRegistrations = 7; //是否开启注册
+    int64 mode = 1; //  1:手机  2：邮箱  3：第三方账号
+    repeated OnRegisterOpeningTime openingTime = 2; //开放时间
+    int64 anIPRegistrationInterval = 3; //一个IP注册间隔
+    int64 anDeviceRegistrationInterval = 4; //一个设备注册间隔
+    int64 submitlal = 5; //是否提交经纬度信息
+    int64 allowNewRegistrations = 6; //是否开启注册
 }
 
 message OnRegisterOpeningTime {

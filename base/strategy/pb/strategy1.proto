@@ -14,6 +14,7 @@ service Strategy {
 
     //初始化
     rpc Init(InitRequest)  returns (fs.base.Response);
+
 }
 
 message InitRequest {
@@ -27,10 +28,10 @@ message GetRequest {
 
 message GetResponse {
     fs.base.State state = 1;
-    fs.base.ProjectStrategy strategy = 2;
+    fs.base.Strategy strategy = 2;
 }
 
 message UpsertRequest {
-    fs.base.ProjectStrategy strategy = 1;
+    fs.base.Strategy strategy = 1;
     fs.base.Meta meta = 2;
 }

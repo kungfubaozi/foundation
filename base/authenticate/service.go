@@ -254,6 +254,14 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 		wg.Done()
 	}()
 
+	st := fs_metadata_transport.ContextToStrategy(ctx)
+	if st.Events.OnUserEntry.OpenReview == 2 { //是否开始审核
+		wg.Add(1)
+		go func() {
+
+		}()
+	}
+
 	wg.Wait()
 
 	if !ps.Ok {

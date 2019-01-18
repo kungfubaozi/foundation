@@ -39,6 +39,13 @@ const (
 	STATE_USER_LOCK           int64 = 3 << 3 //用户被锁定
 	STATE_USER_VALIDATE       int64 = 3 << 6 //需要通过手机验证才可继续
 	STATE_USER_RESET_PASSWORD int64 = 3 << 8 //需要通过手机验证才可继续
+	STATE_WAIT_FOR_REVIEW     int64 = 3 << 9 //等待审核
+)
+
+const (
+	REVIEW_OK    int64 = 2 << 5 //审核OK
+	REVIEW_ING   int64 = 2 << 7 //审核中
+	REVIEW_REFER int64 = 2 << 9 //未通过 需要用户重新填写
 )
 
 const (
