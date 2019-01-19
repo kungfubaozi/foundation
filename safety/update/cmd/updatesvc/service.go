@@ -8,9 +8,9 @@ import (
 	"net"
 	"os"
 	"zskparker.com/foundation/base/user/cmd/usercli"
-	"zskparker.com/foundation/base/validate/cmd/validatecli"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
+	"zskparker.com/foundation/pkg/middlewares/mwclients"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -44,8 +44,8 @@ func StartService() {
 	}
 	defer session.Close()
 
-	service := update.NewService(usercli.NewClient(zipkinTracer), validatecli.NewClient(zipkinTracer))
-	endpoints := update.NewEndpoints(service, zipkinTracer, logger)
+	service := update.NewService(usercli.NewClient(zipkinTracer))
+	endpoints := update.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := update.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()

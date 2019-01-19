@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"math"
 )
 
 func main() {
@@ -29,7 +29,5 @@ func main() {
 	//fmt.Println(s[:1] + s[strings.Index(s, "@")+1:])
 	//fmt.Println(s[:3] + s[len(s)-1:])
 
-	var t int64 = 1547491722498592000
-
-	fmt.Println(t - time.Now().UnixNano())
+	fmt.Println(int32(math.Pow(10, float64(6))))
 }

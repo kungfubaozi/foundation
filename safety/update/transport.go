@@ -26,10 +26,10 @@ import (
 )
 
 type GRPCServer struct {
-	updatePhone      grpctransport.Handler
-	updateEmail      grpctransport.Handler
-	updateEnterprise grpctransport.Handler
-	updatePassword   grpctransport.Handler
+	updatePhone    grpctransport.Handler
+	updateEmail    grpctransport.Handler
+	resetPassword  grpctransport.Handler
+	updatePassword grpctransport.Handler
 }
 
 func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
@@ -54,11 +54,11 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 		format.EncodeHTTPGenericResponse,
 		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "UpdatePhone", logger)))...,
 	))
-	m.Handle(fs_functions.GetUpdateEnterpriseFunc().Infix, httptransport.NewServer(
-		endpoints.UpdateEnterpriseEndpoint,
-		decodeHTTPUpdate,
+	m.Handle(fs_functions.GetResetPasswordFunc().Infix, httptransport.NewServer(
+		endpoints.ResetPasswordEndpoint,
+		decodeHTTPResetPassword,
 		format.EncodeHTTPGenericResponse,
-		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "UpdateEnterprise", logger)))...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "ResetPassword", logger)))...,
 	))
 	m.Handle(fs_functions.GetUpdateEmailFunc().Infix, httptransport.NewServer(
 		endpoints.UpdateEmailEndpoint,
@@ -71,6 +71,12 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 
 func decodeHTTPUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	var req *fs_safety_update.UpdateRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	return req, err
+}
+
+func decodeHTTPResetPassword(_ context.Context, r *http.Request) (interface{}, error) {
+	var req *fs_safety_update.ResetPasswordRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
@@ -93,11 +99,11 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 			format.GrpcMessage,
 			format.GrpcMessage,
 			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "UpdateEmail", logger)))...),
-		updateEnterprise: grpctransport.NewServer(
-			endpoints.UpdateEnterpriseEndpoint,
+		resetPassword: grpctransport.NewServer(
+			endpoints.ResetPasswordEndpoint,
 			format.GrpcMessage,
 			format.GrpcMessage,
-			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "UpdateEnterprise", logger)))...),
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "ResetPassword", logger)))...),
 		updatePassword: grpctransport.NewServer(
 			endpoints.UpdatePasswordEndpoint,
 			format.GrpcMessage,
@@ -130,21 +136,21 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			Timeout: 5 * time.Second,
 		}))(updatePhoneEndpoint)
 	}
-	var updateEnterpriseEndpoint endpoint.Endpoint
+	var resetPasswordEndpoint endpoint.Endpoint
 	{
-		updateEnterpriseEndpoint = grpctransport.NewClient(conn,
+		resetPasswordEndpoint = grpctransport.NewClient(conn,
 			"fs.safety.update.Update",
-			"UpdateEnterprise",
+			"ResetPassword",
 			format.GrpcMessage,
 			format.GrpcMessage,
 			fs_base.Response{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
-		updateEnterpriseEndpoint = limiter(updateEnterpriseEndpoint)
-		updateEnterpriseEndpoint = opentracing.TraceClient(otTracer, "UpdateEnterprise")(updateEnterpriseEndpoint)
-		updateEnterpriseEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "UpdateEnterprise",
+		resetPasswordEndpoint = limiter(resetPasswordEndpoint)
+		resetPasswordEndpoint = opentracing.TraceClient(otTracer, "ResetPassword")(resetPasswordEndpoint)
+		resetPasswordEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "ResetPassword",
 			Timeout: 5 * time.Second,
-		}))(updateEnterpriseEndpoint)
+		}))(resetPasswordEndpoint)
 	}
 	var updateEmailEndpoint endpoint.Endpoint
 	{
@@ -179,10 +185,10 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 		}))(updatePasswordEndpoint)
 	}
 	return &Endpoints{
-		UpdatePhoneEndpoint:      updatePhoneEndpoint,
-		UpdatePasswordEndpoint:   updatePasswordEndpoint,
-		UpdateEnterpriseEndpoint: updateEnterpriseEndpoint,
-		UpdateEmailEndpoint:      updateEmailEndpoint,
+		UpdatePhoneEndpoint:    updatePhoneEndpoint,
+		UpdatePasswordEndpoint: updatePasswordEndpoint,
+		ResetPasswordEndpoint:  resetPasswordEndpoint,
+		UpdateEmailEndpoint:    updateEmailEndpoint,
 	}
 }
 
@@ -194,8 +200,8 @@ func (g *GRPCServer) UpdatePhone(ctx context.Context, in *fs_safety_update.Updat
 	return resp.(*fs_base.Response), nil
 }
 
-func (g *GRPCServer) UpdateEnterprise(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
-	_, resp, err := g.updateEnterprise.ServeGRPC(ctx, in)
+func (g *GRPCServer) ResetPassword(ctx context.Context, in *fs_safety_update.ResetPasswordRequest) (*fs_base.Response, error) {
+	_, resp, err := g.resetPassword.ServeGRPC(ctx, in)
 	if err != nil {
 		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}

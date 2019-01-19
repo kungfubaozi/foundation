@@ -2,13 +2,14 @@ package fs_tools_number
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"time"
 )
 
 func GetRndNumber(size int) string {
-	return fmt.Sprintf("%0"+strconv.Itoa(size)+"v", rnd().Int31n(1000000000))
+	return fmt.Sprintf("%0"+strconv.Itoa(size)+"v", rnd().Int31n(int32(math.Pow(10, float64(size)))))
 }
 
 func rnd() *rand.Rand {

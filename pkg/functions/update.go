@@ -38,22 +38,22 @@ func GetUpdateEmailFunc() *fs_pkg_model.APIFunction {
 }
 
 //更新指定用户的企业号
-func GetUpdateEnterpriseFunc() *fs_pkg_model.APIFunction {
+func GetResetPasswordFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/fds/api/safety/update",
-		Infix:  "/enterprise",
+		Infix:  "/resetPW",
 	}
 	f.Function = &fs_base_function.Func{
-		Zh:    "更新企业号",
-		En:    "UpdateEnterprise",
-		Func:  fs_function_tags.GetUpdateEnterpriseFuncTag(),
+		Zh:    "重置密码",
+		En:    "ResetPassword",
+		Func:  fs_function_tags.GetResetPasswordFuncTag(),
 		Fcv:   fs_constants.FCV_AUTH,
-		Level: fs_constants.LEVEL_PROJECT_MANAGER,
+		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
 }
 
-//更新密码不需要登录，使用绑定的手机即可
+//更新密码
 func GetUpdatePasswordFunc() *fs_pkg_model.APIFunction {
 	f := &fs_pkg_model.APIFunction{
 		Prefix: "/fds/api/safety/update",
@@ -63,8 +63,8 @@ func GetUpdatePasswordFunc() *fs_pkg_model.APIFunction {
 		Zh:    "更新密码",
 		En:    "UpdatePassword",
 		Func:  fs_function_tags.GetUpdatePasswordFuncTag(),
-		Fcv:   fs_constants.FCV_VALIDATE_CODE,
-		Level: fs_constants.LEVEL_TOURIST,
+		Fcv:   fs_constants.FCV_AUTH | fs_constants.FCV_VALIDATE_CODE,
+		Level: fs_constants.LEVEL_USER,
 	}
 	return f
 }

@@ -3,6 +3,7 @@ package function
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 )
 
@@ -63,7 +64,7 @@ func (repo *functionRepository) FindByFunc(fu string) (*Model, error) {
 }
 
 func (repo *functionRepository) collection() *mgo.Collection {
-	return repo.session.DB("foundation").C("functions")
+	return repo.session.DB(fs_constants.DB_BASE).C("functions")
 }
 
 func (repo *functionRepository) Close() {

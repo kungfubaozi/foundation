@@ -7,13 +7,14 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"os"
-	"zskparker.com/foundation/base/function/cmd/functionmw"
 	"zskparker.com/foundation/base/invite"
 	"zskparker.com/foundation/base/invite/pb"
 	"zskparker.com/foundation/base/message/cmd/messagecli"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
+	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
+	"zskparker.com/foundation/pkg/middlewares/mwclients"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -53,8 +54,8 @@ func StartService() {
 	}
 	defer rh.Close()
 
-	service := invite.NewService(session, mh, rh)
-	endpoints := invite.NewEndpoints(service, zipkinTracer, logger, functionmw.NewFunctionMWClient(zipkinTracer))
+	service := invite.NewService(session, mh, rh, usercli.NewClient(zipkinTracer))
+	endpoints := invite.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := invite.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()

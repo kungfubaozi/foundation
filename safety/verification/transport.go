@@ -41,7 +41,7 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	m := http.NewServeMux()
 
 	//register
-	m.Handle(fs_functions.GetRegisterFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetVerificationRegisterFunc().Infix, httptransport.NewServer(
 		endpoints.NewEndpoint,
 		decodeHTTPNewRegister,
 		format.EncodeHTTPGenericResponse,
@@ -50,7 +50,7 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	))
 
 	//login
-	m.Handle(fs_functions.GetLoginFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetVerificationLoginFunc().Infix, httptransport.NewServer(
 		endpoints.NewEndpoint,
 		decodeHTTPNewLogin,
 		format.EncodeHTTPGenericResponse,
@@ -59,7 +59,7 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 	))
 
 	//reset password
-	m.Handle(fs_functions.GetVerificationUpdatePasswordFunc().Infix, httptransport.NewServer(
+	m.Handle(fs_functions.GetVerificationResetPasswordFunc().Infix, httptransport.NewServer(
 		endpoints.NewEndpoint,
 		decodeHTTPNewResetPassword,
 		format.EncodeHTTPGenericResponse,
@@ -67,11 +67,30 @@ func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkin
 			httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "NewResetPassword", logger)))...,
 	))
 
+	//update password
+	m.Handle(fs_functions.GetVerificationUpdatePasswordFunc().Infix, httptransport.NewServer(
+		endpoints.NewEndpoint,
+		decodeHTTPNewUpdatePassword,
+		format.EncodeHTTPGenericResponse,
+		append(options,
+			httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "NewUpdatePassword", logger)))...,
+	))
+
 	return m
 }
 
-//使用密码账号注册验证码
+//重置密码
 func decodeHTTPNewResetPassword(_ context.Context, r *http.Request) (interface{}, error) {
+	var req *fs_safety_verification.NewRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if req != nil {
+		req.Func = fs_function_tags.GetResetPasswordFuncTag()
+	}
+	return req, err
+}
+
+//更新密码
+func decodeHTTPNewUpdatePassword(_ context.Context, r *http.Request) (interface{}, error) {
 	var req *fs_safety_verification.NewRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if req != nil {

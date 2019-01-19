@@ -64,10 +64,10 @@ func (svc *blacklistService) CheckMeta(ctx context.Context, in *fs_safety_blackl
 			err := repo.Get(in.Ip, IP)
 			if err == nil {
 				errc(errno.Ok)
-			} else {
-				fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.Ip, fs_function_tags.GetBlacklistCheckIP(), fs_constants.STATUS_OK)
-				errc(errno.ErrRequest)
+				return
 			}
+			fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.Ip, fs_function_tags.GetBlacklistCheckIP(), fs_constants.STATUS_OK)
+			errc(errno.ErrRequest)
 		}()
 	}
 
@@ -77,10 +77,10 @@ func (svc *blacklistService) CheckMeta(ctx context.Context, in *fs_safety_blackl
 			err := repo.Get(in.Ip, DEVICE)
 			if err == nil {
 				errc(errno.Ok)
-			} else {
-				fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.Device, fs_function_tags.GetBlacklistCheckDevice(), fs_constants.STATUS_OK)
-				errc(errno.ErrRequest)
+				return
 			}
+			fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.Device, fs_function_tags.GetBlacklistCheckDevice(), fs_constants.STATUS_OK)
+			errc(errno.ErrRequest)
 		}()
 	}
 
@@ -90,10 +90,10 @@ func (svc *blacklistService) CheckMeta(ctx context.Context, in *fs_safety_blackl
 			err := repo.Get(in.UserId, USER)
 			if err == nil {
 				errc(errno.Ok)
-			} else {
-				fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.UserId, fs_function_tags.GetBlacklistCheckUser(), fs_constants.STATUS_OK)
-				errc(errno.ErrRequest)
+				return
 			}
+			fs_metadata_transport.MetaToReporterByMetadata(svc.reportercli, in.Meta, in.UserId, fs_function_tags.GetBlacklistCheckUser(), fs_constants.STATUS_OK)
+			errc(errno.ErrRequest)
 		}()
 	}
 

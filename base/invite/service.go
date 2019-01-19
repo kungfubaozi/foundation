@@ -10,11 +10,12 @@ import (
 	"zskparker.com/foundation/base/message/cmd/messagecli"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
+	"zskparker.com/foundation/base/user"
+	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/match"
 	"zskparker.com/foundation/pkg/osenv"
-	"zskparker.com/foundation/pkg/tags"
 	"zskparker.com/foundation/pkg/tool/encrypt"
 	"zskparker.com/foundation/pkg/tool/number"
 	"zskparker.com/foundation/pkg/transport"
@@ -34,12 +35,13 @@ type inviteService struct {
 	session     *mgo.Session
 	messagecli  messagecli.Channel
 	reportercli reportercli.Channel
+	usercli     user.Service
 }
 
-func NewService(session *mgo.Session, messagecli messagecli.Channel, reportercli reportercli.Channel) Service {
+func NewService(session *mgo.Session, messagecli messagecli.Channel, reportercli reportercli.Channel, usercli user.Service) Service {
 	var svc Service
 	{
-		svc = &inviteService{session: session, messagecli: messagecli, reportercli: reportercli}
+		svc = &inviteService{session: session, messagecli: messagecli, reportercli: reportercli, usercli: usercli}
 	}
 	return svc
 }
@@ -51,6 +53,8 @@ func (svc *inviteService) GetRepo() repository {
 func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest) (*fs_base.Response, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
+
+	fmt.Println("enter")
 
 	if len(in.Account) < 10 {
 		return errno.ErrResponse(errno.ErrInviteAccount)
@@ -70,25 +74,46 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 
 	m := &model{}
 	var err error
+	var u *fs_base_user.FindResponse
 
 	if fs_regx_match.Phone(in.Account) {
 		m, err = repo.FindInviteByAccount(in.Account, true)
+		u, err = svc.usercli.FindByPhone(context.Background(), &fs_base_user.FindRequest{
+			Value: in.Account,
+		})
 		m.Phone = in.Account
 	} else if fs_regx_match.Email(in.Account) {
 		m, err = repo.FindInviteByAccount(in.Account, false)
+		u, err = svc.usercli.FindByEmail(context.Background(), &fs_base_user.FindRequest{
+			Value: in.Account,
+		})
 		m.Email = in.Account
 	} else {
 		return errno.ErrResponse(errno.ErrInviteAccount)
 	}
 
-	if err != nil {
+	if err != nil && err == mgo.ErrNotFound {
+		err = nil
+		m.Ok = false
+	}
+
+	if err != nil || u == nil {
+		fmt.Println("err", err)
+		fmt.Println("u", u)
 		return errno.ErrResponse(errno.ErrSystem)
+	}
+
+	if u != nil && u.State.Code != errno.ErrInvalidUser.Code {
+		return errno.ErrResponse(errno.ErrUserAlreadyExists)
 	}
 
 	//是否已经邀请过且通过了
 	if m.Ok {
 		return errno.ErrResponse(errno.ErrAlreadyInvited)
 	}
+
+	//查找用户是否存在
+
 	//如果存在且没有过期则返回错误
 	if len(m.InviteId) > 0 && m.ExpireAt-time.Now().UnixNano() > 0 {
 		return errno.ErrResponse(errno.ErrInviteExists)
@@ -101,11 +126,11 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 	m.ExpireAt = time.Now().UnixNano() + strategy.Events.OnInviteUser.ExpireTime*60*1e9
 	m.Ok = false
 	m.OperateUserId = meta.UserId //操作人
-	code := fs_tools_number.GetRndNumber(8)
+	code := fs_tools_number.GetRndNumber(6)
 	m.Code = fs_tools_encrypt.SHA1_256_512(code)
 
 	//存在重新邀请的情况
-	if len(m.InviteId) == 0 {
+	if len(m.InviteId.Hex()) == 0 {
 		m.InviteId = bson.NewObjectId()
 	}
 
@@ -118,16 +143,16 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 	if len(m.Phone) > 0 {
 		svc.messagecli.SendSMS(&fs_base.DirectMessage{
 			To:      m.Phone,
-			Content: fmt.Sprintf(osenv.GetInviteMessage(), m.Code),
+			Content: fmt.Sprintf(osenv.GetInviteMessage(), code),
 		})
 	} else {
 		svc.messagecli.SendEmail(&fs_base.DirectMessage{
-			To:      m.Phone,
-			Content: fmt.Sprintf(osenv.GetInviteMessage(), m.Code),
+			To:      m.Email,
+			Content: fmt.Sprintf(osenv.GetInviteMessage(), code),
 		})
 	}
 
-	svc.reportercli.Write(fs_function_tags.GetInviteTag(), meta.UserId, meta.ClientId, 1)
+	fs_metadata_transport.MetaToReporter(svc.reportercli, ctx, in.Account, fs_constants.STATUS_OK)
 
 	return errno.ErrResponse(errno.Ok)
 }
@@ -170,6 +195,10 @@ func (svc *inviteService) Get(ctx context.Context, in *fs_base_invite.GetRequest
 			return resp(errno.ErrExpired)
 		}
 
+		if m.Ok {
+			return resp(errno.ErrInviteCodeExpired)
+		}
+
 		return &fs_base_invite.GetResponse{
 			State:    errno.Ok,
 			InviteId: m.InviteId.Hex(),
@@ -187,12 +216,4 @@ func (svc *inviteService) Get(ctx context.Context, in *fs_base_invite.GetRequest
 	}
 
 	return resp(errno.ErrInvalid)
-}
-
-func NewSerivce(session *mgo.Session, messagecli messagecli.Channel, reportercli reportercli.Channel) Service {
-	var svc Service
-	{
-		svc = &inviteService{session: session, reportercli: reportercli, messagecli: messagecli}
-	}
-	return svc
 }

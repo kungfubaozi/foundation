@@ -4,6 +4,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type repository interface {
@@ -62,7 +63,7 @@ func (repo *inviteRepository) Update(account, id string) error {
 }
 
 func (repo *inviteRepository) collection() *mgo.Collection {
-	return repo.session.DB("foundation").C("invite")
+	return repo.session.DB(fs_constants.DB_USER).C("invite")
 }
 
 func (repo *inviteRepository) Close() {

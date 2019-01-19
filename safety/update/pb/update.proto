@@ -8,12 +8,19 @@ service Update {
 
     rpc UpdatePhone (UpdateRequest) returns (fs.base.Response);
 
-    rpc UpdateEnterprise (UpdateRequest) returns (fs.base.Response);
-
     rpc UpdatePassword (UpdateRequest) returns (fs.base.Response);
 
     rpc UpdateEmail (UpdateRequest) returns (fs.base.Response);
 
+    rpc ResetPassword (ResetPasswordRequest) returns (fs.base.Response);
+
+}
+
+//重置密码
+message ResetPasswordRequest {
+    string new = 1; //新密码
+    string account = 2;
+    fs.base.Meta meta = 3;
 }
 
 message UpdateRequest {

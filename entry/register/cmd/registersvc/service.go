@@ -19,6 +19,7 @@ import (
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
 	"zskparker.com/foundation/pkg/sync"
+	"zskparker.com/foundation/safety/blacklist/cmd/blacklistcli"
 )
 
 func StartService() {
@@ -46,7 +47,8 @@ func StartService() {
 	pool := db.CreatePool(osenv.GetRedisAddr())
 	defer pool.Close()
 
-	service := register.NewService(usercli.NewClient(zipkinTracer), rs, facecli.NewClient(zipkinTracer), fs_redisync.Create(pool))
+	service := register.NewService(usercli.NewClient(zipkinTracer), rs, facecli.NewClient(zipkinTracer), fs_redisync.Create(pool),
+		blacklistcli.NewClient(zipkinTracer))
 	endpoints := register.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := register.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

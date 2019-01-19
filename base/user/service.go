@@ -51,7 +51,7 @@ func (svc *userService) findByKey(ctx context.Context, key, value, password stri
 	if err != nil {
 		fmt.Println("err", err)
 		return &fs_base_user.FindResponse{
-			State: errno.ErrInvalid,
+			State: errno.ErrInvalidUser,
 		}, nil
 	}
 	if len(password) > 0 {

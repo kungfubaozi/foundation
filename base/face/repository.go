@@ -8,6 +8,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type repository interface {
@@ -107,5 +108,5 @@ func (repo *faceRepository) Close() {
 
 //最后两个字符
 func (repo *faceRepository) collection(userId string) *mgo.Collection {
-	return repo.session.DB("fds_faceset").C("set_" + userId[len(userId)-2:])
+	return repo.session.DB(fs_constants.DB_USER).C("faceset_" + userId[len(userId)-1:])
 }

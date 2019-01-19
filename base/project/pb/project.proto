@@ -3,7 +3,6 @@ syntax = "proto3";
 package fs.base.project;
 
 import "zskparker.com/foundation/base/pb/base.proto";
-import "zskparker.com/foundation/base/pb/strategy1.proto";
 
 service Project {
 
@@ -52,7 +51,7 @@ message GetRequest {
 message GetResponse {
     fs.base.State state = 1;
     ProjectInfo info = 2;
-    fs.base.Strategy strategy = 3; //策略一律返回主项目的
+    string projectId = 3;
 }
 
 message NewRequest {

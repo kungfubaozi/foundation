@@ -15,6 +15,8 @@ import (
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/base/project/cmd/projectcli"
 	"zskparker.com/foundation/base/project/pb"
+	"zskparker.com/foundation/base/strategy/cmd/strategycli"
+	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/base/user/pb"
 	"zskparker.com/foundation/pkg/constants"
@@ -89,6 +91,8 @@ func main() {
 	usersrv := usercli.NewClient(zipkinTracer)
 	facesrv := facecli.NewClient(zipkinTracer)
 	projectsrv := projectcli.NewClient(zipkinTracer)
+	strategysrv := strategycli.NewClient(zipkinTracer)
+	functionsrv := functioncli.NewClient(zipkinTracer)
 
 	userId := bson.NewObjectId().Hex()
 	userAlreadyRegister := false
@@ -105,9 +109,7 @@ func main() {
 	}
 	if !pr.State.Ok {
 		fmt.Println("add project err", pr.State.Message)
-		if pr.State.Code != errno.ErrProjectAlreadyExists.Code {
-			return
-		}
+		return
 	} else {
 		fmt.Println("def project session [set it to the API Service environment variable]:", pr.Session)
 		fmt.Println("android client id:", pr.AndroidId)
@@ -115,75 +117,85 @@ func main() {
 		fmt.Println("macOS client id:", pr.MaxOSId)
 		fmt.Println("web client id:", pr.WebId)
 		fmt.Println("windows client id:", pr.WindowsId)
-	}
 
-	time.Sleep(100)
-
-	ur, err := usersrv.Add(context.Background(), &fs_base_user.AddRequest{
-		UserId:        userId,
-		Password:      password,
-		Username:      username,
-		RealName:      name,
-		Enterprise:    enterprise,
-		Level:         fs_constants.LEVEL_ADMIN,
-		Phone:         phone,
-		Email:         email,
-		FromProjectId: pr.ProjectId,
-	})
-	if err != nil {
-		fmt.Println("add user err", err)
-		return
-	}
-	if !ur.State.Ok {
-		userAlreadyRegister = true
-		fmt.Println("add user err", ur.State.Message)
-		if pr.State != errno.ErrUserAlreadyExists {
-			return
-		}
-	}
-
-	time.Sleep(100)
-
-	f := functioncli.NewClient(zipkinTracer)
-
-	fur, err := f.Init(context.Background(), &fs_base_function.InitRequest{
-		Session: pr.Session,
-	})
-
-	if err != nil {
-		fmt.Println("add function err", err)
-		return
-	}
-
-	if !fur.State.Ok {
-		fmt.Println("add function err", fur.State.Message)
-		return
-	}
-
-	if !userAlreadyRegister {
-		b, err := ioutil.ReadFile("system_admin.jpg")
-		if err != nil {
-			panic(err)
-		}
-
-		str := base64.StdEncoding.EncodeToString(b)
-
-		fr, err := facesrv.Upsert(context.Background(), &fs_base_face.UpsertRequest{
-			UserId:     ur.Content,
-			Base64Face: str,
+		sr, err := strategysrv.Init(context.Background(), &fs_base_strategy.InitRequest{
+			Session: pr.Session,
+			Creator: userId,
 		})
 
 		if err != nil {
-			fmt.Println("add face err", err)
+			fmt.Println("add root strategy err", err)
 			return
 		}
-		if !fr.State.Ok {
-			fmt.Println("add face err", fr.State.Message)
+
+		if !sr.State.Ok {
+			fmt.Println("add root strategy", sr.State.Message)
+		}
+
+		time.Sleep(100)
+
+		ur, err := usersrv.Add(context.Background(), &fs_base_user.AddRequest{
+			UserId:        userId,
+			Password:      password,
+			Username:      username,
+			RealName:      name,
+			Enterprise:    enterprise,
+			Level:         fs_constants.LEVEL_ADMIN,
+			Phone:         phone,
+			Email:         email,
+			FromProjectId: pr.ProjectId,
+		})
+		if err != nil {
+			fmt.Println("add user err", err)
 			return
+		}
+		if !ur.State.Ok {
+			userAlreadyRegister = true
+			fmt.Println("add user err", ur.State.Message)
+			if pr.State != errno.ErrUserAlreadyExists {
+				return
+			}
+		}
+
+		time.Sleep(100)
+
+		fur, err := functionsrv.Init(context.Background(), &fs_base_function.InitRequest{
+			Session: pr.Session,
+		})
+
+		if err != nil {
+			fmt.Println("add function err", err)
+			return
+		}
+
+		if !fur.State.Ok {
+			fmt.Println("add function err", fur.State.Message)
+			return
+		}
+
+		if !userAlreadyRegister {
+			b, err := ioutil.ReadFile("system_admin.jpg")
+			if err != nil {
+				panic(err)
+			}
+
+			str := base64.StdEncoding.EncodeToString(b)
+
+			fr, err := facesrv.Upsert(context.Background(), &fs_base_face.UpsertRequest{
+				UserId:     ur.Content,
+				Base64Face: str,
+			})
+
+			if err != nil {
+				fmt.Println("add face err", err)
+				return
+			}
+			if !fr.State.Ok {
+				fmt.Println("add face err", fr.State.Message)
+				return
+			}
 		}
 	}
-
-	time.Sleep(100)
 
 	fmt.Println("system initialize ok.")
 }

@@ -11,6 +11,13 @@ service Review {
 
     //获取
     rpc GetCondition (GetConditionRequest) returns (GetConditionResponse);
+
+    //用户提交审核
+    rpc SubmitReview (SubmitReviewRequest) returns (fs.base.Response);
+}
+
+message SubmitReviewRequest {
+    fs.base.Meta meta = 1;
 }
 
 message AddConditionRequest {

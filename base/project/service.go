@@ -11,8 +11,6 @@ import (
 	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/strategy"
-	"zskparker.com/foundation/base/strategy/def"
-	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/transport"
@@ -35,6 +33,7 @@ type projectService struct {
 	reportercli reportercli.Channel
 }
 
+//初始化项目允许任何人访问(作为登录等访问用)
 func (svc *projectService) Init(ctx context.Context, in *fs_base_project.InitRequest) (*fs_base_project.InitResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
@@ -43,8 +42,8 @@ func (svc *projectService) Init(ctx context.Context, in *fs_base_project.InitReq
 		return &fs_base_project.InitResponse{State: errno.ErrProjectAlreadyExists}, nil
 	}
 
-	p := defProject(in.Logo, in.Zh, in.En, in.Desc, in.UserId, bson.NewObjectId(), fs_constants.LEVEL_DEVELOPER)
-	r, err := svc.Create(ctx, p, false)
+	p := defProject(in.Logo, in.Zh, in.En, in.Desc, in.UserId, bson.NewObjectId(), fs_constants.LEVEL_TOURIST)
+	r, err := svc.Create(ctx, p)
 	if err != nil {
 		return &fs_base_project.InitResponse{State: errno.ErrSystem}, nil
 	}
@@ -125,30 +124,20 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 		return &fs_base_project.GetResponse{}, nil
 	}
 
-	r, err := svc.strategycli.Get(context.Background(), &fs_base_strategy.GetRequest{
-		ProjectId: p.Id.Hex(),
-	})
-	if err != nil {
-		return resp(errno.ErrSystem)
-	}
-	if !r.State.Ok {
-		return resp(r.State)
-	}
-
 	return &fs_base_project.GetResponse{
-		State:    errno.Ok,
-		Info:     gp,
-		Strategy: r.Strategy,
+		State:     errno.Ok,
+		Info:      gp,
+		ProjectId: p.Id.Hex(),
 	}, nil
 }
 
 func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewRequest) (*fs_base.Response, error) {
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 	p := defProject(in.Logo, in.Zh, in.En, in.Desc, meta.UserId, bson.NewObjectId(), fs_constants.LEVEL_DEVELOPER)
-	return svc.Create(ctx, p, true)
+	return svc.Create(ctx, p)
 }
 
-func (svc *projectService) Create(ctx context.Context, p *project, s bool) (*fs_base.Response, error) {
+func (svc *projectService) Create(ctx context.Context, p *project) (*fs_base.Response, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
 
@@ -160,27 +149,9 @@ func (svc *projectService) Create(ctx context.Context, p *project, s bool) (*fs_
 		return errno.ErrResponse(errno.ErrSystem)
 	}
 
-	errc := make(chan error, 2)
+	err = repo.Save(p)
 
-	go func() {
-		errc <- repo.Save(p)
-	}()
-
-	go func() {
-		if s {
-			_, errc <- svc.strategycli.Upsert(ctx, &fs_base_strategy.UpsertRequest{
-				Strategy: strategydef.DefStrategy(p.Id.Hex(), p.Creator),
-			})
-		} else {
-			_, errc <- svc.strategycli.Init(ctx, &fs_base_strategy.InitRequest{
-				Creator:   p.Creator,
-				ProjectId: p.Id.Hex(),
-			})
-		}
-	}()
-
-	g
-	if err := <-errc; err != nil {
+	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
 	return errno.ErrResponse(errno.Ok)

@@ -42,7 +42,7 @@ func main() {
 	{
 		//verification
 		endpoints := verificationcli.NewEndpoints(osenv.GetConsulAddr(), zipkinTracer)
-		r.PathPrefix(fs_functions.GetRegisterFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetRegisterFunc().Prefix, verification.MakeHTTPHandler(
+		r.PathPrefix(fs_functions.GetVerificationRegisterFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetVerificationRegisterFunc().Prefix, verification.MakeHTTPHandler(
 			endpoints, tracer, zipkinTracer, logger)))
 	}
 

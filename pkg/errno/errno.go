@@ -58,4 +58,7 @@ var (
 	ErrAlreadyInvited       = &fs_base.State{Ok: false, Message: "err already invited", Code: 10042}
 	ErrResetPassword        = &fs_base.State{Ok: false, Message: "err reset password", Code: 10043}
 	ErrAlreadyExists        = &fs_base.State{Ok: false, Message: "err already exists", Code: 10044}
+	ErrTokenOrExpired       = &fs_base.State{Ok: false, Message: "err token or expired", Code: 10045}
+	ErrInvalidUser          = &fs_base.State{Ok: false, Message: "err invalid user", Code: 10046}
+	ErrInviteCodeExpired    = &fs_base.State{Ok: false, Message: "err invite code expired", Code: 10047}
 )

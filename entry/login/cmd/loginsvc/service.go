@@ -9,6 +9,7 @@ import (
 	"os"
 	"zskparker.com/foundation/base/authenticate/cmd/authenticatecli"
 	"zskparker.com/foundation/base/face/cmd/facecli"
+	"zskparker.com/foundation/base/invite/cmd/invitecli"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/base/validate/cmd/validatecli"
@@ -49,7 +50,7 @@ func StartService() {
 	defer pool.Close()
 
 	service := login.NewService(usercli.NewClient(zipkinTracer), rs, authenticatecli.NewClient(zipkinTracer), validatecli.NewClient(zipkinTracer),
-		facecli.NewClient(zipkinTracer), fs_redisync.Create(pool))
+		facecli.NewClient(zipkinTracer), fs_redisync.Create(pool), invitecli.NewClient(zipkinTracer))
 	endpoints := login.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := login.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

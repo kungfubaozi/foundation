@@ -6,6 +6,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"time"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type repository interface {
@@ -92,7 +93,7 @@ func (repo *stateRepository) addCacheStore(tag string, status int64) error {
 }
 
 func (repo *stateRepository) collection(tag string) *mgo.Collection {
-	return repo.session.DB("foundation").C("stores_" + tag[len(tag)-2:])
+	return repo.session.DB(fs_constants.DB_BASE).C("stores_" + tag[len(tag)-1:])
 }
 
 func (repo *stateRepository) Close() {

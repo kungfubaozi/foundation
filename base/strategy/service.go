@@ -2,13 +2,14 @@ package strategy
 
 import (
 	"context"
+	"github.com/garyburd/redigo/redis"
 	"gopkg.in/mgo.v2"
-	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/base/strategy/def"
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/transport"
 )
 
 type Service interface {
@@ -22,13 +23,14 @@ type Service interface {
 type strategyService struct {
 	session     *mgo.Session
 	reportercli reportercli.Channel
+	pool        *redis.Pool
 }
 
 func (svc *strategyService) Get(ctx context.Context, in *fs_base_strategy.GetRequest) (*fs_base_strategy.GetResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	p, err := repo.Get(in.ProjectId)
+	p, err := repo.Get(in.ProjectSession)
 	if err != nil {
 		return &fs_base_strategy.GetResponse{State: errno.ErrSystem}, nil
 	}
@@ -46,7 +48,7 @@ func (svc *strategyService) Init(ctx context.Context, in *fs_base_strategy.InitR
 	if i > 0 {
 		return errno.ErrResponse(errno.ErrAlreadyExists)
 	}
-	err := repo.Upsert(strategydef.DefStrategy(in.ProjectId, in.Creator))
+	err := repo.Upsert(strategydef.DefStrategy(in.Session, in.Creator))
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
@@ -57,7 +59,9 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 	repo := svc.GetRepo()
 	defer repo.Close()
 
-	p, err := repo.Get(in.Strategy.ProjectId)
+	meta := fs_metadata_transport.ContextToMeta(ctx)
+
+	p, err := repo.Get(meta.InitSession)
 	if err != nil && err == mgo.ErrNotFound {
 		err = nil
 		p = &fs_base.Strategy{
@@ -87,17 +91,10 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 		return errno.ErrResponse(errno.ErrSystem)
 	}
 
-	p.ProjectId = in.Strategy.ProjectId
-	p.Version = p.Version + 1
-
-	p.CreateAt = time.Now().UnixNano()
-
+	p.Session = meta.Session
 	p.Creator = in.Strategy.Creator
 
 	if in.Strategy.Configuration != nil {
-		if len(in.Strategy.Configuration.RegisterReviewId) > 0 {
-			p.Configuration.RegisterReviewId = in.Strategy.Configuration.RegisterReviewId
-		}
 		if len(in.Strategy.Configuration.OpenTime) > 0 {
 			p.Configuration.OpenTime = in.Strategy.Configuration.OpenTime
 		}
@@ -253,13 +250,13 @@ func (svc *strategyService) Upsert(ctx context.Context, in *fs_base_strategy.Ups
 }
 
 func (svc *strategyService) GetRepo() repository {
-	return &strategyRepository{session: svc.session.Clone()}
+	return &strategyRepository{session: svc.session.Clone(), conn: svc.pool.Get()}
 }
 
-func NewService(session *mgo.Session, reportercli reportercli.Channel) Service {
+func NewService(session *mgo.Session, reportercli reportercli.Channel, pool *redis.Pool) Service {
 	var svc Service
 	{
-		svc = &strategyService{session: session, reportercli: reportercli}
+		svc = &strategyService{session: session, reportercli: reportercli, pool: pool}
 	}
 	return svc
 }

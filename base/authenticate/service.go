@@ -72,7 +72,7 @@ func (svc *authenticateService) Refresh(ctx context.Context, in *fs_base_authent
 	}
 
 	//锁定30s
-	if s := svc.redisync.Lock(fs_function_tags.GetAuthenticateRefreshTag(), token.Relation, 30); s.Ok {
+	if s := svc.redisync.Lock(fs_function_tags.GetAuthenticateRefreshTag(), token.Relation, 30); s != nil {
 		return resp(s)
 	}
 
@@ -254,8 +254,7 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 		wg.Done()
 	}()
 
-	st := fs_metadata_transport.ContextToStrategy(ctx)
-	if st.Events.OnUserEntry.OpenReview == 2 { //是否开始审核
+	if in.Review { //是否开始审核
 		wg.Add(1)
 		go func() {
 
@@ -292,7 +291,7 @@ func (svc *authenticateService) Check(ctx context.Context, in *fs_base_authentic
 		}, nil
 	}
 	svc.logger.Log("check", "over")
-	return resp(errno.ErrToken)
+	return resp(errno.ErrTokenOrExpired)
 }
 
 func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticate.NewRequest) (*fs_base_authenticate.NewResponse, error) {
@@ -302,6 +301,9 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	if in.MaxOnlineCount == -1 {
 		return resp(errno.ErrProject)
 	}
+
+	svc.logger.Log("new")
+
 	node := utils.NodeGenerate()
 	in.Authorize.AccessTokenUUID = node.Generate().Base64()
 	in.Authorize.RefreshTokenUUID = node.Generate().Base64()
@@ -309,7 +311,7 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 	in.Authorize.Relation = node.Generate().Base64()
 	auth := &auth{}
 	var err error
-	var cs *fs_base.State
+	cs := errno.Ok
 
 	wg := sync.WaitGroup{}
 	errc := func(e *fs_base.State) {
@@ -373,7 +375,7 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 		fmt.Println("encode err", err)
 		return resp(errno.ErrSystem)
 	}
-	if cs != nil {
+	if !cs.Ok {
 		return resp(cs)
 	}
 	repo := svc.GetRepo()
@@ -409,6 +411,7 @@ func (svc *authenticateService) New(ctx context.Context, in *fs_base_authenticat
 		fmt.Println("add", err)
 		return resp(errno.ErrSystem)
 	}
+
 	return &fs_base_authenticate.NewResponse{
 		State:        errno.Ok,
 		RefreshToken: auth.Refresh,

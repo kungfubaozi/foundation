@@ -97,7 +97,7 @@ func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.E
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 
 	//邀请码为8位数字码
-	if len(in.Code) != 8 {
+	if len(in.Code) != 6 {
 		return resp(errno.ErrRequest)
 	}
 
@@ -298,12 +298,12 @@ func (svc *loginService) EntryByQRCode(ctx context.Context, in *fs_entry_login.E
 }
 
 func NewService(usercli user.Service, reportercli reportercli.Channel, authenticatecli authenticate.Service,
-	validatecli validate.Service, facecli face.Service, redisync *fs_redisync.Redisync) Service {
+	validatecli validate.Service, facecli face.Service, redisync *fs_redisync.Redisync, invitecli invite.Service) Service {
 	var service Service
 	{
 		service = &loginService{usercli: usercli, reportercli: reportercli,
 			authenticatecli: authenticatecli, validatecli: validatecli, facecli: facecli,
-			redisync: redisync}
+			redisync: redisync, invitecli: invitecli}
 	}
 	return service
 }

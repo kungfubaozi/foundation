@@ -34,7 +34,6 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		checkEndpoint = MakeCheckEndpoint(svc)
 		checkEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(checkEndpoint)
 		checkEndpoint = zipkin.TraceEndpoint(trace, "Check")(checkEndpoint)
-
 	}
 
 	var offlineUserEndpoint endpoint.Endpoint

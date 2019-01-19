@@ -36,6 +36,7 @@ message Metadata {
     string token = 10;
     string session = 11; //服务器通讯用
     string funcTag = 12;
+    string initSession = 13;
 }
 
 message KeyValue {

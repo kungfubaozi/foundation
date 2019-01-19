@@ -18,12 +18,12 @@ service Strategy {
 }
 
 message InitRequest {
-    string projectId = 1;
+    string session = 1;
     string creator = 2;
 }
 
 message GetRequest {
-    string projectId = 1;
+    string projectSession = 1;
 }
 
 message GetResponse {

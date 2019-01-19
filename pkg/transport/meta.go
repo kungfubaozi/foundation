@@ -14,14 +14,25 @@ import (
 	"zskparker.com/foundation/base/reporter/cmd/reportercli"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
+	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/osenv"
+	"zskparker.com/foundation/pkg/tool/encrypt"
 )
 
 var (
 	MetadataTransportKey = "meta"
 	StrategyTransportKey = "strategy"
 	ProjectTransportKey  = "project"
+	ValidateTransportKey = "validate_account"
 )
+
+func CheckValidateAccount(ctx context.Context, account string) *fs_base.State {
+	to := ContextToValidateAccount(ctx)
+	if to != fs_tools_encrypt.SHA256(account) {
+		return errno.ErrRequest
+	}
+	return errno.Ok
+}
 
 func MetaToReporter(reportercli reportercli.Channel, ctx context.Context, who string, status int64) {
 	meta := ContextToMeta(ctx)
@@ -37,8 +48,12 @@ func MetaToReporterByTag(reportercli reportercli.Channel, ctx context.Context, w
 	reportercli.Write(tag, who, fmt.Sprintf("%s;%s;%s;%s;%s", meta.Ip, meta.ProjectId, meta.ClientId, meta.UserAgent, meta.Device), status)
 }
 
-func ContextToStrategy(ctx context.Context) *fs_base.ProjectStrategy {
-	return ctx.Value(StrategyTransportKey).(*fs_base.ProjectStrategy)
+func ContextToValidateAccount(ctx context.Context) string {
+	return ctx.Value(ValidateTransportKey).(string)
+}
+
+func ContextToStrategy(ctx context.Context) *fs_base.Strategy {
+	return ctx.Value(StrategyTransportKey).(*fs_base.Strategy)
 }
 
 func ContextToMeta(ctx context.Context) *fs_base.Metadata {
@@ -70,6 +85,7 @@ func GRPCToContext() grpc.ServerRequestFunc {
 		}
 		meta.Level = i
 		meta.Session = header[8]
+		meta.InitSession = header[9]
 
 		return context.WithValue(ctx, MetadataTransportKey, meta)
 	}
@@ -86,16 +102,12 @@ func HTTPToContext() http.RequestFunc {
 		meta.UserAgent = request.Header.Get("User-Agent")
 		meta.Api = uri(request.RequestURI)
 		forward := request.Header.Get("X-Forward-URI")
-		if len(forward) > 2 {
+		f := fs_functions.GetInterceptFunc()
+		meta.InitSession = session
+		if len(forward) > 2 && meta.Api == fmt.Sprintf("%s%s", f.Prefix, f.Infix) { //只允许拦截器设置URI和session
 			meta.Api = forward
+			meta.Session = request.Header.Get("X-Server-Session")
 		}
-		meta.Session = request.Header.Get("X-Server-Session")
-
-		//使用默认的session
-		if len(meta.Session) < 32 {
-			meta.Session = session
-		}
-
 		meta.Token = request.Header.Get("Authorization")
 		return context.WithValue(ctx, MetadataTransportKey, meta)
 	}
@@ -110,19 +122,20 @@ func uri(uri string) string {
 
 func ContextToGRPC() grpc.ClientRequestFunc {
 	return func(ctx context.Context, md *metadata.MD) context.Context {
-		metadata, ok := ctx.Value(MetadataTransportKey).(*fs_base.Metadata)
+		m, ok := ctx.Value(MetadataTransportKey).(*fs_base.Metadata)
 		if ok {
 			// capital "Key" is illegal in HTTP/2.
 			(*md)["authorization"] = []string{
-				metadata.ClientId,
-				metadata.Ip,
-				metadata.UserAgent,
-				metadata.Api,
-				metadata.Token,
-				metadata.Device,
-				metadata.UserId,
-				strconv.FormatInt(metadata.Level, 10),
-				metadata.Session,
+				m.ClientId,
+				m.Ip,
+				m.UserAgent,
+				m.Api,
+				m.Token,
+				m.Device,
+				m.UserId,
+				strconv.FormatInt(m.Level, 10),
+				m.Session,
+				m.InitSession,
 			}
 		}
 		return ctx

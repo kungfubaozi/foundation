@@ -71,8 +71,12 @@ func GetVerificationRegisterFuncTag() string {
 	return "3e4f9c2e8530"
 }
 
-func GetVerificationAdminInitFuncTag() string {
-	return "7a53fdcb71a9"
+func GetVerificationUpdatePasswordFuncTag() string {
+	return "2be66373fe25"
+}
+
+func GetVerificationResetPasswordFuncTag() string {
+	return "e75a06ee2cae"
 }
 
 func GetVerificationLoginFuncTag() string {
@@ -87,7 +91,7 @@ func GetUpdateEmailFuncTag() string {
 	return "71c2f4744c8a"
 }
 
-func GetUpdateEnterpriseFuncTag() string {
+func GetResetPasswordFuncTag() string {
 	return "71c2f4744c8a"
 }
 

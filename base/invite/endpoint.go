@@ -36,8 +36,6 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		updateEndpoint = MakeUpdateEndpoint(svc)
 		updateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updateEndpoint)
 		updateEndpoint = zipkin.TraceEndpoint(trace, "Update")(updateEndpoint)
-
-		updateEndpoint = client.WithMeta()(updateEndpoint)
 	}
 
 	var getEndpoint endpoint.Endpoint

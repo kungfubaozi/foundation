@@ -8,16 +8,15 @@ import (
 )
 
 func GetInviteUserFunc() *fs_pkg_model.APIFunction {
-	f := &fs_pkg_model.APIFunction{
+	return &fs_pkg_model.APIFunction{
 		Prefix: "/fds/api/env/invite",
 		Infix:  "/add",
+		Function: &fs_base_function.Func{
+			Zh:    "邀请用户",
+			En:    "InviteUser",
+			Func:  fs_function_tags.GetInviteTag(),
+			Level: fs_constants.LEVEL_ADMIN,
+			Fcv:   fs_constants.FCV_AUTH | fs_constants.FCV_FACE,
+		},
 	}
-	f.Function = &fs_base_function.Func{
-		Zh:    "邀请用户",
-		En:    "InviteUser",
-		Func:  fs_function_tags.GetInviteTag(),
-		Level: fs_constants.LEVEL_ADMIN,
-		Fcv:   fs_constants.FCV_AUTH | fs_constants.FCV_FACE,
-	}
-	return f
 }

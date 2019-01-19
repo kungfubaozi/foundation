@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -9,15 +10,19 @@ import (
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	httptransport "github.com/go-kit/kit/transport/http"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
+	"net/http"
 	"time"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/pkg/format"
+	"zskparker.com/foundation/pkg/functions"
+	"zskparker.com/foundation/pkg/transport"
 )
 
 type GRPCServer struct {
@@ -25,6 +30,32 @@ type GRPCServer struct {
 	get            grpctransport.Handler
 	enablePlatform grpctransport.Handler
 	init           grpctransport.Handler
+}
+
+func MakeHTTPHandler(endpoints Endpoints, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
+	zipkinServer := zipkin.HTTPServerTrace(zipkinTracer)
+
+	options := []httptransport.ServerOption{
+		httptransport.ServerErrorLogger(logger),
+		httptransport.ServerBefore(fs_metadata_transport.HTTPToContext()),
+		zipkinServer,
+	}
+
+	m := http.NewServeMux()
+	m.Handle(fs_functions.GetCreateProject().Infix, httptransport.NewServer(
+		endpoints.NewEndpoint,
+		decodeHTTPCreate,
+		format.EncodeHTTPGenericResponse,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Create", logger)))...,
+	))
+
+	return m
+}
+
+func decodeHTTPCreate(_ context.Context, r *http.Request) (interface{}, error) {
+	var req *fs_base_project.NewRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	return req, err
 }
 
 func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer *stdzipkin.Tracer, logger log.Logger) fs_base_project.ProjectServer {

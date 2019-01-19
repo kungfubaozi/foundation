@@ -12,9 +12,9 @@ import (
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/state"
 	"zskparker.com/foundation/base/validate/pb"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/osenv"
-	"zskparker.com/foundation/pkg/states"
 	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tool/encrypt"
 	"zskparker.com/foundation/pkg/utils"
@@ -52,10 +52,10 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 	}
 
 	//验证凭证(通过操作有时间等限制)
-	voucher := in.Metadata.Ip + ";" + in.Func
+	voucher := in.Metadata.Ip + ";" + in.Func + ";" + in.Metadata.UserAgent
 	//有用户ID设置为凭证
 	if len(in.Metadata.UserId) > 0 {
-		voucher = in.Metadata.UserId + ";" + in.Func
+		voucher = in.Metadata.UserId + ";" + in.Func + ";" + in.Metadata.UserAgent
 	}
 	voucher = fs_tools_encrypt.SHA256(voucher)
 
@@ -76,9 +76,10 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		VerId:    bson.NewObjectId(),
 		Func:     in.Func,
 		Voucher:  voucher,
+		To:       fs_tools_encrypt.SHA256(in.To),
 		CreateAt: time.Now().UnixNano(),
 		Code:     fs_tools_encrypt.SHA1_256_512(code),
-		State:    states.F_STATE_WAITING,
+		State:    fs_constants.STATE_WAIT_VALIDATE,
 	}
 
 	err := repo.Create(vl)
@@ -130,16 +131,16 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 
 	//检查时间和操作
 	if b {
-		voucher := in.Metadata.Ip + ";" + in.Func
+		voucher := in.Metadata.Ip + ";" + in.Func + ";" + in.Metadata.UserAgent
 		if len(in.Metadata.UserId) > 16 {
-			voucher = in.Metadata.UserId + ";" + in.Func
+			voucher = in.Metadata.UserId + ";" + in.Func + ";" + in.Metadata.UserAgent
 		}
 		md := fs_tools_encrypt.SHA256(voucher)
 		if md != vl.Voucher {
 			return &fs_base_validate.VerificationResponse{State: errno.ErrRequest}, nil
 		}
 		//需要在等待验证状态
-		if vl.State == states.F_STATE_WAITING {
+		if vl.State == fs_constants.STATE_WAIT_VALIDATE {
 			code := strings.ToLower(in.Code)
 			if a := fs_tools_encrypt.SHA1_256_512(code); a == vl.Code {
 				return &fs_base_validate.VerificationResponse{State: errno.Ok, To: vl.To}, nil

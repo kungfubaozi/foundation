@@ -14,6 +14,15 @@ const (
 )
 
 const (
+	DB_BASE     = "fds_base"
+	DB_REVIEW   = "fds_review"
+	DB_USER     = "fds_user"
+	DB_VALIDATE = "fds_validate"
+	DB_LOGGER   = "fds_logger"
+	DB_STATIS   = "fds_statistics"
+)
+
+const (
 	TYPE_HIDE = 2 << 3
 )
 
@@ -37,7 +46,7 @@ const (
 	STATE_OK                  int64 = 3 << 1
 	STATE_USER_FROZE          int64 = 3 << 2 //用户状态冻结
 	STATE_USER_LOCK           int64 = 3 << 3 //用户被锁定
-	STATE_USER_VALIDATE       int64 = 3 << 6 //需要通过手机验证才可继续
+	STATE_WAIT_VALIDATE       int64 = 3 << 6 //需要通过手机验证才可继续
 	STATE_USER_RESET_PASSWORD int64 = 3 << 8 //需要通过手机验证才可继续
 	STATE_WAIT_FOR_REVIEW     int64 = 3 << 9 //等待审核
 )

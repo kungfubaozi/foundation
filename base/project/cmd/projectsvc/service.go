@@ -13,6 +13,7 @@ import (
 	"zskparker.com/foundation/base/strategy/cmd/strategycli"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/db"
+	"zskparker.com/foundation/pkg/middlewares/mwclients"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/registration"
 	"zskparker.com/foundation/pkg/serv"
@@ -51,7 +52,7 @@ func StartService() {
 
 	service := project.NewService(session, strategycli.NewClient(zipkinTracer), rs)
 
-	endpoints := project.NewEndpoints(service, zipkinTracer, logger)
+	endpoints := project.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := project.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 
 	gs := grpc.NewServer()

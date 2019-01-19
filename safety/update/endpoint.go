@@ -14,10 +14,10 @@ import (
 )
 
 type Endpoints struct {
-	UpdatePhoneEndpoint      endpoint.Endpoint
-	UpdateEmailEndpoint      endpoint.Endpoint
-	UpdateEnterpriseEndpoint endpoint.Endpoint
-	UpdatePasswordEndpoint   endpoint.Endpoint
+	UpdatePhoneEndpoint    endpoint.Endpoint
+	UpdateEmailEndpoint    endpoint.Endpoint
+	ResetPasswordEndpoint  endpoint.Endpoint
+	UpdatePasswordEndpoint endpoint.Endpoint
 }
 
 func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clients fs_endpoint_middlewares.Endpoint) Endpoints {
@@ -40,13 +40,13 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 		updateEmail = clients.WithMeta()(updateEmail)
 	}
 
-	var updateEnterprise endpoint.Endpoint
+	var resetPasswordEndpoint endpoint.Endpoint
 	{
-		updateEnterprise = MakeUpdateEnterpriseEndpoint(svc)
-		updateEnterprise = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(updateEnterprise)
-		updateEnterprise = zipkin.TraceEndpoint(trace, "UpdateEnterprise")(updateEnterprise)
+		resetPasswordEndpoint = MakeResetPasswordEndpoint(svc)
+		resetPasswordEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(resetPasswordEndpoint)
+		resetPasswordEndpoint = zipkin.TraceEndpoint(trace, "ResetPassword")(resetPasswordEndpoint)
 
-		updateEnterprise = clients.WithMeta()(updateEnterprise)
+		resetPasswordEndpoint = clients.WithMeta()(resetPasswordEndpoint)
 	}
 
 	var updatePassword endpoint.Endpoint
@@ -59,23 +59,15 @@ func NewEndpoints(svc Service, trace *stdzipkin.Tracer, logger log.Logger, clien
 	}
 
 	return Endpoints{
-		UpdatePhoneEndpoint:      updatePhone,
-		UpdateEnterpriseEndpoint: updateEnterprise,
-		UpdatePasswordEndpoint:   updatePassword,
-		UpdateEmailEndpoint:      updateEmail,
+		UpdatePhoneEndpoint:    updatePhone,
+		ResetPasswordEndpoint:  resetPasswordEndpoint,
+		UpdatePasswordEndpoint: updatePassword,
+		UpdateEmailEndpoint:    updateEmail,
 	}
 }
 
 func (g Endpoints) UpdatePhone(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
 	resp, err := g.UpdatePhoneEndpoint(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*fs_base.Response), nil
-}
-
-func (g Endpoints) UpdateEnterprise(ctx context.Context, in *fs_safety_update.UpdateRequest) (*fs_base.Response, error) {
-	resp, err := g.UpdateEnterpriseEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -98,15 +90,23 @@ func (g Endpoints) UpdateEmail(ctx context.Context, in *fs_safety_update.UpdateR
 	return resp.(*fs_base.Response), nil
 }
 
+func (g Endpoints) ResetPassword(ctx context.Context, in *fs_safety_update.ResetPasswordRequest) (*fs_base.Response, error) {
+	resp, err := g.ResetPasswordEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*fs_base.Response), nil
+}
+
 func MakeUpdatePhoneEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return svc.UpdatePhone(ctx, request.(*fs_safety_update.UpdateRequest))
 	}
 }
 
-func MakeUpdateEnterpriseEndpoint(svc Service) endpoint.Endpoint {
+func MakeResetPasswordEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return svc.UpdateEnterprise(ctx, request.(*fs_safety_update.UpdateRequest))
+		return svc.ResetPassword(ctx, request.(*fs_safety_update.ResetPasswordRequest))
 	}
 }
 

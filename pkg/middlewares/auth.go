@@ -11,6 +11,7 @@ import (
 	"zskparker.com/foundation/base/function/pb"
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/project/pb"
+	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/base/validate/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
@@ -28,6 +29,7 @@ type authMiddleware struct {
 	validatecli     fs_base_validate.ValidateServer
 	projectcli      fs_base_project.ProjectServer
 	blacklistcli    fs_safety_blacklist.BlacklistServer
+	strategycli     fs_base_strategy.StrategyServer
 }
 
 type Endpoint interface {
@@ -42,11 +44,11 @@ func Create(logger log.Logger, functioncli fs_base_function.FunctionServer,
 	authenticatecli fs_base_authenticate.AuthenticateServer,
 	facecli fs_base_face.FaceServer,
 	validatecli fs_base_validate.ValidateServer,
-	projectcli fs_base_project.ProjectServer, blacklistcli fs_safety_blacklist.BlacklistServer) Endpoint {
+	projectcli fs_base_project.ProjectServer, blacklistcli fs_safety_blacklist.BlacklistServer, strategycli fs_base_strategy.StrategyServer) Endpoint {
 	return &authMiddleware{logger: logger, functioncli: functioncli,
 		authenticatecli: authenticatecli, facecli: facecli,
 		validatecli: validatecli, blacklistcli: blacklistcli,
-		projectcli: projectcli}
+		projectcli: projectcli, strategycli: strategycli}
 }
 
 func (mwcli *authMiddleware) WithMeta() endpoint.Middleware {
@@ -72,7 +74,7 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 			mr := ref.GetMetaInfo(request)
 			ps := errno.Ok
 			var cf *fs_base_function.Func
-			var strategy *fs_base.ProjectStrategy
+			var strategy *fs_base.Strategy
 			var p *fs_base_project.ProjectInfo
 			var wg sync.WaitGroup
 
@@ -89,11 +91,15 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 			}
 
 			//项目检查
-			wg.Add(3)
+			wg.Add(4)
 			go func() {
-				pr, _ := mwcli.projectcli.Get(context.Background(), &fs_base_project.GetRequest{
+				pr, err := mwcli.projectcli.Get(context.Background(), &fs_base_project.GetRequest{
 					ClientId: meta.ClientId,
 				})
+				if err != nil {
+					errc(errno.ErrSystem)
+					return
+				}
 				if pr == nil {
 					errc(errno.ErrSystem)
 					mwcli.logger.Log("middleware", "function", "err", "find project nil")
@@ -105,18 +111,39 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 					return
 				}
 				p = pr.Info
+				meta.ProjectId = pr.ProjectId
 				meta.Platform = p.Platform.Platform
-				meta.ProjectId = pr.Strategy.ProjectId
-				strategy = pr.Strategy
-				wg.Done()
+				errc(errno.Ok)
+			}()
+
+			//获取主项目策略设置
+			go func() {
+				sr, err := mwcli.strategycli.Get(context.Background(), &fs_base_strategy.GetRequest{
+					ProjectSession: meta.InitSession,
+				})
+				if err != nil {
+					errc(errno.ErrSystem)
+					return
+				}
+				if !sr.State.Ok {
+					errc(sr.State)
+					mwcli.logger.Log("middleware", "function", "state", "function", "value", sr)
+					return
+				}
+				strategy = sr.Strategy
+				errc(errno.Ok)
 			}()
 
 			//功能检查
 			go func() {
-				fr, _ := mwcli.functioncli.Get(context.Background(), &fs_base_function.GetRequest{
+				fr, err := mwcli.functioncli.Get(context.Background(), &fs_base_function.GetRequest{
 					Tag:  utils.Md5(meta.Api + meta.Session),
 					Func: function,
 				})
+				if err != nil {
+					errc(errno.ErrSystem)
+					return
+				}
 				if fr == nil {
 					errc(errno.ErrSystem)
 					mwcli.logger.Log("middleware", "function", "err", "find function nil")
@@ -130,7 +157,7 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 				cf = fr.Func
 				//设置meta的访问tag
 				meta.FuncTag = fr.Func.Tag
-				wg.Done()
+				errc(errno.Ok)
 			}()
 
 			//黑名单检查
@@ -159,14 +186,11 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 				return errno.ErrClient, errno.ERROR
 			}
 
-			//项目权限
-			if !ignoreProjectLevel && meta.Level >= p.Level {
-				return errno.ErrProjectPermission, errno.ERROR
-			}
-
 			if meta.Session != p.Session {
 				return errno.ErrRequestPermission, errno.ERROR
 			}
+
+			mwcli.logger.Log("info", cf.Func, "level", cf.Level, "fcv", cf.Fcv)
 
 			metaCheck := func(face bool) bool {
 				if face {
@@ -200,7 +224,7 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 					return
 				}
 				ps = resp.State
-				ctx = context.WithValue(ctx, "validate_to", resp.To)
+				ctx = context.WithValue(ctx, fs_metadata_transport.ValidateTransportKey, resp.To)
 			}
 
 			authCheck := func() {
@@ -210,6 +234,7 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 				}
 				resp, err := mwcli.authenticatecli.Check(context.Background(), &fs_base_authenticate.CheckRequest{
 					Metadata: meta,
+					Review:   p.OpenReview == 2,
 				})
 				if err != nil {
 					ps = errno.ErrSystem
@@ -286,6 +311,11 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 					mwcli.logger.Log("middleware", "fcv", "step", "!ok", ps)
 					return ps, errno.ERROR
 				}
+			}
+
+			//项目权限
+			if !ignoreProjectLevel && meta.Level < p.Level {
+				return errno.ErrProjectPermission, errno.ERROR
 			}
 
 			mwcli.logger.Log("middleware", "function", "check", "ok")

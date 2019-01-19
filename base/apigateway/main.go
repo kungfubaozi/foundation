@@ -13,6 +13,8 @@ import (
 	"zskparker.com/foundation/base/interceptor/cmd/interceptorcli"
 	"zskparker.com/foundation/base/invite"
 	"zskparker.com/foundation/base/invite/cmd/invitecli"
+	"zskparker.com/foundation/base/project"
+	"zskparker.com/foundation/base/project/cmd/projectcli"
 	"zskparker.com/foundation/pkg/functions"
 	"zskparker.com/foundation/pkg/osenv"
 )
@@ -45,6 +47,12 @@ func main() {
 	{
 		endpoints := invitecli.NewEndpoint(zipkinTracer)
 		r.PathPrefix(fs_functions.GetInviteUserFunc().Prefix).Handler(http.StripPrefix(fs_functions.GetInviteUserFunc().Prefix, invite.MakeHTTPHandler(
+			endpoints, tracer, zipkinTracer, logger)))
+	}
+
+	{
+		endpoints := projectcli.NewEndpoints(zipkinTracer)
+		r.PathPrefix(fs_functions.GetCreateProject().Prefix).Handler(http.StripPrefix(fs_functions.GetCreateProject().Prefix, project.MakeHTTPHandler(
 			endpoints, tracer, zipkinTracer, logger)))
 	}
 

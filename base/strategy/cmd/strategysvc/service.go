@@ -46,7 +46,10 @@ func StartService() {
 	}
 	defer rs.Close()
 
-	service := strategy.NewService(session, rs)
+	pool := db.CreatePool(osenv.GetRedisAddr())
+	defer pool.Close()
+
+	service := strategy.NewService(session, rs, pool)
 	endpoints := strategy.NewEndpoints(service, zipkinTracer, logger, mwclients.NewMiddleware(logger, zipkinTracer))
 	svc := strategy.MakeGRPCServer(endpoints, otTracer, zipkinTracer, logger)
 

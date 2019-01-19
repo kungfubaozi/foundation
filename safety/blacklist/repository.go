@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 )
 
@@ -54,7 +55,7 @@ func (repo *blacklistRepository) collection(data string, t int) *mgo.Collection 
 		c = "device"
 		break
 	}
-	return repo.session.DB("foundation").C(fmt.Sprintf("%s_%s_%s", "blacklist", c, data[0:1]))
+	return repo.session.DB(fs_constants.DB_BASE).C(fmt.Sprintf("%s_%s_%s", "blacklist", c, data[0:1]))
 }
 
 func (repo *blacklistRepository) Add(m *model, t int) error {

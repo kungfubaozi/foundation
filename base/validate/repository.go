@@ -3,6 +3,7 @@ package validate
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type repository interface {
@@ -55,5 +56,5 @@ func (svc *validateRepository) Get(id string) (*verification, error) {
 }
 
 func (svc *validateRepository) collection(id string) *mgo.Collection {
-	return svc.session.DB("fds_validate").C("v_" + id[len(id)-1:])
+	return svc.session.DB(fs_constants.DB_VALIDATE).C("v_" + id[len(id)-1:])
 }

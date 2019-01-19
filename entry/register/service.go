@@ -42,6 +42,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 	if len(in.Password) < 6 || len(in.Meta.Face) > 0 {
 		return errno.ErrResponse(errno.ErrRequest)
 	}
+
 	strategy := fs_metadata_transport.ContextToStrategy(ctx)
 
 	if strategy.Events.OnRegister.AllowNewRegistrations == 1 {
@@ -70,6 +71,10 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		v = in.Email
 	} else { //不支持的操作
 		return errno.ErrResponse(errno.ErrSupport)
+	}
+
+	if s := fs_metadata_transport.CheckValidateAccount(ctx, v); !s.Ok {
+		return errno.ErrResponse(s)
 	}
 
 	b, e := svc.blacklistcli.CheckAccount(context.Background(), &fs_safety_blacklist.CheckAccountRequest{

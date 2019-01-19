@@ -56,7 +56,7 @@ func NewEndpoint(tracer *zipkin.Tracer) invite.Endpoints {
 		tags        []string
 		passingOnly = true
 		endpoints   = invite.Endpoints{}
-		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_SAFETY_UPDATE, tags, passingOnly)
+		instancer   = consulsd.NewInstancer(client, logger, fs_constants.SVC_INVITE, tags, passingOnly)
 	)
 
 	{

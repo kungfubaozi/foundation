@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"gopkg.in/mgo.v2"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type repository interface {
@@ -28,5 +29,5 @@ func (repo *reporterRepository) Close() {
 }
 
 func (repo *reporterRepository) Write(logger *logger) error {
-	return repo.session.DB("fds_logger").C(logger.Func + "_" + logger.Date).Insert(logger)
+	return repo.session.DB(fs_constants.DB_LOGGER).C(logger.Func + "_" + logger.Date).Insert(logger)
 }

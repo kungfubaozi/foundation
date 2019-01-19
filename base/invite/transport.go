@@ -35,7 +35,7 @@ type GRPCServer struct {
 func (g *GRPCServer) Add(ctx context.Context, in *fs_base_invite.AddRequest) (*fs_base.Response, error) {
 	_, resp, err := g.add.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -43,7 +43,7 @@ func (g *GRPCServer) Add(ctx context.Context, in *fs_base_invite.AddRequest) (*f
 func (g *GRPCServer) Get(ctx context.Context, in *fs_base_invite.GetRequest) (*fs_base_invite.GetResponse, error) {
 	_, resp, err := g.get.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base_invite.GetResponse{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base_invite.GetResponse), nil
 }
@@ -51,7 +51,7 @@ func (g *GRPCServer) Get(ctx context.Context, in *fs_base_invite.GetRequest) (*f
 func (g *GRPCServer) Update(ctx context.Context, in *fs_base_invite.UpdateRequest) (*fs_base.Response, error) {
 	_, resp, err := g.update.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base.Response{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base.Response), nil
 }
@@ -59,7 +59,7 @@ func (g *GRPCServer) Update(ctx context.Context, in *fs_base_invite.UpdateReques
 func (g *GRPCServer) GetInvites(ctx context.Context, in *fs_base_invite.GetInvitesRequest) (*fs_base_invite.GetInvitesResponse, error) {
 	_, resp, err := g.getInvites.ServeGRPC(ctx, in)
 	if err != nil {
-		return nil, err
+		return &fs_base_invite.GetInvitesResponse{State: fs_metadata_transport.GetResponseState(err, resp)}, nil
 	}
 	return resp.(*fs_base_invite.GetInvitesResponse), nil
 }
@@ -173,7 +173,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			fs_base.Response{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		addEndpoint = limiter(addEndpoint)
-		addEndpoint = opentracing.TraceClient(otTracer, "GetInvites")(addEndpoint)
+		addEndpoint = opentracing.TraceClient(otTracer, "Add")(addEndpoint)
 		addEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Add",
 			Timeout: 5 * time.Second,
@@ -190,9 +190,9 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 			fs_base.Response{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...).Endpoint()
 		updateEndpoint = limiter(updateEndpoint)
-		updateEndpoint = opentracing.TraceClient(otTracer, "GetInvites")(updateEndpoint)
+		updateEndpoint = opentracing.TraceClient(otTracer, "Update")(updateEndpoint)
 		updateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "Add",
+			Name:    "Update",
 			Timeout: 5 * time.Second,
 		}))(updateEndpoint)
 	}

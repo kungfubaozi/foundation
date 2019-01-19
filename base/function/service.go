@@ -41,7 +41,7 @@ func upsert(c *mgo.Collection, session string, f *fs_pkg_model.APIFunction) {
 }
 
 func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitRequest) (*fs_base.Response, error) {
-	c := svc.session.Clone().DB("foundation").C("functions")
+	c := svc.session.Clone().DB(fs_constants.DB_BASE).C("functions")
 	i, _ := c.Count()
 	if i > 0 {
 		return errno.ErrResponse(errno.ErrRequest)
@@ -56,8 +56,10 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 	upsert(c, in.Session, fs_functions.GetEntryByInviteFunc())
 
 	//safety verification functions
-	upsert(c, in.Session, fs_functions.GetRegisterFunc())
-	upsert(c, in.Session, fs_functions.GetLoginFunc())
+	upsert(c, in.Session, fs_functions.GetVerificationUpdatePasswordFunc())
+	upsert(c, in.Session, fs_functions.GetVerificationLoginFunc())
+	upsert(c, in.Session, fs_functions.GetVerificationRegisterFunc())
+	upsert(c, in.Session, fs_functions.GetVerificationResetPasswordFunc())
 
 	//register functions
 	upsert(c, in.Session, fs_functions.GetFromAPFunc())
@@ -65,7 +67,7 @@ func (svc *functionService) Init(ctx context.Context, in *fs_base_function.InitR
 
 	//safety update functions
 	upsert(c, in.Session, fs_functions.GetUpdateEmailFunc())
-	upsert(c, in.Session, fs_functions.GetUpdateEnterpriseFunc())
+	upsert(c, in.Session, fs_functions.GetResetPasswordFunc())
 	upsert(c, in.Session, fs_functions.GetUpdatePasswordFunc())
 	upsert(c, in.Session, fs_functions.GetUpdatePhoneFunc())
 

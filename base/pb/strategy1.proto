@@ -8,10 +8,13 @@ message Strategy {
 
     Events events = 2;
     Configuration configuration = 3;
+
+    string creator = 4;
+    string session = 5;
+    int64 createAt = 6;
 }
 
 message Configuration {
-    string registerReviewId = 1; //注册时的审核信息
     string openTime = 2; //开放时间 格式: 小时-小时 eg:0-24
 }
 
@@ -31,6 +34,7 @@ message Events {
     OnResetPassword onResetPassword = 13;
     OnElsewhereLogin onElsewhereLogin = 14;
     OnInviteUser onInviteUser = 15;
+    OnSubmitReview onSubmitReview = 16;
 }
 
 //邀请用户时
@@ -41,8 +45,8 @@ message OnInviteUser {
 
 //提交审核时
 message OnSubmitReview {
-    string reportUserId = 1; //审核人（level4-5）
-    string responseMessage = 2; //返回消息（用户提交审核后看到的消息）
+    string responseMessage = 1; //返回消息（用户提交审核后看到的消息)
+    int64 noticeUser = 2; //审核成功后是否提示用户
 }
 
 //异地登录

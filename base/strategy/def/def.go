@@ -13,18 +13,17 @@ func GetOnVerificationDefault() *fs_base.OnVerification {
 	}
 }
 
-func DefStrategy(projectId, creator string) *fs_base.ProjectStrategy {
-	return &fs_base.ProjectStrategy{
-		ProjectId: projectId,
-		CreateAt:  time.Now().UnixNano(),
-		Creator:   creator,
-		Version:   1,
+func DefStrategy(session, creator string) *fs_base.Strategy {
+	return &fs_base.Strategy{
+		Session:  session,
+		CreateAt: time.Now().UnixNano(),
+		Creator:  creator,
+		Version:  1,
 		Configuration: &fs_base.Configuration{
 			OpenTime: "0-24",
 		},
 		Events: &fs_base.Events{
 			OnRegister: &fs_base.OnRegister{
-				OpenReview:                   1, //不开启审核
 				Mode:                         1, //手机注册
 				AnIPRegistrationInterval:     5,
 				AnDeviceRegistrationInterval: 5,
@@ -113,7 +112,10 @@ func DefStrategy(projectId, creator string) *fs_base.ProjectStrategy {
 				SendMessageToUser: 2,
 				Verification:      2,
 			},
-			OnSubmitReview: &fs_base.OnSubmitReview{},
+			OnSubmitReview: &fs_base.OnSubmitReview{
+				NoticeUser:      2,
+				ResponseMessage: "Your account has been review access! ",
+			},
 			OnInviteUser: &fs_base.OnInviteUser{
 				ExpireTime: 48, //48小时
 				Review:     2,

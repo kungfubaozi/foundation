@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"gopkg.in/mgo.v2"
+	"zskparker.com/foundation/pkg/constants"
 )
 
 type model struct {
@@ -69,7 +70,7 @@ func (repo *reviewRepository) collection() {
 }
 
 func (repo *reviewRepository) userReviewCollection(userId string) *mgo.Collection {
-	return repo.session.DB("fds_review").C(fmt.Sprintf("%s_%s", "review", userId[len(userId)-2:]))
+	return repo.session.DB(fs_constants.DB_REVIEW).C(fmt.Sprintf("%s_%s", "review", userId[len(userId)-2:]))
 }
 
 type repository interface {

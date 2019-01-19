@@ -108,7 +108,7 @@ func (repo *userRepository) UpdateEmail(id, email string) error {
 }
 
 func (repo *userRepository) collection() *mgo.Collection {
-	return repo.session.DB("foundation").C("user")
+	return repo.session.DB(fs_constants.DB_USER).C("user")
 }
 
 type User struct {

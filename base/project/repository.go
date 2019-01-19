@@ -3,6 +3,7 @@ package project
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 )
 
@@ -84,5 +85,5 @@ func (repo *projectRepository) Save(p *project) error {
 }
 
 func (repo *projectRepository) collection() *mgo.Collection {
-	return repo.session.DB("foundation").C("project")
+	return repo.session.DB(fs_constants.DB_BASE).C("project")
 }
