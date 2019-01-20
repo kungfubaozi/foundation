@@ -80,6 +80,7 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 
 			//必须传入对应的项目session
 			if len(meta.Session) < 32 {
+				mwcli.logger.Log("err", "session")
 				return errno.ErrRequest, errno.ERROR
 			}
 

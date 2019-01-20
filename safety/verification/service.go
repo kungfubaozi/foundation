@@ -48,6 +48,9 @@ func (svc *verificationService) New(ctx context.Context, in *fs_safety_verificat
 	case fs_function_tags.GetEntryByValidateCodeFuncTag(): //使用验证码登录
 		svc.logger.Log("function", "entry by validate code")
 		break
+	case fs_function_tags.GetResetPasswordFuncTag():
+		req.Mode = 1
+		break
 
 	default: //未匹配的方法
 		svc.logger.Log("function", "no mactch")

@@ -47,7 +47,7 @@ func GetResetPasswordFunc() *fs_pkg_model.APIFunction {
 		Zh:    "重置密码",
 		En:    "ResetPassword",
 		Func:  fs_function_tags.GetResetPasswordFuncTag(),
-		Fcv:   fs_constants.FCV_AUTH,
+		Fcv:   fs_constants.FCV_VALIDATE_CODE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f

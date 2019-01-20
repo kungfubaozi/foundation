@@ -17,6 +17,7 @@ func GetVerificationRegisterFunc() *fs_pkg_model.APIFunction {
 		En:    "NewRegisterVerification",
 		Func:  fs_function_tags.GetVerificationRegisterFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
@@ -32,6 +33,7 @@ func GetVerificationLoginFunc() *fs_pkg_model.APIFunction {
 		En:    "NewLoginVerification",
 		Func:  fs_function_tags.GetVerificationLoginFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
@@ -47,6 +49,7 @@ func GetVerificationUpdatePasswordFunc() *fs_pkg_model.APIFunction {
 		En:    "NewUpdatePasswordVerification",
 		Func:  fs_function_tags.GetVerificationUpdatePasswordFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
@@ -62,6 +65,7 @@ func GetVerificationResetPasswordFunc() *fs_pkg_model.APIFunction {
 		En:    "NewResetPasswordVerification",
 		Func:  fs_function_tags.GetVerificationResetPasswordFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f

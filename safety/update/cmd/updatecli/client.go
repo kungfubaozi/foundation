@@ -76,11 +76,11 @@ func NewEndpoints(tracer *zipkin.Tracer) update.Endpoints {
 	}
 
 	{
-		factory := Factory(update.MakeUpdateEnterpriseEndpoint, otTracer, tracer, logger)
+		factory := Factory(update.MakeResetPasswordEndpoint, otTracer, tracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.UpdateEnterpriseEndpoint = retry
+		endpoints.ResetPasswordEndpoint = retry
 	}
 
 	{

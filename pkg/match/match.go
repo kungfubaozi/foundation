@@ -5,7 +5,7 @@ import (
 )
 
 func Phone(str string) bool {
-	reg := `^1([38][0-9]|14[57]|5[^4])\d{8}$`
+	reg := `^(13[0-9]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}$`
 	rgx := regexp.MustCompile(reg)
 	return rgx.MatchString(str)
 }

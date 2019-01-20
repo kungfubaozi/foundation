@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"math"
+	"zskparker.com/foundation/pkg/match"
 )
 
 func main() {
@@ -29,5 +29,5 @@ func main() {
 	//fmt.Println(s[:1] + s[strings.Index(s, "@")+1:])
 	//fmt.Println(s[:3] + s[len(s)-1:])
 
-	fmt.Println(int32(math.Pow(10, float64(6))))
+	fmt.Println(fs_regx_match.Phone("17317278139"))
 }

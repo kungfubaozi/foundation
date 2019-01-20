@@ -27,6 +27,9 @@ var (
 )
 
 func CheckValidateAccount(ctx context.Context, account string) *fs_base.State {
+	if ctx.Value(ValidateTransportKey) == nil {
+		return errno.ErrRequest
+	}
 	to := ContextToValidateAccount(ctx)
 	if to != fs_tools_encrypt.SHA256(account) {
 		return errno.ErrRequest
@@ -104,6 +107,7 @@ func HTTPToContext() http.RequestFunc {
 		forward := request.Header.Get("X-Forward-URI")
 		f := fs_functions.GetInterceptFunc()
 		meta.InitSession = session
+		meta.Session = session
 		if len(forward) > 2 && meta.Api == fmt.Sprintf("%s%s", f.Prefix, f.Infix) { //只允许拦截器设置URI和session
 			meta.Api = forward
 			meta.Session = request.Header.Get("X-Server-Session")

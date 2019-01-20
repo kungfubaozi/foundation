@@ -63,6 +63,7 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(fs_metadata_transport.GRPCToContext()),
 		zipkinServer,
 	}
 
@@ -96,6 +97,7 @@ func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipki
 
 	options := []grpctransport.ClientOption{
 		zipkinClient,
+		grpctransport.ClientBefore(fs_metadata_transport.ContextToGRPC()),
 	}
 
 	var getEndpoint endpoint.Endpoint

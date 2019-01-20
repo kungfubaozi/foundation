@@ -17,6 +17,7 @@ func GetEntryByInviteFunc() *fs_pkg_model.APIFunction {
 		En:    "EntryByInvite",
 		Func:  fs_function_tags.GetEntryByInviteTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
@@ -32,6 +33,7 @@ func GetEntryByFaceFunc() *fs_pkg_model.APIFunction {
 		En:    "EntryByFace",
 		Func:  fs_function_tags.GetEntryByFaceFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_ADMIN, //刷脸登录目前只对最高管理员开放
 	}
 	return f
@@ -47,6 +49,7 @@ func GetEntryByAPFunc() *fs_pkg_model.APIFunction {
 		En:    "EntryByAP",
 		Func:  fs_function_tags.GetEntryByAPFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
@@ -62,6 +65,7 @@ func GetEntryByOAuthFunc() *fs_pkg_model.APIFunction {
 		En:    "EntryByOAuth",
 		Func:  fs_function_tags.GetEntryByOAuthFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
@@ -77,6 +81,7 @@ func GetEntryByValidateCodeFunc() *fs_pkg_model.APIFunction {
 		En:    "EntryByValidateCode",
 		Func:  fs_function_tags.GetEntryByValidateCodeFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f
@@ -92,6 +97,7 @@ func GetEntryByQRCodeFunc() *fs_pkg_model.APIFunction {
 		En:    "EntryByQRCode",
 		Func:  fs_function_tags.GetEntryByQRCodeFuncTag(),
 		Type:  fs_constants.TYPE_HIDE,
+		Fcv:   fs_constants.FCV_NONE,
 		Level: fs_constants.LEVEL_TOURIST,
 	}
 	return f

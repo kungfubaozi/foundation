@@ -125,6 +125,8 @@ func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.E
 		wg.Done()
 	}
 
+	var userId string
+
 	//写入用户表
 	go func() {
 		resp, err := svc.usercli.Add(context.Background(), &fs_base_user.AddRequest{
@@ -143,6 +145,7 @@ func (svc *loginService) EntryByInvite(ctx context.Context, in *fs_entry_login.E
 			errc(errno.ErrSystem)
 			return
 		}
+		userId = resp.Content
 		errc(resp.State)
 	}()
 
@@ -214,6 +217,7 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 
 func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.EntryByAPRequest) (*fs_entry_login.EntryResponse, error) {
 	if len(in.Account) < 6 || len(in.Password) < 6 {
+		fmt.Println("err input")
 		return &fs_entry_login.EntryResponse{State: errno.ErrRequest}, nil
 	}
 
@@ -226,6 +230,7 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 
 	//不允许登录
 	if strategy.Events.OnLogin.AllowLogin == 1 {
+		fmt.Println("err allow")
 		return resp(errno.ErrRequest)
 	}
 
@@ -244,9 +249,11 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 		u, err = svc.usercli.FindByEnterprise(context.Background(), req)
 	}
 	if err != nil {
+		fmt.Println("err 1", err)
 		return resp(errno.ErrSystem)
 	}
 	if !u.State.Ok {
+		fmt.Println("err 2", u.State)
 		return resp(u.State)
 	}
 
@@ -264,6 +271,7 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 		Authorize:      svc.getAuthorize(meta, u.UserId, "ap", u.Level, project.Platform.Platform),
 	})
 	if err != nil {
+		fmt.Println("err 3", err)
 		return resp(errno.ErrSystem)
 	}
 	if !a.State.Ok {

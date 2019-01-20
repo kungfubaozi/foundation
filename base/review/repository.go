@@ -25,7 +25,9 @@ type model struct {
 type Pair struct {
 	Key   string `bson:"key"`
 	Value string `bson:"value"`
-	Force bool   `bson:"force"` // 强制
+	Aud   bool   `bson:"aud"`  // 是否要审核
+	Fill  bool   `bson:"fill"` //是否必填
+	Desc  string `bson:"desc"` //描述
 }
 
 //用户审核是对应的项目中的审核，因为项目如果不开启审核是不会经过审核流程的
