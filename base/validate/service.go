@@ -12,11 +12,13 @@ import (
 	"zskparker.com/foundation/base/pb"
 	"zskparker.com/foundation/base/state"
 	"zskparker.com/foundation/base/validate/pb"
+	"zskparker.com/foundation/base/veds"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tool/encrypt"
+	"zskparker.com/foundation/pkg/tool/veds"
 	"zskparker.com/foundation/pkg/utils"
 )
 
@@ -31,6 +33,7 @@ type validateService struct {
 	messagecli messagecli.Channel
 	state      state.Service
 	redisync   *fs_redisync.Redisync
+	vedscli    veds.Service
 }
 
 func (svc *validateService) GetRepo() repository {
@@ -107,8 +110,13 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		return resp(errno.ErrSupport)
 	}
 
+	v := fs_service_veds.Encrypt(svc.vedscli, vl.VerId.Hex())
+	if !v.State.Ok {
+		return resp(v.State)
+	}
+
 	return &fs_base_validate.CreateResponse{
-		VerId: vl.VerId.Hex(),
+		VerId: v.Values[0],
 		State: errno.Ok,
 	}, nil
 
@@ -152,10 +160,10 @@ func (svc *validateService) Verification(ctx context.Context, in *fs_base_valida
 	return &fs_base_validate.VerificationResponse{State: errno.ErrExpired}, nil
 }
 
-func NewService(session *mgo.Session, messagecli messagecli.Channel, state state.Service, redisync *fs_redisync.Redisync) Service {
+func NewService(session *mgo.Session, messagecli messagecli.Channel, state state.Service, redisync *fs_redisync.Redisync, vedscli veds.Service) Service {
 	var svc Service
 	{
-		svc = &validateService{session: session, messagecli: messagecli, state: state, redisync: redisync}
+		svc = &validateService{session: session, messagecli: messagecli, state: state, redisync: redisync, vedscli: vedscli}
 	}
 	return svc
 }

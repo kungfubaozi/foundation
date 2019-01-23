@@ -13,9 +13,11 @@ import (
 	"zskparker.com/foundation/base/project/pb"
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/base/validate/pb"
+	"zskparker.com/foundation/base/veds/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/ref"
+	"zskparker.com/foundation/pkg/tool/veds"
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 	"zskparker.com/foundation/safety/blacklist/pb"
@@ -30,6 +32,7 @@ type authMiddleware struct {
 	projectcli      fs_base_project.ProjectServer
 	blacklistcli    fs_safety_blacklist.BlacklistServer
 	strategycli     fs_base_strategy.StrategyServer
+	vedscli         fs_base_veds.VEDSServer
 }
 
 type Endpoint interface {
@@ -44,11 +47,12 @@ func Create(logger log.Logger, functioncli fs_base_function.FunctionServer,
 	authenticatecli fs_base_authenticate.AuthenticateServer,
 	facecli fs_base_face.FaceServer,
 	validatecli fs_base_validate.ValidateServer,
-	projectcli fs_base_project.ProjectServer, blacklistcli fs_safety_blacklist.BlacklistServer, strategycli fs_base_strategy.StrategyServer) Endpoint {
+	projectcli fs_base_project.ProjectServer, blacklistcli fs_safety_blacklist.BlacklistServer,
+	strategycli fs_base_strategy.StrategyServer, vedscli fs_base_veds.VEDSServer) Endpoint {
 	return &authMiddleware{logger: logger, functioncli: functioncli,
 		authenticatecli: authenticatecli, facecli: facecli,
 		validatecli: validatecli, blacklistcli: blacklistcli,
-		projectcli: projectcli, strategycli: strategycli}
+		projectcli: projectcli, strategycli: strategycli, vedscli: vedscli}
 }
 
 func (mwcli *authMiddleware) WithMeta() endpoint.Middleware {
@@ -82,6 +86,28 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 			if len(meta.Session) < 32 {
 				mwcli.logger.Log("err", "session")
 				return errno.ErrRequest, errno.ERROR
+			}
+
+			if len(meta.ClientId) < 32 {
+				mwcli.logger.Log("err", "client")
+				return errno.ErrClient, errno.ERROR
+			}
+
+			//解密数据
+			vs := []string{meta.Session, meta.ClientId}
+			if len(mr.Id) > 0 {
+				vs = append(vs, mr.Id)
+			}
+			v := fs_service_veds.Decrypt(mwcli.vedscli, vs)
+
+			if !v.State.Ok {
+				return v.State, errno.ERROR
+			}
+
+			meta.Session = v.Values[0]
+			meta.ClientId = v.Values[1]
+			if len(mr.Id) > 0 {
+				mr.Id = v.Values[2]
 			}
 
 			errc := func(s *fs_base.State) {

@@ -90,12 +90,12 @@ func (svc *authenticateService) Refresh(ctx context.Context, in *fs_base_authent
 	auth.AccessTokenUUID = node.Generate().Base64()
 	var accessToken string
 
-	//!!!验证操作已经在拦截器中设置完成（状态检测，黑名单，用户依存等）
+	//!!!验证操作已经在拦截器中设置完成（状态检测，黑名单，用户依存等)
 
 	//可能是跳转的token
 	if auth.ClientId != meta.ClientId {
 		svc.logger.Log("step")
-		//需要通过web端才可跨项目访问
+		//需要通过web端才可跨项目访问，并且clientId必须是主项目的clientId!!!
 		if auth.Platform == fs_constants.PLATFORM_WEB && meta.Platform == fs_constants.PLATFORM_WEB {
 			accessToken, err = EncodeAccessToken(&fs_base_authenticate.Authorize{
 				ClientId:        meta.ClientId,

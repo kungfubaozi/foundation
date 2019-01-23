@@ -61,4 +61,6 @@ var (
 	ErrTokenOrExpired       = &fs_base.State{Ok: false, Message: "err token or expired", Code: 10045}
 	ErrInvalidUser          = &fs_base.State{Ok: false, Message: "err invalid user", Code: 10046}
 	ErrInviteCodeExpired    = &fs_base.State{Ok: false, Message: "err invite code expired", Code: 10047}
+	ErrDecrypt              = &fs_base.State{Ok: false, Message: "err decrypt", Code: 10048}
+	ErrEncrypt              = &fs_base.State{Ok: false, Message: "err encrypt", Code: 10049}
 )

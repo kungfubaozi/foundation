@@ -46,7 +46,7 @@ func MakeGRPCServer(endpoints Endpoints, otTracer stdopentracing.Tracer, tracer 
 	}
 }
 
-func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) Service {
+func MakeGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) fs_base_validate.ValidateServer {
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
 	zipkinClient := zipkin.GRPCClientTrace(zipkinTracer)
 

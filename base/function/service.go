@@ -138,12 +138,13 @@ func (svc *functionService) Add(ctx context.Context, in *fs_base_function.Upsert
 	uid, _ := uuid.NewV1()
 
 	f = &Model{
-		Func:  uuid.NewV5(uid, in.Api).String()[24:],
-		ZH:    in.Zh,
-		Tag:   utils.Md5(in.Api + meta.Session),
-		Level: in.Level,
-		EN:    in.En,
-		Fcv:   in.Fcv,
+		Func:     uuid.NewV5(uid, in.Api).String()[24:],
+		ZH:       in.Zh,
+		Tag:      utils.Md5(in.Api + meta.Session),
+		Level:    in.Level,
+		EN:       in.En,
+		Fcv:      in.Fcv,
+		Postpone: in.Postpone,
 	}
 	err = repo.Add(f)
 	if err != nil {

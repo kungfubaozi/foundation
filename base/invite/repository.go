@@ -86,4 +86,5 @@ type model struct {
 	Ok            bool          `bson:"ok"`
 	OkTime        int64         `bson:"ok_time"`
 	OperateUserId string        `bson:"operate_user_id"`
+	Scope         int64         `bson:"scope"`
 }

@@ -56,4 +56,5 @@ message AddRequest {
     string username = 9;
     string realName = 10;
     bool reset = 11;
+    int64 scope = 12;
 }

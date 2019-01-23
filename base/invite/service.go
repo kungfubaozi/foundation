@@ -119,6 +119,11 @@ func (svc *inviteService) Add(ctx context.Context, in *fs_base_invite.AddRequest
 		return errno.ErrResponse(errno.ErrInviteExists)
 	}
 
+	if in.Scope != fs_constants.SCOPE_TYPE_OUTTER && in.Scope != fs_constants.SCOPE_TYPE_INNER {
+		return errno.ErrResponse(errno.ErrRequest)
+	}
+
+	m.Scope = in.Scope
 	m.Level = in.Level
 	m.Username = in.Username
 	m.Enterprise = in.Enterprise

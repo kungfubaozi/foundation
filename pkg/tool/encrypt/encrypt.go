@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"zskparker.com/foundation/pkg/tool/number"
@@ -40,6 +41,10 @@ func Md5(s string) string {
 	h := md5.New()
 	h.Write([]byte(s))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func SHA256_BASE64(value string) string {
+	return base64.StdEncoding.EncodeToString([]byte(SHA256(value)))
 }
 
 func MD5_SHA256(value string) string {

@@ -43,6 +43,8 @@ func (svc *projectService) Init(ctx context.Context, in *fs_base_project.InitReq
 	}
 
 	p := defProject(in.Logo, in.Zh, in.En, in.Desc, in.UserId, bson.NewObjectId(), fs_constants.LEVEL_TOURIST)
+	//内外都可以用
+	p.Scope = fs_constants.SCOPE_TYPE_INNER | fs_constants.SCOPE_TYPE_OUTTER
 	r, err := svc.Create(ctx, p)
 	if err != nil {
 		return &fs_base_project.InitResponse{State: errno.ErrSystem}, nil
@@ -57,7 +59,7 @@ func (svc *projectService) Init(ctx context.Context, in *fs_base_project.InitReq
 		AndroidId: p.Platforms[0].ClientId,
 		IosId:     p.Platforms[1].ClientId,
 		WindowsId: p.Platforms[2].ClientId,
-		MaxOSId:   p.Platforms[3].ClientId,
+		MacOSId:   p.Platforms[3].ClientId,
 		WebId:     p.Platforms[4].ClientId,
 	}, nil
 }
@@ -101,6 +103,7 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 		Level:   p.Level,
 		Session: p.Session,
 		Website: p.Website,
+		Scope:   p.Scope,
 	}
 
 	if len(p.Platforms) != 5 {
@@ -134,6 +137,9 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 func (svc *projectService) New(ctx context.Context, in *fs_base_project.NewRequest) (*fs_base.Response, error) {
 	meta := fs_metadata_transport.ContextToMeta(ctx)
 	p := defProject(in.Logo, in.Zh, in.En, in.Desc, meta.UserId, bson.NewObjectId(), fs_constants.LEVEL_DEVELOPER)
+
+	//允许用户访问的范围
+	p.Scope = in.Scope
 	return svc.Create(ctx, p)
 }
 
@@ -176,6 +182,7 @@ func defProject(logo, zh, en, desc, creator string, id bson.ObjectId, level int6
 		CreateAt: time.Now().UnixNano(),
 		Desc:     desc,
 		Level:    level,
+		Scope:    fs_constants.SCOPE_TYPE_INNER,
 		Session:  base64.StdEncoding.EncodeToString([]byte(uuid.NewV4().String())),
 		Platforms: []*platform{
 			{

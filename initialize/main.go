@@ -19,11 +19,14 @@ import (
 	"zskparker.com/foundation/base/strategy/pb"
 	"zskparker.com/foundation/base/user/cmd/usercli"
 	"zskparker.com/foundation/base/user/pb"
+	"zskparker.com/foundation/base/veds/cmd/vedscli"
+	"zskparker.com/foundation/base/veds/pb"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/match"
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/serv"
+	"zskparker.com/foundation/pkg/tool/veds"
 )
 
 var (
@@ -88,6 +91,7 @@ func main() {
 	zipkinTracer, reporter := serv.NewZipkin(osenv.GetZipkinAddr(), fs_constants.INIT, osenv.GetMicroPortString())
 	defer reporter.Close()
 
+	vedssvc := vedscli.NewClient(zipkinTracer)
 	usersrv := usercli.NewClient(zipkinTracer)
 	facesrv := facecli.NewClient(zipkinTracer)
 	projectsrv := projectcli.NewClient(zipkinTracer)
@@ -97,10 +101,23 @@ func main() {
 	userId := bson.NewObjectId().Hex()
 	userAlreadyRegister := false
 
+	{
+		//test
+		vr, err := vedssvc.Encrypt(context.Background(), &fs_base_veds.CryptRequest{
+			Value: "test",
+		})
+		if err != nil {
+			panic(err)
+		}
+		if !vr.State.Ok {
+			panic(vr.State.Message)
+		}
+	}
+
 	pr, err := projectsrv.Init(context.Background(), &fs_base_project.InitRequest{
-		Desc:   "def project",
-		En:     "foundation",
-		Zh:     "foundation",
+		Desc:   "root project",
+		En:     "SSORoute",
+		Zh:     "SSORoute",
 		UserId: userId,
 	})
 	if err != nil {
@@ -111,12 +128,19 @@ func main() {
 		fmt.Println("add project err", pr.State.Message)
 		return
 	} else {
-		fmt.Println("def project session [set it to the API Service environment variable]:", pr.Session)
-		fmt.Println("android client id:", pr.AndroidId)
-		fmt.Println("iOS client id:", pr.IosId)
-		fmt.Println("macOS client id:", pr.MaxOSId)
-		fmt.Println("web client id:", pr.WebId)
-		fmt.Println("windows client id:", pr.WindowsId)
+
+		v := fs_service_veds.Encrypt(vedssvc, pr.Session, pr.AndroidId, pr.IosId, pr.MacOSId, pr.WebId, pr.WindowsId)
+
+		if !v.State.Ok {
+			panic(v.State.Message)
+		}
+
+		fmt.Println("def project session [set it to the API Service environment variable]:", v.Values[0])
+		fmt.Println("android client id:", v.Values[1])
+		fmt.Println("iOS client id:", v.Values[2])
+		fmt.Println("macOS client id:", v.Values[3])
+		fmt.Println("web client id:", v.Values[4])
+		fmt.Println("windows client id:", v.Values[5])
 
 		sr, err := strategysrv.Init(context.Background(), &fs_base_strategy.InitRequest{
 			Session: pr.Session,

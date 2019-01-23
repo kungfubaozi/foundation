@@ -101,6 +101,7 @@ func HTTPToContext() http.RequestFunc {
 		meta := &fs_base.Metadata{}
 		meta.Device = request.Header.Get("X-User-Device")
 		meta.ClientId = request.Header.Get("X-Client-Id")
+
 		meta.Ip = request.Header.Get("X-Real-IP")
 		meta.UserAgent = request.Header.Get("User-Agent")
 		meta.Api = uri(request.RequestURI)

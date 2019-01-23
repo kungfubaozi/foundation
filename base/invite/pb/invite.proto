@@ -39,6 +39,8 @@ message InviteInfo {
     string username = 7;
     string realName = 8;
     int64 level = 9;
+
+    int64 scope = 10;
 }
 
 message UpdateRequest {
@@ -65,4 +67,6 @@ message AddRequest {
     fs.base.Meta meta = 5;
 
     int64 level = 6; //必填
+
+    int64 scope = 7;
 }

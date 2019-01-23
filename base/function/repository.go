@@ -29,6 +29,7 @@ type Model struct {
 	EN       string `bson:"en"`
 	Fcv      int64  `bson:"fcv"` //首选验证模式
 	Level    int64  `bson:"level"`
+	Postpone int64  `bson:"postpone"` //延迟过期时间,单位秒
 	//项目集成时会带入session来请求API
 	//新加入的功能会加入session防止API一致
 	//如果没有注册功能，默认会对比session

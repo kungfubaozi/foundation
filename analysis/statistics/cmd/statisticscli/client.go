@@ -21,7 +21,7 @@ func (s *istatistics) Close() {
 
 func (s *istatistics) Event(who, where, function string, time, status int64) {
 	s.Kafka(&sarama.ProducerMessage{
-		Topic: "foundation_statistics_streaming",
+		Topic: "fds_statistics_streaming",
 		Key:   sarama.StringEncoder("statistics"),
 		Value: sarama.ByteEncoder(fmt.Sprintf("%s;%s;%s;%d;%d", function, who, where, time, status)),
 	})

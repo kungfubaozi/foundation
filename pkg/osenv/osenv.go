@@ -6,6 +6,10 @@ import (
 	"strconv"
 )
 
+func GetSecretKey() string {
+	return os.Getenv("SECRET_KEY")
+}
+
 func GetInviteMessage() string {
 	return os.Getenv("INVITE_MESSAGE")
 }

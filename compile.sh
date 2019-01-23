@@ -20,6 +20,7 @@ protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/userinfo/pb/userinfo.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/usersync/pb/usersync.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/invite/pb/invite.proto
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/veds/pb/veds.proto
 
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. entry/login/pb/login.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. entry/register/pb/register.proto

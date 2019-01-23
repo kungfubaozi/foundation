@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package fs.base.authorization;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service Authorization {
+
+    //授权(需要用户手动操作)
+    rpc Sync (SyncRequest) returns (fs.base.Response);
+
+    //检查是否给予对应项目授权
+    rpc Check (SyncRequest) returns (fs.base.Response);
+
+}
+
+message SyncRequest {
+    string userId = 1;
+    string projectId = 2;
+}

@@ -14,6 +14,11 @@ const (
 )
 
 const (
+	SCOPE_TYPE_INNER  = 11 << 8 //内部
+	SCOPE_TYPE_OUTTER = 11 << 9 //外部
+)
+
+const (
 	DB_BASE     = "fds_base"
 	DB_REVIEW   = "fds_review"
 	DB_USER     = "fds_user"
@@ -83,5 +88,6 @@ const (
 	SVC_INTERCEPTOR         = "fd.svc.interceptor"
 	SVC_BLACKLIST           = "fd.svc.blacklist"
 	SVC_INVITE              = "fd.svc.invite"
+	SVC_VEDS                = "fd.svc.veds"
 	INIT                    = "fd.init"
 )

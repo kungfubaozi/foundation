@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"zskparker.com/foundation/pkg/match"
-)
+import "fmt"
 
 func main() {
 
@@ -12,10 +9,11 @@ func main() {
 	//fmt.Printf("%x\n", h.Sum(nil))
 	//
 	////hmac ,use sha1
-	//key := []byte("123456")
-	//mac := hmac.New(sha1.New, key)
-	//mac.Write([]byte("aaaaaa"))
+	//key := []byte("fjaslkdfjiuoiuoiu234=sfoj")
+	//mac := hmac.New(sha256.New, key)
+	//mac.Write([]byte("MTA4Njk3MjU0MjMzOTUxODQ2OA=="))
 	//fmt.Printf("%x\n", mac.Sum(nil))
+
 	//
 	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
 	//fmt.Println(fs_tools_encrypt.Rnd_SHA1_256_512(8))
@@ -29,5 +27,5 @@ func main() {
 	//fmt.Println(s[:1] + s[strings.Index(s, "@")+1:])
 	//fmt.Println(s[:3] + s[len(s)-1:])
 
-	fmt.Println(fs_regx_match.Phone("17317278139"))
+	fmt.Println((1548224561635657000 - 1548224561627868000) / 1e9)
 }

@@ -101,6 +101,7 @@ func (svc *registerService) FromAP(ctx context.Context, in *fs_entry_register.Fr
 		Email:         in.Email,
 		FromClientId:  meta.ClientId,
 		FromProjectId: meta.ProjectId,
+		Scope:         fs_constants.SCOPE_TYPE_OUTTER,
 	})
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)

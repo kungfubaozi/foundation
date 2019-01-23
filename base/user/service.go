@@ -223,6 +223,7 @@ func (svc *userService) Add(ctx context.Context, in *fs_base_user.AddRequest) (*
 		FromProjectId: in.FromProjectId,
 		Username:      in.Username,
 		RealName:      in.RealName,
+		Scope:         in.Scope,
 	}
 	repo := svc.GetRepo()
 	defer repo.Close()

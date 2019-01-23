@@ -212,6 +212,7 @@ func (svc *loginService) EntryByFace(ctx context.Context, in *fs_entry_login.Ent
 		Session:      ar.Session,
 		RefreshToken: ar.RefreshToken,
 		AccessToken:  ar.AccessToken,
+		Website:      project.Website,
 	}, nil
 }
 
@@ -290,6 +291,7 @@ func (svc *loginService) EntryByAP(ctx context.Context, in *fs_entry_login.Entry
 		RefreshToken: a.RefreshToken,
 		Session:      a.Session,
 		AccessToken:  a.AccessToken,
+		Website:      project.Website,
 	}, nil
 }
 

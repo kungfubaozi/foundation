@@ -34,7 +34,7 @@ message InitResponse {
     string androidId = 4;
     string iosId = 5;
     string webId = 6;
-    string maxOSId = 7;
+    string macOSId = 7;
     string windowsId = 8;
 }
 
@@ -60,6 +60,7 @@ message NewRequest {
     string en = 3;
     string zh = 4;
     fs.base.Meta meta = 5;
+    int64 scope = 6;
 }
 
 message ProjectInfo {
@@ -72,6 +73,7 @@ message ProjectInfo {
     string session = 7;
     string website = 8;
     int64 openReview = 9;
+    int64 scope = 10;
 }
 
 message Platform {

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package fs.base.veds;
+
+import "zskparker.com/foundation/base/pb/base.proto";
+
+service VEDS {
+
+    rpc Encrypt(CryptRequest) returns (CryptResponse);
+
+    rpc Decrypt(CryptRequest) returns (CryptResponse);
+
+}
+
+message CryptRequest {
+    string value = 1;
+}
+
+message CryptResponse {
+    fs.base.State state = 1;
+    string value = 2;
+}

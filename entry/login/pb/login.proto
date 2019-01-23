@@ -35,6 +35,7 @@ message EntryResponse {
     string refreshToken = 2;
     string accessToken = 3;
     string session = 4;
+    string website = 5;
 }
 
 message EntryByFaceRequest {
