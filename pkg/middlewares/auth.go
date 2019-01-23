@@ -17,7 +17,6 @@ import (
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 	"zskparker.com/foundation/pkg/ref"
-	"zskparker.com/foundation/pkg/tool/veds"
 	"zskparker.com/foundation/pkg/transport"
 	"zskparker.com/foundation/pkg/utils"
 	"zskparker.com/foundation/safety/blacklist/pb"
@@ -93,22 +92,22 @@ func (mwcli *authMiddleware) middleware(function string, ignoreProjectLevel bool
 				return errno.ErrClient, errno.ERROR
 			}
 
-			//解密数据
-			vs := []string{meta.Session, meta.ClientId}
-			if len(mr.Id) > 0 {
-				vs = append(vs, mr.Id)
-			}
-			v := fs_service_veds.Decrypt(mwcli.vedscli, vs)
-
-			if !v.State.Ok {
-				return v.State, errno.ERROR
-			}
-
-			meta.Session = v.Values[0]
-			meta.ClientId = v.Values[1]
-			if len(mr.Id) > 0 {
-				mr.Id = v.Values[2]
-			}
+			////解密数据
+			//vs := []string{meta.Session, meta.ClientId}
+			//if len(mr.Id) > 0 {
+			//	vs = append(vs, mr.Id)
+			//}
+			//v := fs_service_veds.Decrypt(mwcli.vedscli, vs)
+			//
+			//if !v.State.Ok {
+			//	return v.State, errno.ERROR
+			//}
+			//
+			//meta.Session = v.Values[0]
+			//meta.ClientId = v.Values[1]
+			//if len(mr.Id) > 0 {
+			//	mr.Id = v.Values[2]
+			//}
 
 			errc := func(s *fs_base.State) {
 				if !ps.Ok {

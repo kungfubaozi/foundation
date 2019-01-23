@@ -12,6 +12,7 @@ import (
 	"zskparker.com/foundation/base/state"
 	"zskparker.com/foundation/base/state/pb"
 	"zskparker.com/foundation/base/user/pb"
+	"zskparker.com/foundation/base/veds"
 	"zskparker.com/foundation/pkg/constants"
 	"zskparker.com/foundation/pkg/errno"
 )
@@ -41,11 +42,13 @@ type userService struct {
 	session  *mgo.Session
 	statecli state.Service
 	logger   log.Logger
+	vedscli  veds.Service
 }
 
 func (svc *userService) findByKey(ctx context.Context, key, value, password string) (*fs_base_user.FindResponse, error) {
 	repo := svc.GetRepo()
 	defer repo.Close()
+
 	user, err := repo.Get(value, key)
 	if err != nil {
 		fmt.Println("err", err)

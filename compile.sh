@@ -17,10 +17,10 @@ protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/interceptor/pb/interceptor.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/review/pb/review.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/state/pb/state.proto
-protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/userinfo/pb/userinfo.proto
-protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/usersync/pb/usersync.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/invite/pb/invite.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/veds/pb/veds.proto
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/authorization/pb/authorization.proto
+protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. base/userinfo/pb/userinfo.proto
 
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. entry/login/pb/login.proto
 protoc -I /Users/Richard/Desktop/Development/Golang/src/ --proto_path=. --go_out=plugins=grpc:. entry/register/pb/register.proto

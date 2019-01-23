@@ -34,6 +34,7 @@ type project struct {
 	Level     int64         `bson:"level"`   // 等级限制
 	Website   string        `bson:"website"` //网页 sso会跳转到这里
 	Scope     int64         `bson:"scope"`
+	SyncURL   string        `bson:"sync_url"` //同步地址
 }
 
 type platform struct {

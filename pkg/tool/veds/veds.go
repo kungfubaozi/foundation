@@ -10,23 +10,23 @@ import (
 
 type Values struct {
 	State  *fs_base.State
-	Values []string
+	Values map[int]string
 }
 
-func Decrypt(client fs_base_veds.VEDSServer, values []string) Values {
+func Decrypt(client fs_base_veds.VEDSServer, values map[int]string) Values {
 	return process(client, false, values)
 }
 
-func Encrypt(client fs_base_veds.VEDSServer, values ...string) Values {
+func Encrypt(client fs_base_veds.VEDSServer, values map[int]string) Values {
 	return process(client, true, values)
 }
 
-func process(client fs_base_veds.VEDSServer, ref bool, values []string) Values {
+func process(client fs_base_veds.VEDSServer, ref bool, values map[int]string) Values {
 	var wg sync.WaitGroup
 
 	v := Values{
 		State:  errno.Ok,
-		Values: make([]string, len(values)),
+		Values: make(map[int]string),
 	}
 
 	errc := func(s *fs_base.State) {
@@ -38,17 +38,17 @@ func process(client fs_base_veds.VEDSServer, ref bool, values []string) Values {
 
 	wg.Add(len(values))
 
-	for i := 0; i < len(values); i++ {
-		go func(index int) {
+	for k, va := range values {
+		go func(key int) {
 			var r *fs_base_veds.CryptResponse
 			var e error
 			if ref {
 				r, e = client.Encrypt(fs_metadata_transport.BuildInnerServiceAuthToContext(), &fs_base_veds.CryptRequest{
-					Value: values[index],
+					Value: values[k],
 				})
 			} else {
 				r, e = client.Decrypt(fs_metadata_transport.BuildInnerServiceAuthToContext(), &fs_base_veds.CryptRequest{
-					Value: values[index],
+					Value: values[k],
 				})
 			}
 			if e != nil {
@@ -59,9 +59,9 @@ func process(client fs_base_veds.VEDSServer, ref bool, values []string) Values {
 				errc(r.State)
 				return
 			}
-			v.Values[index] = r.Value
+			v.Values[k] = r.Value
 			errc(errno.Ok)
-		}(i)
+		}(k)
 	}
 
 	wg.Wait()

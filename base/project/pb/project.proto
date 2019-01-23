@@ -74,6 +74,7 @@ message ProjectInfo {
     string website = 8;
     int64 openReview = 9;
     int64 scope = 10;
+    string syncURL = 11;
 }
 
 message Platform {

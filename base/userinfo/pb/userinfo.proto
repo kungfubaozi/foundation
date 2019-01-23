@@ -6,30 +6,33 @@ import "zskparker.com/foundation/base/pb/base.proto";
 
 service UserInfo {
 
-    rpc Upsert (UserBaseInfo) returns (fs.base.Response);
+    rpc Upsert (UpsertRequest) returns (fs.base.Response);
 
-    rpc Get(GetRequest) returns (GetResponse);
+    rpc Get (GetRequest) returns (GetResponse);
 
 }
 
+message UpsertRequest {
+    fs.base.Meta meta = 1;
+    BaseInfo info = 2;
+}
+
 message GetRequest {
+    fs.base.Meta meta = 1;
+    string userId = 2;
+}
+
+message BaseInfo {
     string userId = 1;
+    string realName = 2;
+    string username = 3;
+    int64 sex = 4;
+    int64 age = 5;
+    string birthday = 6;
+    string icon = 7;
 }
 
 message GetResponse {
     fs.base.State state = 1;
-    string userId = 2;
-    string nickName = 3;
-    string realName = 4;
-    int64 age = 5;
-    string icon = 6;
-}
-
-message UserBaseInfo {
-    string userId = 1;
-    string nickName = 2;
-    string realName = 3;
-    int64 age = 4;
-    string icon = 5;
-    int64 sex = 6;
+    BaseInfo info = 2;
 }

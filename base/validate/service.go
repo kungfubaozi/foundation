@@ -3,6 +3,7 @@ package validate
 import (
 	"context"
 	"fmt"
+	"github.com/garyburd/redigo/redis"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
@@ -18,7 +19,6 @@ import (
 	"zskparker.com/foundation/pkg/osenv"
 	"zskparker.com/foundation/pkg/sync"
 	"zskparker.com/foundation/pkg/tool/encrypt"
-	"zskparker.com/foundation/pkg/tool/veds"
 	"zskparker.com/foundation/pkg/utils"
 )
 
@@ -34,6 +34,7 @@ type validateService struct {
 	state      state.Service
 	redisync   *fs_redisync.Redisync
 	vedscli    veds.Service
+	pool       *redis.Pool
 }
 
 func (svc *validateService) GetRepo() repository {
@@ -110,13 +111,8 @@ func (svc *validateService) Create(ctx context.Context, in *fs_base_validate.Cre
 		return resp(errno.ErrSupport)
 	}
 
-	v := fs_service_veds.Encrypt(svc.vedscli, vl.VerId.Hex())
-	if !v.State.Ok {
-		return resp(v.State)
-	}
-
 	return &fs_base_validate.CreateResponse{
-		VerId: v.Values[0],
+		VerId: vl.VerId.Hex(),
 		State: errno.Ok,
 	}, nil
 

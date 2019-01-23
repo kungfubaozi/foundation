@@ -17,4 +17,6 @@ service Authorization {
 message SyncRequest {
     string userId = 1;
     string projectId = 2;
+
+    fs.base.Meta meta = 3;
 }

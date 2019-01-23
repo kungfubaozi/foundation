@@ -104,6 +104,7 @@ func (svc *projectService) Get(ctx context.Context, in *fs_base_project.GetReque
 		Session: p.Session,
 		Website: p.Website,
 		Scope:   p.Scope,
+		SyncURL: p.SyncURL,
 	}
 
 	if len(p.Platforms) != 5 {
@@ -160,6 +161,7 @@ func (svc *projectService) Create(ctx context.Context, p *project) (*fs_base.Res
 	if err != nil {
 		return errno.ErrResponse(errno.ErrSystem)
 	}
+
 	return errno.ErrResponse(errno.Ok)
 }
 
